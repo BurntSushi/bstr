@@ -1,4 +1,4 @@
 .*.swp
 tags
 target
-Cargo.lock
+/Cargo.lock

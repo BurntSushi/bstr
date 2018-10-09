@@ -1,0 +1,27 @@
+[package]
+publish = false
+name = "bstr-bench"
+version = "0.0.1"
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Criterion benchmark suite for bstr."
+homepage = "https://github.com/BurntSushi/bstr"
+repository = "https://github.com/BurntSushi/bstr"
+license = "Unlicense/MIT"
+
+[lib]
+bench = false
+
+[[bench]]
+name = "bstr"
+harness = false
+path = "src/bench.rs"
+
+[dependencies]
+criterion = "0.2.10"
+bstr = { version = "*", path = ".." }
+
+# For comparisons.
+unicode-segmentation = "1.2.1"
+
+[profile.release]
+debug = true
