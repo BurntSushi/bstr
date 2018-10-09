@@ -1,0 +1,23 @@
+[package]
+name = "bstr"
+version = "0.0.1"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "A string type that is not required to be valid UTF-8."
+documentation = "https://docs.rs/bstr"
+homepage = "https://github.com/BurntSushi/bstr"
+repository = "https://github.com/BurntSushi/bstr"
+readme = "README.md"
+keywords = ["string", "str", "byte", "bytes", "text"]
+license = "MIT OR Apache-2.0"
+categories = ["text-processing", "encoding"]
+exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml"]
+
+[badges]
+travis-ci = { repository = "BurntSushi/bstr" }
+appveyor = { repository = "BurntSushi/bstr" }
+
+[lib]
+bench = false
+
+[profile.release]
+debug = true
