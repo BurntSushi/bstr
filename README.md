@@ -13,8 +13,10 @@ that they are not required to be valid UTF-8.
 
 https://docs.rs/bstr
 
-The documentation includes a section on why you might want to use this crate.
+### When should I use byte string
 
+See this part of the documentation
+https://docs.rs/bstr/0.1.0/bstr/#when-should-i-use-byte-strings.
 
 ### Usage
 
