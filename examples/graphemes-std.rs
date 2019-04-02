@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<Error>> {
             .take(10)
             .last()
             .unwrap_or(line.len());
+        #[allow(deprecated)] // for Rust 1.28.0
         stdout.write_all(line[..end].trim_right().as_bytes())?;
         stdout.write_all(b"\n")?;
 
