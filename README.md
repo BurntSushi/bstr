@@ -13,7 +13,14 @@ that they are not required to be valid UTF-8.
 
 https://docs.rs/bstr
 
-The documentation includes a section on why you might want to use this crate.
+
+### When should I use byte strings?
+
+See this part of the documentation for more details:
+https://docs.rs/bstr/0.1.0/bstr/#when-should-i-use-byte-strings.
+
+The short story is that byte strings are useful when it is inconvenient or
+incorrect to require valid UTF-8.
 
 
 ### Usage
