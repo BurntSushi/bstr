@@ -166,7 +166,7 @@ impl BStr {
 
     /// Create a mutable byte string slice from anything that can be borrowed
     /// as a sequence of bytes. This includes, but is not limited to, `&mut
-    /// Vec<u8>`, `&mut [u8]`, `&mut String` and `&mut str`.
+    /// Vec<u8>` and `&mut [u8]`.
     ///
     /// # Examples
     ///
