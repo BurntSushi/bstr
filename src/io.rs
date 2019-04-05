@@ -195,9 +195,9 @@ impl<B: io::BufRead> Iterator for ByteLines<B> {
 
 fn trim_line(line: &mut BString) {
     if line.last() == Some(b'\n') {
-        line.pop();
+        line.pop_byte();
         if line.last() == Some(b'\r') {
-            line.pop();
+            line.pop_byte();
         }
     }
 }
