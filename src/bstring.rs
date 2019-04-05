@@ -961,9 +961,91 @@ impl BString {
 
     /// Removes the last codepoint from this `BString` and returns it.
     ///
-    /// If this string is empty, then `None` is returned. If the last bytes
-    /// of this string do not correspond to a valid UTF-8 code unit sequence,
-    /// then the Unicode replacement codepoint is yielded instead in
+    /// If this byte string is empty, then `None` is returned. If the last
+    /// bytes of this byte string do not correspond to a valid UTF-8 code unit
+    /// sequence, then the Unicode replacement codepoint is yielded instead in
+    /// accordance with the
+    /// [replacement codepoint substitution policy](index.html#handling-of-invalid-utf8-8).
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let mut s = BString::from("foo");
+    /// assert_eq!(s.pop_char(), Some('o'));
+    /// assert_eq!(s.pop_char(), Some('o'));
+    /// assert_eq!(s.pop_char(), Some('f'));
+    /// assert_eq!(s.pop_char(), None);
+    /// ```
+    ///
+    /// This shows the replacement codepoint substitution policy. Note that
+    /// the first pop yields a replacement codepoint but actually removes two
+    /// bytes. This is in contrast with subsequent pops when encountering
+    /// `\xFF` since `\xFF` is never a valid prefix for any valid UTF-8
+    /// code unit sequence.
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let mut s = BString::from_slice(b"f\xFF\xFF\xFFoo\xE2\x98");
+    /// assert_eq!(s.pop_char(), Some('\u{FFFD}'));
+    /// assert_eq!(s.pop_char(), Some('o'));
+    /// assert_eq!(s.pop_char(), Some('o'));
+    /// assert_eq!(s.pop_char(), Some('\u{FFFD}'));
+    /// assert_eq!(s.pop_char(), Some('\u{FFFD}'));
+    /// assert_eq!(s.pop_char(), Some('\u{FFFD}'));
+    /// assert_eq!(s.pop_char(), Some('f'));
+    /// assert_eq!(s.pop_char(), None);
+    /// ```
+    pub fn pop_char(&mut self) -> Option<char> {
+        let (ch, size) = utf8::decode_last_lossy(self.as_bytes());
+        if size == 0 {
+            return None;
+        }
+        let new_len = self.len() - size;
+        self.truncate(new_len);
+        Some(ch)
+    }
+
+    /// Removes the last byte from this `BString` and returns it.
+    ///
+    /// If this byte string is empty, then `None` is returned.
+    ///
+    /// Note that if the last codepoint in this byte string is not ASCII, then
+    /// removing the last byte could make this byte string contain invalid
+    /// UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let mut s = BString::from("foo");
+    /// assert_eq!(s.pop_byte(), Some(b'o'));
+    /// assert_eq!(s.pop_byte(), Some(b'o'));
+    /// assert_eq!(s.pop_byte(), Some(b'f'));
+    /// assert_eq!(s.pop_byte(), None);
+    /// ```
+    pub fn pop_byte(&mut self) -> Option<u8> {
+        self.bytes.pop()
+    }
+
+    /// **DEPRECATED**: Use
+    /// [`pop_char`](struct.BString.html#method.pop_char)
+    /// or
+    /// [`pop_byte`](struct.BString.html#method.pop_byte)
+    /// instead.
+    ///
+    /// Removes the last codepoint from this `BString` and returns it.
+    ///
+    /// If this byte string is empty, then `None` is returned. If the last
+    /// bytes of this byte string do not correspond to a valid UTF-8 code unit
+    /// sequence, then the Unicode replacement codepoint is yielded instead in
     /// accordance with the
     /// [replacement codepoint substitution policy](index.html#handling-of-invalid-utf8-8).
     ///
@@ -1000,14 +1082,9 @@ impl BString {
     /// assert_eq!(s.pop(), Some('f'));
     /// assert_eq!(s.pop(), None);
     /// ```
+    #[deprecated(since = "0.1.1", note = "use pop_char or pop_byte instead")]
     pub fn pop(&mut self) -> Option<char> {
-        let (ch, size) = utf8::decode_last_lossy(self.as_bytes());
-        if size == 0 {
-            return None;
-        }
-        let new_len = self.len() - size;
-        self.truncate(new_len);
-        Some(ch)
+        self.pop_char()
     }
 
     /// Removes a `char` from this `BString` at the given byte position and
