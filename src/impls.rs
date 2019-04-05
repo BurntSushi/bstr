@@ -18,6 +18,26 @@ macro_rules! impl_partial_eq {
     }
 }
 
+macro_rules! impl_partial_eq_cow {
+    ($lhs:ty, $rhs:ty) => {
+        impl<'a, 'b> PartialEq<$rhs> for $lhs {
+            #[inline]
+            fn eq(&self, other: &$rhs) -> bool {
+                let other: &[u8] = (&**other).as_ref();
+                PartialEq::eq(self.as_bytes(), other)
+            }
+        }
+
+        impl<'a, 'b> PartialEq<$lhs> for $rhs {
+            #[inline]
+            fn eq(&self, other: &$lhs) -> bool {
+                let this: &[u8] = (&**other).as_ref();
+                PartialEq::eq(this, other.as_bytes())
+            }
+        }
+    }
+}
+
 macro_rules! impl_partial_ord {
     ($lhs:ty, $rhs:ty) => {
         impl<'a, 'b> PartialOrd<$rhs> for $lhs {
@@ -252,6 +272,9 @@ mod bstring {
 }
 
 mod bstr {
+    #[cfg(feature = "std")]
+    use std::borrow::Cow;
+
     use core::cmp::Ordering;
     use core::fmt;
     use core::ops;
@@ -465,6 +488,12 @@ mod bstr {
     impl_partial_eq!(BStr, String);
     #[cfg(feature = "std")]
     impl_partial_eq!(&'a BStr, String);
+    #[cfg(feature = "std")]
+    impl_partial_eq_cow!(&'a BStr, Cow<'a, BStr>);
+    #[cfg(feature = "std")]
+    impl_partial_eq_cow!(&'a BStr, Cow<'a, str>);
+    #[cfg(feature = "std")]
+    impl_partial_eq_cow!(&'a BStr, Cow<'a, [u8]>);
 
     impl PartialOrd for BStr {
         #[inline]
