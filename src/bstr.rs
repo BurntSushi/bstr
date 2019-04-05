@@ -1,8 +1,13 @@
 #[cfg(feature = "std")]
 use std::borrow::Cow;
-use core::cmp;
+#[cfg(feature = "std")]
+use std::ffi::OsStr;
 #[cfg(feature = "std")]
 use std::iter;
+#[cfg(feature = "std")]
+use std::path::Path;
+
+use core::cmp;
 use core::mem;
 use core::ops;
 use core::ptr;
@@ -315,6 +320,71 @@ impl BStr {
         BStr::new_mut(slice::from_raw_parts_mut(data, len))
     }
 
+    /// Create an immutable byte string from an OS string slice.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns `None` if the given OS string is not valid UTF-8. (For
+    /// example, on Windows, file paths are allowed to be a sequence of
+    /// arbitrary 16-bit integers. Not all such sequences can be transcoded to
+    /// valid UTF-8.)
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::ffi::OsStr;
+    ///
+    /// use bstr::BStr;
+    ///
+    /// let os_str = OsStr::new("foo");
+    /// let bs = BStr::from_os_str(os_str).expect("should be valid UTF-8");
+    /// assert_eq!(bs, "foo");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn from_os_str(os_str: &OsStr) -> Option<&BStr> {
+        BStr::from_os_str_imp(os_str)
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(unix)]
+    fn from_os_str_imp(os_str: &OsStr) -> Option<&BStr> {
+        use std::os::unix::ffi::OsStrExt;
+
+        Some(BStr::new(os_str.as_bytes()))
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(not(unix))]
+    fn from_os_str_imp(os_str: &OsStr) -> Option<&BStr> {
+        os_str.to_str().map(BStr::new)
+    }
+
+    /// Create an immutable byte string from a file path.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns `None` if the given path is not valid UTF-8. (For example,
+    /// on Windows, file paths are allowed to be a sequence of arbitrary 16-bit
+    /// integers. Not all such sequences can be transcoded to valid UTF-8.)
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::path::Path;
+    ///
+    /// use bstr::BStr;
+    ///
+    /// let path = Path::new("foo");
+    /// let bs = BStr::from_path(path).expect("should be valid UTF-8");
+    /// assert_eq!(bs, "foo");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn from_path(path: &Path) -> Option<&BStr> {
+        BStr::from_os_str(path.as_os_str())
+    }
+
     /// Returns the length, in bytes, of this byte string.
     ///
     /// # Examples
@@ -607,6 +677,146 @@ impl BStr {
                     }
                 }
             }
+        }
+    }
+
+    /// Create an OS string slice from this byte string.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns a UTF-8 decoding error if this byte string is not valid
+    /// UTF-8. (For example, on Windows, file paths are allowed to be a
+    /// sequence of arbitrary 16-bit integers. There is no obvious mapping from
+    /// an arbitrary sequence of 8-bit integers to an arbitrary sequence of
+    /// 16-bit integers.)
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::B;
+    ///
+    /// let bs = B("foo");
+    /// let os_str = bs.to_os_str().expect("should be valid UTF-8");
+    /// assert_eq!(os_str, "foo");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn to_os_str(&self) -> Result<&OsStr, Utf8Error> {
+        self.to_os_str_imp()
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(unix)]
+    fn to_os_str_imp(&self) -> Result<&OsStr, Utf8Error> {
+        use std::os::unix::ffi::OsStrExt;
+
+        Ok(OsStr::from_bytes(self.as_bytes()))
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(not(unix))]
+    fn to_os_str_imp(&self) -> Result<&OsStr, Utf8Error> {
+        self.to_str().map(OsStr::new)
+    }
+
+    /// Lossily create an OS string slice from this byte string.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this will perform a UTF-8 check and lossily convert this byte string
+    /// into valid UTF-8 using the Unicode replacement codepoint.
+    ///
+    /// Note that this can prevent the correct roundtripping of file paths on
+    /// non-Unix systems such as Windows, where file paths are an arbitrary
+    /// sequence of 16-bit integers.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::B;
+    ///
+    /// let bs = B(b"foo\xFFbar");
+    /// let os_str = bs.to_os_str_lossy();
+    /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn to_os_str_lossy(&self) -> Cow<OsStr> {
+        self.to_os_str_lossy_imp()
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(unix)]
+    fn to_os_str_lossy_imp(&self) -> Cow<OsStr> {
+        use std::os::unix::ffi::OsStrExt;
+
+        Cow::Borrowed(OsStr::from_bytes(self.as_bytes()))
+    }
+
+    #[cfg(feature = "std")]
+    #[cfg(not(unix))]
+    fn to_os_str_lossy_imp(&self) -> Cow<OsStr> {
+        use std::ffi::OsString;
+
+        match self.to_str_lossy() {
+            Cow::Borrowed(x) => Cow::Borrowed(OsStr::new(x)),
+            Cow::Owned(x) => Cow::Owned(OsString::from(x)),
+        }
+    }
+
+    /// Create a path slice from this byte string.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns a UTF-8 decoding error if this byte string is not valid
+    /// UTF-8. (For example, on Windows, file paths are allowed to be a
+    /// sequence of arbitrary 16-bit integers. There is no obvious mapping from
+    /// an arbitrary sequence of 8-bit integers to an arbitrary sequence of
+    /// 16-bit integers.)
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::B;
+    ///
+    /// let bs = B("foo");
+    /// let path = bs.to_path().expect("should be valid UTF-8");
+    /// assert_eq!(path.as_os_str(), "foo");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn to_path(&self) -> Result<&Path, Utf8Error> {
+        self.to_os_str().map(Path::new)
+    }
+
+    /// Lossily create a path slice from this byte string.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this will perform a UTF-8 check and lossily convert this byte string
+    /// into valid UTF-8 using the Unicode replacement codepoint.
+    ///
+    /// Note that this can prevent the correct roundtripping of file paths on
+    /// non-Unix systems such as Windows, where file paths are an arbitrary
+    /// sequence of 16-bit integers.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::B;
+    ///
+    /// let bs = B(b"foo\xFFbar");
+    /// let path = bs.to_path_lossy();
+    /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn to_path_lossy(&self) -> Cow<Path> {
+        use std::path::PathBuf;
+
+        match self.to_os_str_lossy() {
+            Cow::Borrowed(x) => Cow::Borrowed(Path::new(x)),
+            Cow::Owned(x) => Cow::Owned(PathBuf::from(x)),
         }
     }
 

@@ -226,6 +226,98 @@ assert_eq!(vec![(0, 1, 'a'), (1, 3, '\u{FFFD}'), (3, 4, 'z')], chars);
 let chars: Vec<&BStr> = bs.char_indices().map(|(s, e, _)| &bs[s..e]).collect();
 assert_eq!(vec![B("a"), B(b"\xE2\x98"), B("z")], chars);
 ```
+
+# File paths and OS strings
+
+One of the premiere features of Rust's standard library is how it handles file
+paths. In particular, it makes it very hard to write incorrect code while
+simultaneously providing a correct cross platform abstraction for manipulating
+file paths. The key challenge that one faces with file paths across platforms
+is derived from the following observations:
+
+* On most Unix-like systems, file paths are an arbitrary sequence of bytes.
+* On Windows, file paths are an arbitrary sequence of 16-bit integers.
+
+(In both cases, certain sequences aren't allowed. For example a `NUL` byte is
+not allowed in either case. But we can ignore this for the purposes of this
+section.)
+
+Byte strings, like the ones provided in this crate, line up really well with
+file paths on Unix like systems, which are themselves just arbitrary sequences
+of bytes. It turns out that if you treat them as "mostly UTF-8," then things
+work out pretty well. On the contrary, byte strings _don't_ really work
+that well on Windows because it's not possible to correctly roundtrip file
+paths between 16-bit integers and something that looks like UTF-8 _without_
+explicitly defining an encoding to do this for you, which is anathema to byte
+strings, which are just bytes.
+
+Rust's standard library elegantly solves this problem by specifying an
+internal encoding for file paths that's only used on Windows called
+[WTF-8](https://simonsapin.github.io/wtf-8/). Its key properties are that they
+permit losslessly roundtripping file paths on Windows by extending UTF-8 to
+support an encoding of surrogate codepoints, while simultaneously supporting
+zero-cost conversion from Rust's Unicode strings to file paths. (Since UTF-8 is
+a proper subset of WTF-8.)
+
+The fundamental point at which the above strategy fails is when you want to
+treat file paths as things that look like strings in a zero cost way. In most
+cases, this is actually the wrong thing to do, but some cases call for it,
+for example, glob or regex matching on file paths. This is because WTF-8 is
+treated as an internal implementation detail, and there is no way to access
+those bytes via a public API. Therefore, such consumers are limited in what
+they can do:
+
+1. One could re-implement WTF-8 and re-encode file paths on Windows to WTF-8
+   by accessing their underlying 16-bit integer representation. Unfortunately,
+   this isn't zero cost (it introduces a second WTF-8 decoding step) and it's
+   not clear this is a good thing to do, since WTF-8 should ideally remain an
+   internal implementation detail.
+2. One could instead declare that they will not handle paths on Windows that
+   are not valid UTF-16, and return an error when one is encountered.
+3. Like (2), but instead of returning an error, lossily decode the file path
+   on Windows that isn't valid UTF-16 into UTF-16 by replacing invalid bytes
+   with the Unicode replacement codepoint.
+
+While this library may provide facilities for (1) in the future, currently,
+this library only provides facilities for (2) and (3). In particular, a suite
+of conversion functions are provided that permit converting between byte
+strings, OS strings and file paths. For owned `BString`s, they are:
+
+* [`BString::from_os_string`](struct.BString.html#method.from_os_string)
+* [`BString::from_os_str_lossy`](struct.BString.html#method.from_os_str_lossy)
+* [`BString::from_path_buf`](struct.BString.html#method.from_path_buf)
+* [`BString::from_path_lossy`](struct.BString.html#method.from_path_lossy)
+* [`BString::into_os_string`](struct.BString.html#method.into_os_string)
+* [`BString::into_os_string_lossy`](struct.BString.html#method.into_os_string_lossy)
+* [`BString::into_path_buf`](struct.BString.html#method.into_path_buf)
+* [`BString::into_path_buf_lossy`](struct.BString.html#method.into_path_buf_lossy)
+
+For byte string slices, they are:
+
+* [`BStr::from_os_str`](struct.BStr.html#method.from_os_str)
+* [`BStr::from_path`](struct.BStr.html#method.from_path)
+* [`BStr::to_os_str`](struct.BStr.html#method.to_os_str)
+* [`BStr::to_os_str_lossy`](struct.BStr.html#method.to_os_str_lossy)
+* [`BStr::to_path`](struct.BStr.html#method.to_path)
+* [`BStr::to_path_lossy`](struct.BStr.html#method.to_path_lossy)
+
+On Unix, all of these conversions are rigorously zero cost, which gives one
+a way to ergonomically deal with raw file paths exactly as they are using
+normal string-related functions. On Windows, these conversion routines perform
+a UTF-8 check and either return an error or lossily decode the file path
+into valid UTF-8, depending on which function you use. This means that you
+cannot roundtrip all file paths on Windows correctly using these conversion
+routines. However, this may be an acceptable downside since such file paths
+are exceptionally rare. Moreover, roundtripping isn't always necessary, for
+example, if all you're doing is filtering based on file paths.
+
+The reason why using byte strings for this is potentially superior than the
+standard library's approach is that a lot of Rust code is already lossily
+converting file paths to Rust's Unicode strings, which are required to be valid
+UTF-8, and thus contain latent bugs on Unix where paths with invalid UTF-8 are
+not terribly uncommon. If you instead use byte strings, then you're guaranteed
+to write correct code for Unix, at the cost of getting a corner case wrong on
+Windows.
 */
 
 #![cfg_attr(not(feature = "std"), no_std)]

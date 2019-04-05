@@ -1,7 +1,10 @@
+use std::borrow::Cow;
 use std::error;
+use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::iter;
 use std::ops;
+use std::path::{Path, PathBuf};
 use std::ptr;
 use std::str;
 use std::vec;
@@ -297,6 +300,126 @@ impl BString {
         BString::from_vec(slice.as_ref().to_vec())
     }
 
+    /// Create a new byte string from an owned OS string.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns the original OS string if it is not valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::ffi::OsString;
+    ///
+    /// use bstr::BString;
+    ///
+    /// let os_str = OsString::from("foo");
+    /// let bs = BString::from_os_string(os_str).expect("must be valid UTF-8");
+    /// assert_eq!(bs, "foo");
+    /// ```
+    pub fn from_os_string(os_str: OsString) -> Result<BString, OsString> {
+        BString::from_os_string_imp(os_str)
+    }
+
+    #[cfg(unix)]
+    fn from_os_string_imp(os_str: OsString) -> Result<BString, OsString> {
+        use std::os::unix::ffi::OsStringExt;
+
+        Ok(BString::from(os_str.into_vec()))
+    }
+
+    #[cfg(not(unix))]
+    fn from_os_string_imp(os_str: OsString) -> Result<BString, OsString> {
+        os_str.into_string().map(BString::from)
+    }
+
+    /// Lossily create a new byte string from an OS string slice.
+    ///
+    /// On Unix, this always succeeds, is zero cost and always returns a slice.
+    /// On non-Unix systems, this does a UTF-8 check. If the given OS string
+    /// slice is not valid UTF-8, then it is lossily decoded into valid UTF-8
+    /// (with invalid bytes replaced by the Unicode replacement codepoint).
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::ffi::OsStr;
+    ///
+    /// use bstr::{B, BString};
+    ///
+    /// let os_str = OsStr::new("foo");
+    /// let bs = BString::from_os_str_lossy(os_str);
+    /// assert_eq!(bs, B("foo"));
+    /// ```
+    pub fn from_os_str_lossy<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
+        BString::from_os_str_lossy_imp(os_str)
+    }
+
+    #[cfg(unix)]
+    fn from_os_str_lossy_imp<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
+        use std::os::unix::ffi::OsStrExt;
+
+        Cow::Borrowed(BStr::new(os_str.as_bytes()))
+    }
+
+    #[cfg(not(unix))]
+    fn from_os_str_lossy_imp<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
+        match os_str.to_string_lossy() {
+            Cow::Borrowed(x) => Cow::Borrowed(BStr::new(x)),
+            Cow::Owned(x) => Cow::Owned(BString::from(x)),
+        }
+    }
+
+    /// Create a new byte string from an owned file path.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns the original path if it is not valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::path::PathBuf;
+    ///
+    /// use bstr::BString;
+    ///
+    /// let path = PathBuf::from("foo");
+    /// let bs = BString::from_path_buf(path).expect("must be valid UTF-8");
+    /// assert_eq!(bs, "foo");
+    /// ```
+    pub fn from_path_buf(path: PathBuf) -> Result<BString, PathBuf> {
+        BString::from_os_string(path.into_os_string())
+            .map_err(PathBuf::from)
+    }
+
+    /// Lossily create a new byte string from a file path.
+    ///
+    /// On Unix, this always succeeds, is zero cost and always returns a slice.
+    /// On non-Unix systems, this does a UTF-8 check. If the given path is not
+    /// valid UTF-8, then it is lossily decoded into valid UTF-8 (with invalid
+    /// bytes replaced by the Unicode replacement codepoint).
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::path::Path;
+    ///
+    /// use bstr::{B, BString};
+    ///
+    /// let path = Path::new("foo");
+    /// let bs = BString::from_path_lossy(path);
+    /// assert_eq!(bs, B("foo"));
+    /// ```
+    pub fn from_path_lossy<'a>(path: &'a Path) -> Cow<'a, BStr> {
+        BString::from_os_str_lossy(path.as_os_str())
+    }
+
     /// Appends the given byte to the end of this byte string.
     ///
     /// # Examples
@@ -500,6 +623,25 @@ impl BString {
         }
     }
 
+    /// Lossily converts a `BString` into a `String`. If this byte string
+    /// contains invalid UTF-8, then the invalid bytes are replaced with the
+    /// Unicode replacement codepoint.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let bytes = BString::from_slice(b"foo\xFFbar");
+    /// let string = bytes.into_string_lossy();
+    /// assert_eq!(string, "foo\u{FFFD}bar");
+    /// ```
+    pub fn into_string_lossy(self) -> String {
+        self.to_string()
+    }
+
     /// Unsafely convert this byte string into a `String`, without checking for
     /// valid UTF-8.
     ///
@@ -528,6 +670,125 @@ impl BString {
     /// ```
     pub unsafe fn into_string_unchecked(self) -> String {
         String::from_utf8_unchecked(self.into_vec())
+    }
+
+    /// Converts this byte string into an OS string, in place.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns the original byte string if it is not valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use std::ffi::OsStr;
+    ///
+    /// use bstr::BString;
+    ///
+    /// let bs = BString::from("foo");
+    /// let os_str = bs.into_os_string().expect("should be valid UTF-8");
+    /// assert_eq!(os_str, OsStr::new("foo"));
+    /// ```
+    pub fn into_os_string(self) -> Result<OsString, BString> {
+        self.into_os_string_imp()
+    }
+
+    #[cfg(unix)]
+    fn into_os_string_imp(self) -> Result<OsString, BString> {
+        use std::os::unix::ffi::OsStringExt;
+
+        Ok(OsString::from_vec(self.into_vec()))
+    }
+
+    #[cfg(not(unix))]
+    fn into_os_string_imp(self) -> Result<OsString, BString> {
+        match self.into_string() {
+            Ok(s) => Ok(OsString::from(s)),
+            Err(err) => Err(err.into_bstring()),
+        }
+    }
+
+    /// Lossily converts this byte string into an OS string, in place.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this will perform a UTF-8 check and lossily convert this byte string
+    /// into valid UTF-8 using the Unicode replacement codepoint.
+    ///
+    /// Note that this can prevent the correct roundtripping of file paths on
+    /// non-Unix systems such as Windows, where file paths are an arbitrary
+    /// sequence of 16-bit integers.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let bs = BString::from_slice(b"foo\xFFbar");
+    /// let os_str = bs.into_os_string_lossy();
+    /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
+    /// ```
+    pub fn into_os_string_lossy(self) -> OsString {
+        self.into_os_string_lossy_imp()
+    }
+
+    #[cfg(unix)]
+    fn into_os_string_lossy_imp(self) -> OsString {
+        use std::os::unix::ffi::OsStringExt;
+
+        OsString::from_vec(self.into_vec())
+    }
+
+    #[cfg(not(unix))]
+    fn into_os_string_lossy_imp(self) -> OsString {
+        OsString::from(self.into_string_lossy())
+    }
+
+    /// Converts this byte string into an owned file path, in place.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this returns the original byte string if it is not valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let bs = BString::from("foo");
+    /// let path = bs.into_path_buf().expect("should be valid UTF-8");
+    /// assert_eq!(path.as_os_str(), "foo");
+    /// ```
+    pub fn into_path_buf(self) -> Result<PathBuf, BString> {
+        self.into_os_string().map(PathBuf::from)
+    }
+
+    /// Lossily converts this byte string into an owned file path, in place.
+    ///
+    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
+    /// this will perform a UTF-8 check and lossily convert this byte string
+    /// into valid UTF-8 using the Unicode replacement codepoint.
+    ///
+    /// Note that this can prevent the correct roundtripping of file paths on
+    /// non-Unix systems such as Windows, where file paths are an arbitrary
+    /// sequence of 16-bit integers.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let bs = BString::from_slice(b"foo\xFFbar");
+    /// let path = bs.into_path_buf_lossy();
+    /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
+    /// ```
+    pub fn into_path_buf_lossy(self) -> PathBuf {
+        PathBuf::from(self.into_os_string_lossy())
     }
 
     /// Converts this `BString` into a `Box<BStr>`.
