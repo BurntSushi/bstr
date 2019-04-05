@@ -2,7 +2,8 @@ bstr
 ====
 This crate provides a `BString` and `BStr` types that are conventionally UTF-8
 for Rust. They differ from the standard library's `String` and `str` types in
-that they are not required to be valid UTF-8.
+that they are not required to be valid UTF-8, but may be fully or partially
+valid UTF-8.
 
 [![Linux build status](https://api.travis-ci.org/BurntSushi/bstr.svg)](https://travis-ci.org/BurntSushi/bstr)
 [![Windows build status](https://ci.appveyor.com/api/projects/status/github/BurntSushi/bstr?svg=true)](https://ci.appveyor.com/project/BurntSushi/bstr)
