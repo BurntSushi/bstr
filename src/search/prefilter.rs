@@ -29,15 +29,15 @@ pub struct PrefilterState {
 impl PrefilterState {
     /// The minimum number of skip attempts to try before considering whether
     /// a prefilter is effective or not.
-    const MIN_SKIPS: usize = 10;
+    const MIN_SKIPS: usize = 50;
 
-    /// The minimum amount of bytes that skipping must average, expressed as
-    /// a factor of the multiple of the length of a possible match.
+    /// The minimum amount of bytes that skipping must average.
     ///
-    /// That is, after MIN_SKIPS have occurred, if the average number of bytes
-    /// skipped ever falls below MIN_AVG_FACTOR, then this searcher is rendered
-    /// inert.
-    const MIN_AVG_FACTOR: usize = 4;
+    /// This value was chosen based on varying it and checking the bstr/find/
+    /// microbenchmarks. In particular, this can impact the
+    /// pathological/repeated-{huge,small} benchmarks quite a bit if it's
+    /// set too low.
+    const MIN_SKIP_BYTES: usize = 8;
 
     /// Create a fresh prefilter state.
     pub fn new(max_match_len: usize) -> PrefilterState {
@@ -70,9 +70,7 @@ impl PrefilterState {
         if self.skips < PrefilterState::MIN_SKIPS {
             return true;
         }
-
-        let min_avg = PrefilterState::MIN_AVG_FACTOR * self.max_match_len;
-        if self.skipped >= min_avg * self.skips {
+        if self.skipped >= PrefilterState::MIN_SKIP_BYTES * self.skips {
             return true;
         }
 
