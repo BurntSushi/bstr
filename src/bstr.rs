@@ -75,6 +75,7 @@ use utf8::{self, Chars, CharIndices, Utf8Error};
 /// Notice that this also lets you mix and match both string literals and byte
 /// string literals. This can be quite convenient!
 #[allow(non_snake_case)]
+#[inline]
 pub fn B<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a BStr {
     BStr::new(bytes.as_ref())
 }
@@ -165,6 +166,7 @@ impl BStr {
     /// assert_eq!("abc", BStr::new("abc"));
     /// assert_eq!("abc", BStr::new(b"abc"));
     /// ```
+    #[inline]
     pub fn new<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &BStr {
         BStr::from_bytes(bytes.as_ref())
     }
@@ -183,6 +185,7 @@ impl BStr {
     /// assert_eq!("abc", BStr::new("abc"));
     /// assert_eq!("abc", BStr::new(b"abc"));
     /// ```
+    #[inline]
     pub fn new_mut<B: ?Sized + AsMut<[u8]>>(bytes: &mut B) -> &mut BStr {
         BStr::from_bytes_mut(bytes.as_mut())
     }
@@ -200,6 +203,7 @@ impl BStr {
     /// let bs = BStr::from_bytes(bytes);
     /// assert_eq!("a", bs);
     /// ```
+    #[inline]
     pub fn from_bytes(slice: &[u8]) -> &BStr {
         unsafe { mem::transmute(slice) }
     }
@@ -220,6 +224,7 @@ impl BStr {
     /// }
     /// assert_eq!(b"b", bytes);
     /// ```
+    #[inline]
     pub fn from_bytes_mut(slice: &mut [u8]) -> &mut BStr {
         unsafe { mem::transmute(slice) }
     }
@@ -342,6 +347,7 @@ impl BStr {
     /// assert_eq!(bs, "foo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn from_os_str(os_str: &OsStr) -> Option<&BStr> {
         BStr::from_os_str_imp(os_str)
     }
@@ -381,6 +387,7 @@ impl BStr {
     /// assert_eq!(bs, "foo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn from_path(path: &Path) -> Option<&BStr> {
         BStr::from_os_str(path.as_os_str())
     }
@@ -398,6 +405,7 @@ impl BStr {
     /// assert_eq!(3, BStr::new("abc").len());
     /// assert_eq!(8, BStr::new("☃βツ").len());
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.bytes.len()
     }
@@ -414,6 +422,7 @@ impl BStr {
     /// assert!(BStr::new("").is_empty());
     /// assert!(!BStr::new("abc").is_empty());
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.bytes.is_empty()
     }
@@ -431,6 +440,7 @@ impl BStr {
     ///
     /// assert_eq!(&[104, 101, 108, 108, 111], s.as_bytes());
     /// ```
+    #[inline]
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
@@ -449,6 +459,7 @@ impl BStr {
     ///
     /// assert_eq!(&[104, 97, 108, 108, 111], s.as_bytes());
     /// ```
+    #[inline]
     pub fn as_bytes_mut(&mut self) -> &mut [u8] {
         &mut self.bytes
     }
@@ -468,6 +479,7 @@ impl BStr {
     /// assert_eq!("abcd", owned);
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_bstring(&self) -> BString {
         BString::from_vec(self.as_bytes().to_vec())
     }
@@ -499,6 +511,7 @@ impl BStr {
     /// assert_eq!(8, err.valid_up_to());
     /// # Ok(()) }; example().unwrap()
     /// ```
+    #[inline]
     pub fn to_str(&self) -> Result<&str, Utf8Error> {
         utf8::validate(self.as_bytes()).map(|_| {
             // SAFETY: This is safe because of the guarantees provided by
@@ -598,6 +611,7 @@ impl BStr {
     /// assert_eq!("a\u{FFFD}\u{FFFD}\u{FFFD}b", bs.to_str_lossy());
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_str_lossy(&self) -> Cow<str> {
         match utf8::validate(self.as_bytes()) {
             Ok(()) => {
@@ -654,6 +668,7 @@ impl BStr {
     /// assert_eq!("☃βツ\u{FFFD}", dest);
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_str_lossy_into(&self, dest: &mut String) {
         dest.reserve(self.len());
         let mut bytes = self.as_bytes();
@@ -701,6 +716,7 @@ impl BStr {
     /// assert_eq!(os_str, "foo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_os_str(&self) -> Result<&OsStr, Utf8Error> {
         self.to_os_str_imp()
     }
@@ -741,6 +757,7 @@ impl BStr {
     /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_os_str_lossy(&self) -> Cow<OsStr> {
         self.to_os_str_lossy_imp()
     }
@@ -785,6 +802,7 @@ impl BStr {
     /// assert_eq!(path.as_os_str(), "foo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_path(&self) -> Result<&Path, Utf8Error> {
         self.to_os_str().map(Path::new)
     }
@@ -811,6 +829,7 @@ impl BStr {
     /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_path_lossy(&self) -> Cow<Path> {
         use std::path::PathBuf;
 
@@ -838,6 +857,7 @@ impl BStr {
     /// assert_eq!("", B("foo").repeat(0));
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn repeat(&self, n: usize) -> BString {
         iter::repeat(self).take(n).collect()
     }
@@ -855,6 +875,7 @@ impl BStr {
     /// assert!(B("foo bar").contains("bar"));
     /// assert!(!B("foo").contains("foobar"));
     /// ```
+    #[inline]
     pub fn contains<B: AsRef<[u8]>>(&self, needle: B) -> bool {
         self.find(needle).is_some()
     }
@@ -872,6 +893,7 @@ impl BStr {
     /// assert!(!B("foo bar").starts_with("bar"));
     /// assert!(!B("foo").starts_with("foobar"));
     /// ```
+    #[inline]
     pub fn starts_with<B: AsRef<[u8]>>(&self, prefix: B) -> bool {
         let prefix = prefix.as_ref();
         self.get(..prefix.len()).map_or(false, |x| x == prefix)
@@ -890,6 +912,7 @@ impl BStr {
     /// assert!(!B("foo bar").ends_with("foo"));
     /// assert!(!B("bar").ends_with("foobar"));
     /// ```
+    #[inline]
     pub fn ends_with<B: AsRef<[u8]>>(&self, suffix: B) -> bool {
         let suffix = suffix.as_ref();
         self.len()
@@ -928,6 +951,7 @@ impl BStr {
     /// assert_eq!(Some(4), s.find("bar"));
     /// assert_eq!(None, s.find("quux"));
     /// ```
+    #[inline]
     pub fn find<B: AsRef<[u8]>>(&self, needle: B) -> Option<usize> {
         Finder::new(needle.as_ref()).find(self)
     }
@@ -965,6 +989,7 @@ impl BStr {
     /// assert_eq!(Some(8), s.rfind("ba"));
     /// assert_eq!(None, s.rfind("quux"));
     /// ```
+    #[inline]
     pub fn rfind<B: AsRef<[u8]>>(&self, needle: B) -> Option<usize> {
         FinderReverse::new(needle.as_ref()).rfind(self)
     }
@@ -1006,6 +1031,7 @@ impl BStr {
     /// let matches: Vec<usize> = B("").find_iter("").collect();
     /// assert_eq!(matches, vec![0]);
     /// ```
+    #[inline]
     pub fn find_iter<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         needle: &'a B,
@@ -1050,6 +1076,7 @@ impl BStr {
     /// let matches: Vec<usize> = B("").rfind_iter("").collect();
     /// assert_eq!(matches, vec![0]);
     /// ```
+    #[inline]
     pub fn rfind_iter<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         needle: &'a B,
@@ -1070,6 +1097,7 @@ impl BStr {
     /// assert_eq!(Some(10), B("foo bar baz").find_byte(b'z'));
     /// assert_eq!(None, B("foo bar baz").find_byte(b'y'));
     /// ```
+    #[inline]
     pub fn find_byte(&self, byte: u8) -> Option<usize> {
         memchr(byte, self.as_bytes())
     }
@@ -1087,6 +1115,7 @@ impl BStr {
     /// assert_eq!(Some(10), B("foo bar baz").rfind_byte(b'z'));
     /// assert_eq!(None, B("foo bar baz").rfind_byte(b'y'));
     /// ```
+    #[inline]
     pub fn rfind_byte(&self, byte: u8) -> Option<usize> {
         memrchr(byte, self.as_bytes())
     }
@@ -1110,6 +1139,7 @@ impl BStr {
     /// assert_eq!(Some(4), B("αβγγδ").find_char('γ'));
     /// assert_eq!(None, B("foo bar baz").find_char('y'));
     /// ```
+    #[inline]
     pub fn find_char(&self, ch: char) -> Option<usize> {
         self.find(ch.encode_utf8(&mut [0; 4]))
     }
@@ -1133,6 +1163,7 @@ impl BStr {
     /// assert_eq!(Some(6), B("αβγγδ").rfind_char('γ'));
     /// assert_eq!(None, B("foo bar baz").rfind_char('y'));
     /// ```
+    #[inline]
     pub fn rfind_char(&self, ch: char) -> Option<usize> {
         self.rfind(ch.encode_utf8(&mut [0; 4]))
     }
@@ -1159,6 +1190,7 @@ impl BStr {
     ///
     /// assert_eq!(0, B("  \n\t\u{2003}\n  \t").fields().count());
     /// ```
+    #[inline]
     pub fn fields(&self) -> Fields {
         Fields::new(self)
     }
@@ -1188,6 +1220,7 @@ impl BStr {
     ///
     /// assert_eq!(0, B("1911354563").fields_with(|c| c.is_numeric()).count());
     /// ```
+    #[inline]
     pub fn fields_with<F: FnMut(char) -> bool>(&self, f: F) -> FieldsWith<F> {
         FieldsWith::new(self, f)
     }
@@ -1271,6 +1304,7 @@ impl BStr {
     ///
     /// It does *not* give you `["a", "b", "c"]`. For that behavior, use
     /// [`fields`](#method.fields) instead.
+    #[inline]
     pub fn split<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         splitter: &'a B,
@@ -1356,6 +1390,7 @@ impl BStr {
     /// ```
     ///
     /// It does *not* give you `["a", "b", "c"]`.
+    #[inline]
     pub fn rsplit<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         splitter: &'a B,
@@ -1396,6 +1431,7 @@ impl BStr {
     /// let x: Vec<_> = B("abcXdef").splitn(0, "X").collect();
     /// assert!(x.is_empty());
     /// ```
+    #[inline]
     pub fn splitn<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         limit: usize,
@@ -1438,6 +1474,7 @@ impl BStr {
     /// let x: Vec<_> = B("abcXdef").rsplitn(0, "X").collect();
     /// assert!(x.is_empty());
     /// ```
+    #[inline]
     pub fn rsplitn<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         limit: usize,
@@ -1481,6 +1518,7 @@ impl BStr {
     /// assert_eq!(s, "ZfZoZoZ");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn replace<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
         needle: N,
@@ -1526,6 +1564,7 @@ impl BStr {
     /// assert_eq!(s, "ZfZoo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn replacen<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
         needle: N,
@@ -1583,6 +1622,7 @@ impl BStr {
     /// assert_eq!(dest, "ZfZoZoZ");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn replace_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
         needle: N,
@@ -1646,6 +1686,7 @@ impl BStr {
     /// assert_eq!(dest, "ZfZoo");
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn replacen_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
         needle: N,
@@ -1677,6 +1718,7 @@ impl BStr {
     /// let bytes: Vec<u8> = bs.bytes().collect();
     /// assert_eq!(bytes, bs);
     /// ```
+    #[inline]
     pub fn bytes(&self) -> Bytes {
         Bytes { it: self.as_bytes().iter() }
     }
@@ -1706,6 +1748,7 @@ impl BStr {
     /// let chars: Vec<char> = bs.chars().rev().collect();
     /// assert_eq!(vec!['a', '\u{FFFD}', '𝞃', '\u{FFFD}', '☃'], chars);
     /// ```
+    #[inline]
     pub fn chars(&self) -> Chars {
         Chars::new(self)
     }
@@ -1760,6 +1803,7 @@ impl BStr {
     ///     (0, 3, '☃'),
     /// ]);
     /// ```
+    #[inline]
     pub fn char_indices(&self) -> CharIndices {
         CharIndices::new(self)
     }
@@ -1791,6 +1835,7 @@ impl BStr {
     /// assert_eq!(vec!["🇺🇸", "à̖"], graphemes);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn graphemes(&self) -> Graphemes {
         Graphemes::new(self)
     }
@@ -1834,6 +1879,7 @@ impl BStr {
     /// );
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn grapheme_indices(&self) -> GraphemeIndices {
         GraphemeIndices::new(self)
     }
@@ -1869,6 +1915,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn words(&self) -> Words {
         Words::new(self)
     }
@@ -1906,6 +1953,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn word_indices(&self) -> WordIndices {
         WordIndices::new(self)
     }
@@ -1935,6 +1983,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn words_with_breaks(&self) -> WordsWithBreaks {
         WordsWithBreaks::new(self)
     }
@@ -1971,6 +2020,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn words_with_break_indices(&self) -> WordsWithBreakIndices {
         WordsWithBreakIndices::new(self)
     }
@@ -2002,6 +2052,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn sentences(&self) -> Sentences {
         Sentences::new(self)
     }
@@ -2035,6 +2086,7 @@ impl BStr {
     /// ]);
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn sentence_indices(&self) -> SentenceIndices {
         SentenceIndices::new(self)
     }
@@ -2065,6 +2117,7 @@ impl BStr {
     ///     "foo", "", "bar", "baz", "", "", "quux",
     /// ]);
     /// ```
+    #[inline]
     pub fn lines(&self) -> Lines {
         Lines::new(self)
     }
@@ -2102,6 +2155,7 @@ impl BStr {
     ///     "foo\n", "\n", "bar\r\n", "baz\n", "\n", "\n", "quux",
     /// ]);
     /// ```
+    #[inline]
     pub fn lines_with_terminator(&self) -> LinesWithTerminator {
         LinesWithTerminator::new(self)
     }
@@ -2123,6 +2177,7 @@ impl BStr {
     /// assert_eq!(s.trim(), "foo\tbar");
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn trim(&self) -> &BStr {
         self.trim_start().trim_end()
     }
@@ -2142,6 +2197,7 @@ impl BStr {
     /// let s = B(" foo\tbar\t\u{2003}\n");
     /// assert_eq!(s.trim_start(), "foo\tbar\t\u{2003}\n");
     /// ```
+    #[inline]
     pub fn trim_start(&self) -> &BStr {
         self.trim_start_imp()
     }
@@ -2172,6 +2228,7 @@ impl BStr {
     /// let s = B(" foo\tbar\t\u{2003}\n");
     /// assert_eq!(s.trim_end(), " foo\tbar");
     /// ```
+    #[inline]
     pub fn trim_end(&self) -> &BStr {
         self.trim_end_imp()
     }
@@ -2200,6 +2257,7 @@ impl BStr {
     /// let s = B("123foo5bar789");
     /// assert_eq!(s.trim_with(|c| c.is_numeric()), "foo5bar");
     /// ```
+    #[inline]
     pub fn trim_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &BStr {
         self.trim_start_with(&mut trim).trim_end_with(&mut trim)
     }
@@ -2217,6 +2275,7 @@ impl BStr {
     /// let s = B("123foo5bar789");
     /// assert_eq!(s.trim_start_with(|c| c.is_numeric()), "foo5bar789");
     /// ```
+    #[inline]
     pub fn trim_start_with<F: FnMut(char) -> bool>(
         &self,
         mut trim: F,
@@ -2242,6 +2301,7 @@ impl BStr {
     /// let s = B("123foo5bar");
     /// assert_eq!(s.trim_end_with(|c| c.is_numeric()), "123foo5bar");
     /// ```
+    #[inline]
     pub fn trim_end_with<F: FnMut(char) -> bool>(
         &self,
         mut trim: F,
@@ -2300,6 +2360,7 @@ impl BStr {
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), s.to_lowercase());
     /// ```
     #[cfg(all(feature = "std", feature = "unicode"))]
+    #[inline]
     pub fn to_lowercase(&self) -> BString {
         let mut buf = BString::new();
         self.to_lowercase_into(&mut buf);
@@ -2361,6 +2422,7 @@ impl BStr {
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), buf);
     /// ```
     #[cfg(all(feature = "std", feature = "unicode"))]
+    #[inline]
     pub fn to_lowercase_into(&self, buf: &mut BString) {
         // TODO: This is the best we can do given what std exposes I think.
         // If we roll our own case handling, then we might be able to do this
@@ -2413,6 +2475,7 @@ impl BStr {
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), s.to_ascii_lowercase());
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_ascii_lowercase(&self) -> BString {
         BString::from(self.as_bytes().to_ascii_lowercase())
     }
@@ -2447,6 +2510,7 @@ impl BStr {
     /// s.make_ascii_lowercase();
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), s);
     /// ```
+    #[inline]
     pub fn make_ascii_lowercase(&mut self) {
         self.as_bytes_mut().make_ascii_lowercase();
     }
@@ -2497,6 +2561,7 @@ impl BStr {
     /// assert_eq!(B(b"FOO\xFFBAR\xE2\x98BAZ"), s.to_uppercase());
     /// ```
     #[cfg(all(feature = "std", feature = "unicode"))]
+    #[inline]
     pub fn to_uppercase(&self) -> BString {
         let mut buf = BString::new();
         self.to_uppercase_into(&mut buf);
@@ -2558,6 +2623,7 @@ impl BStr {
     /// assert_eq!(B(b"FOO\xFFBAR\xE2\x98BAZ"), buf);
     /// ```
     #[cfg(all(feature = "std", feature = "unicode"))]
+    #[inline]
     pub fn to_uppercase_into(&self, buf: &mut BString) {
         // TODO: This is the best we can do given what std exposes I think.
         // If we roll our own case handling, then we might be able to do this
@@ -2609,6 +2675,7 @@ impl BStr {
     /// assert_eq!(B(b"FOO\xFFBAR\xE2\x98BAZ"), s.to_ascii_uppercase());
     /// ```
     #[cfg(feature = "std")]
+    #[inline]
     pub fn to_ascii_uppercase(&self) -> BString {
         BString::from(self.as_bytes().to_ascii_uppercase())
     }
@@ -2643,6 +2710,7 @@ impl BStr {
     /// s.make_ascii_uppercase();
     /// assert_eq!(B(b"FOO\xFFBAR\xE2\x98BAZ"), s);
     /// ```
+    #[inline]
     pub fn make_ascii_uppercase(&mut self) {
         self.as_bytes_mut().make_ascii_uppercase();
     }
@@ -2665,6 +2733,7 @@ impl BStr {
     /// s.reverse_bytes();
     /// assert_eq!(s, "olleh");
     /// ```
+    #[inline]
     pub fn reverse_bytes(&mut self) {
         self.as_bytes_mut().reverse();
     }
@@ -2735,6 +2804,7 @@ impl BStr {
     /// The point here is to be cautious and not assume that just because
     /// `reverse_chars` works in one case, that it therefore works in all
     /// cases.
+    #[inline]
     pub fn reverse_chars(&mut self) {
         let mut i = 0;
         loop {
@@ -2792,6 +2862,7 @@ impl BStr {
     /// assert_eq!(s, "émusér");
     /// ```
     #[cfg(feature = "unicode")]
+    #[inline]
     pub fn reverse_graphemes(&mut self) {
         use unicode::decode_grapheme;
 
@@ -2826,6 +2897,7 @@ impl BStr {
     /// assert!(!B("☃βツ").is_ascii());
     /// assert!(!B(b"\xFF").is_ascii());
     /// ```
+    #[inline]
     pub fn is_ascii(&self) -> bool {
         ascii::first_non_ascii_byte(&self.bytes) == self.len()
     }
@@ -2853,6 +2925,7 @@ impl BStr {
     /// // overlong sequence
     /// assert!(!B(b"\xF0\x82\x82\xAC").is_utf8());
     /// ```
+    #[inline]
     pub fn is_utf8(&self) -> bool {
         utf8::validate(self.as_bytes()).is_ok()
     }
@@ -2877,6 +2950,7 @@ impl BStr {
     /// assert_eq!(B("foobar").split_at(0), (B(""), B("foobar")));
     /// assert_eq!(B("foobar").split_at(6), (B("foobar"), B("")));
     /// ```
+    #[inline]
     pub fn split_at(&self, at: usize) -> (&BStr, &BStr) {
         let (left, right) = self.as_bytes().split_at(at);
         (BStr::new(left), BStr::new(right))
@@ -2906,6 +2980,7 @@ impl BStr {
     /// }
     /// assert_eq!(b, B("fozbaz"));
     /// ```
+    #[inline]
     pub fn split_at_mut(&mut self, at: usize) -> (&mut BStr, &mut BStr) {
         let (left, right) = self.as_bytes_mut().split_at_mut(at);
         (BStr::new_mut(left), BStr::new_mut(right))
@@ -2935,6 +3010,7 @@ impl BStr {
     /// assert_eq!(s.get(2..), Some(B("z")));
     /// assert_eq!(s.get(1..=2), Some(B("az")));
     /// ```
+    #[inline]
     pub fn get<I: SliceIndex>(&self, at: I) -> Option<&I::Output> {
         at.get(self)
     }
@@ -2964,6 +3040,7 @@ impl BStr {
     /// }
     /// assert_eq!(s, "bop");
     /// ```
+    #[inline]
     pub fn get_mut<I: SliceIndex>(&mut self, at: I) -> Option<&mut I::Output> {
         at.get_mut(self)
     }
@@ -3056,6 +3133,7 @@ impl BStr {
     /// assert_eq!(Some(b'z'), B("baz").last());
     /// assert_eq!(None, B("").last());
     /// ```
+    #[inline]
     pub fn last(&self) -> Option<u8> {
         self.get(self.len().saturating_sub(1)).map(|&b| b)
     }
@@ -3085,6 +3163,7 @@ impl BStr {
     /// s.copy_within(1..5, 8);
     /// assert_eq!(s, "Hello, Wello!");
     /// ```
+    #[inline]
     pub fn copy_within<R>(
         &mut self,
         src: R,
@@ -3148,6 +3227,7 @@ impl BStr {
     ///     assert_eq!(*p.add(2), b'l');
     /// }
     /// ```
+    #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         self.as_bytes().as_ptr()
     }
@@ -3179,6 +3259,7 @@ impl BStr {
     /// }
     /// assert_eq!("heZlo", s);
     /// ```
+    #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         self.as_bytes_mut().as_mut_ptr()
     }
@@ -3207,6 +3288,7 @@ pub struct Finder<'a> {
 
 impl<'a> Finder<'a> {
     /// Create a new finder for the given needle.
+    #[inline]
     pub fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> Finder<'a> {
         Finder { searcher: TwoWay::forward(BStr::new(needle)) }
     }
@@ -3219,6 +3301,7 @@ impl<'a> Finder<'a> {
     ///
     /// This is only available when the `std` feature is enabled.
     #[cfg(feature = "std")]
+    #[inline]
     pub fn into_owned(self) -> Finder<'static> {
         Finder { searcher: self.searcher.into_owned() }
     }
@@ -3229,6 +3312,7 @@ impl<'a> Finder<'a> {
     /// of the finder, and may be shorter than the `'a` lifetime. Namely, a
     /// finder's needle can be either borrowed or owned, so the lifetime of the
     /// needle returned must necessarily be the shorter of the two.
+    #[inline]
     pub fn needle(&self) -> &BStr {
         self.searcher.needle()
     }
@@ -3261,6 +3345,7 @@ impl<'a> Finder<'a> {
     /// assert_eq!(Some(4), Finder::new("bar").find(haystack));
     /// assert_eq!(None, Finder::new("quux").find(haystack));
     /// ```
+    #[inline]
     pub fn find<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize> {
         self.searcher.find(BStr::new(haystack.as_ref()))
     }
@@ -3289,6 +3374,7 @@ pub struct FinderReverse<'a> {
 
 impl<'a> FinderReverse<'a> {
     /// Create a new reverse finder for the given needle.
+    #[inline]
     pub fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> FinderReverse<'a> {
         FinderReverse { searcher: TwoWay::reverse(BStr::new(needle)) }
     }
@@ -3301,6 +3387,7 @@ impl<'a> FinderReverse<'a> {
     ///
     /// This is only available when the `std` feature is enabled.
     #[cfg(feature = "std")]
+    #[inline]
     pub fn into_owned(self) -> FinderReverse<'static> {
         FinderReverse { searcher: self.searcher.into_owned() }
     }
@@ -3311,6 +3398,7 @@ impl<'a> FinderReverse<'a> {
     /// of this finder, and may be shorter than the `'a` lifetime. Namely,
     /// a finder's needle can be either borrowed or owned, so the lifetime of
     /// the needle returned must necessarily be the shorter of the two.
+    #[inline]
     pub fn needle(&self) -> &BStr {
         self.searcher.needle()
     }
@@ -3343,6 +3431,7 @@ impl<'a> FinderReverse<'a> {
     /// assert_eq!(Some(4), FinderReverse::new("bar").rfind(haystack));
     /// assert_eq!(None, FinderReverse::new("quux").rfind(haystack));
     /// ```
+    #[inline]
     pub fn rfind<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize> {
         self.searcher.rfind(BStr::new(haystack.as_ref()))
     }
@@ -3373,6 +3462,7 @@ impl<'a> Find<'a> {
 impl<'a> Iterator for Find<'a> {
     type Item = usize;
 
+    #[inline]
     fn next(&mut self) -> Option<usize> {
         if self.pos > self.haystack.len() {
             return None;
@@ -3428,6 +3518,7 @@ impl<'a> FindReverse<'a> {
 impl<'a> Iterator for FindReverse<'a> {
     type Item = usize;
 
+    #[inline]
     fn next(&mut self) -> Option<usize> {
         let pos = match self.pos {
             None => return None,
@@ -3462,18 +3553,21 @@ pub struct Bytes<'a> {
 impl<'a> Iterator for Bytes<'a> {
     type Item = u8;
 
+    #[inline]
     fn next(&mut self) -> Option<u8> {
         self.it.next().map(|&b| b)
     }
 }
 
 impl<'a> DoubleEndedIterator for Bytes<'a> {
+    #[inline]
     fn next_back(&mut self) -> Option<u8> {
         self.it.next_back().map(|&b| b)
     }
 }
 
 impl<'a> ExactSizeIterator for Bytes<'a> {
+    #[inline]
     fn len(&self) -> usize {
         self.it.len()
     }
@@ -3499,6 +3593,7 @@ impl<'a> Fields<'a> {
 impl<'a> Iterator for Fields<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         self.it.next()
     }
@@ -3533,6 +3628,7 @@ impl<'a, F: FnMut(char) -> bool> FieldsWith<'a, F> {
 impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         let (start, mut end);
         loop {
@@ -3584,6 +3680,7 @@ impl<'a> Split<'a> {
 impl<'a> Iterator for Split<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         let haystack = self.finder.haystack;
         match self.finder.next() {
@@ -3639,6 +3736,7 @@ impl<'a> SplitReverse<'a> {
 impl<'a> Iterator for SplitReverse<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         let haystack = self.finder.haystack();
         match self.finder.next() {
@@ -3693,6 +3791,7 @@ impl<'a> SplitN<'a> {
 impl<'a> Iterator for SplitN<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         self.count += 1;
         if self.count > self.limit {
@@ -3732,6 +3831,7 @@ impl<'a> SplitNReverse<'a> {
 impl<'a> Iterator for SplitNReverse<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         self.count += 1;
         if self.count > self.limit {
@@ -3763,6 +3863,7 @@ impl<'a> Lines<'a> {
 impl<'a> Iterator for Lines<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         let mut line = self.it.next()?;
         if line.last() == Some(b'\n') {
@@ -3801,6 +3902,7 @@ impl<'a> LinesWithTerminator<'a> {
 impl<'a> Iterator for LinesWithTerminator<'a> {
     type Item = &'a BStr;
 
+    #[inline]
     fn next(&mut self) -> Option<&'a BStr> {
         match self.bytes.find_byte(b'\n') {
             None if self.bytes.is_empty() => None,

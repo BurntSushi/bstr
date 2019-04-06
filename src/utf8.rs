@@ -101,6 +101,7 @@ impl<'a> Chars<'a> {
     /// chars.next();
     /// assert_eq!("", chars.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }
@@ -181,6 +182,7 @@ impl<'a> CharIndices<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }
@@ -288,6 +290,7 @@ impl Utf8Error {
     /// let string = s[..err.valid_up_to()].to_str().unwrap();
     /// assert_eq!(string, "foobar");
     /// ```
+    #[inline]
     pub fn valid_up_to(&self) -> usize {
         self.valid_up_to
     }
@@ -301,6 +304,7 @@ impl Utf8Error {
     /// codepoint could be completed, then this returns `None`. This is useful
     /// when processing streams, where a `None` value signals that more input
     /// might be needed.
+    #[inline]
     pub fn error_len(&self) -> Option<usize> {
         self.error_len
     }

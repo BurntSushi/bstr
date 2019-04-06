@@ -47,6 +47,7 @@ impl<'a> Sentences<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }
@@ -118,6 +119,7 @@ impl<'a> SentenceIndices<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }

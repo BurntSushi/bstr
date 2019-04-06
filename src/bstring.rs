@@ -28,6 +28,7 @@ use utf8::{self, Utf8Error};
 /// let s = bstr::concat(&["foo", "bar", "baz"]);
 /// assert_eq!(s, "foobarbaz");
 /// ```
+#[inline]
 pub fn concat<T, I>(
     elements: I,
 ) -> BString
@@ -58,6 +59,7 @@ where T: AsRef<[u8]>,
 /// let s = bstr::join(",", &["foo", "bar", "baz"]);
 /// assert_eq!(s, "foo,bar,baz");
 /// ```
+#[inline]
 pub fn join<B, T, I>(
     separator: B,
     elements: I,
@@ -220,6 +222,7 @@ impl BString {
     ///
     /// let s = BString::new();
     /// ```
+    #[inline]
     pub fn new() -> BString {
         BString { bytes: vec![] }
     }
@@ -263,6 +266,7 @@ impl BString {
     /// // ...but this may make the vector reallocate
     /// s.push_char('a');
     /// ```
+    #[inline]
     pub fn with_capacity(capacity: usize) -> BString {
         BString { bytes: Vec::with_capacity(capacity) }
     }
@@ -280,6 +284,7 @@ impl BString {
     /// let s = BString::from_vec(bytes);
     /// assert_eq!("abc", s);
     /// ```
+    #[inline]
     pub fn from_vec(bytes: Vec<u8>) -> BString {
         BString { bytes }
     }
@@ -296,6 +301,7 @@ impl BString {
     /// let s = BString::from_slice(b"abc");
     /// assert_eq!("abc", s);
     /// ```
+    #[inline]
     pub fn from_slice<B: AsRef<[u8]>>(slice: B) -> BString {
         BString::from_vec(slice.as_ref().to_vec())
     }
@@ -318,6 +324,7 @@ impl BString {
     /// let bs = BString::from_os_string(os_str).expect("must be valid UTF-8");
     /// assert_eq!(bs, "foo");
     /// ```
+    #[inline]
     pub fn from_os_string(os_str: OsString) -> Result<BString, OsString> {
         BString::from_os_string_imp(os_str)
     }
@@ -354,6 +361,7 @@ impl BString {
     /// let bs = BString::from_os_str_lossy(os_str);
     /// assert_eq!(bs, B("foo"));
     /// ```
+    #[inline]
     pub fn from_os_str_lossy<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
         BString::from_os_str_lossy_imp(os_str)
     }
@@ -391,6 +399,7 @@ impl BString {
     /// let bs = BString::from_path_buf(path).expect("must be valid UTF-8");
     /// assert_eq!(bs, "foo");
     /// ```
+    #[inline]
     pub fn from_path_buf(path: PathBuf) -> Result<BString, PathBuf> {
         BString::from_os_string(path.into_os_string())
             .map_err(PathBuf::from)
@@ -416,6 +425,7 @@ impl BString {
     /// let bs = BString::from_path_lossy(path);
     /// assert_eq!(bs, B("foo"));
     /// ```
+    #[inline]
     pub fn from_path_lossy<'a>(path: &'a Path) -> Cow<'a, BStr> {
         BString::from_os_str_lossy(path.as_os_str())
     }
@@ -435,6 +445,7 @@ impl BString {
     /// s.push_byte(b'\x83');
     /// assert_eq!("abc☃", s);
     /// ```
+    #[inline]
     pub fn push_byte(&mut self, byte: u8) {
         self.bytes.push(byte);
     }
@@ -454,6 +465,7 @@ impl BString {
     /// s.push_char('3');
     /// assert_eq!("abc123", s);
     /// ```
+    #[inline]
     pub fn push_char(&mut self, ch: char) {
         if ch.len_utf8() == 1 {
             self.bytes.push(ch as u8);
@@ -477,6 +489,7 @@ impl BString {
     /// s.push(b"123");
     /// assert_eq!("abc123", s);
     /// ```
+    #[inline]
     pub fn push<B: AsRef<[u8]>>(&mut self, bytes: B) {
         self.bytes.extend_from_slice(bytes.as_ref());
     }
@@ -494,6 +507,7 @@ impl BString {
     ///
     /// assert_eq!(BStr::new("foo"), s.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &BStr {
         BStr::from_bytes(&self.bytes)
     }
@@ -510,6 +524,7 @@ impl BString {
     /// let bs = BString::from("ab");
     /// assert!(bs.as_vec().capacity() >= 2);
     /// ```
+    #[inline]
     pub fn as_vec(&self) -> &Vec<u8> {
         &self.bytes
     }
@@ -530,6 +545,7 @@ impl BString {
     ///
     /// assert_eq!("Foobar", s_mut_str);
     /// ```
+    #[inline]
     pub fn as_mut_bstr(&mut self) -> &mut BStr {
         BStr::from_bytes_mut(&mut self.bytes)
     }
@@ -547,6 +563,7 @@ impl BString {
     /// bs.as_mut_vec().push(b'c');
     /// assert_eq!("abc", bs);
     /// ```
+    #[inline]
     pub fn as_mut_vec(&mut self) -> &mut Vec<u8> {
         &mut self.bytes
     }
@@ -567,6 +584,7 @@ impl BString {
     ///
     /// assert_eq!(vec![104, 101, 108, 108, 111], &bytes[..]);
     /// ```
+    #[inline]
     pub fn into_vec(self) -> Vec<u8> {
         self.bytes
     }
@@ -610,6 +628,7 @@ impl BString {
     /// let bytes = BString::from(err.into_bstring());
     /// assert_eq!(bytes, B(b"foo\xFFbar"));
     /// ```
+    #[inline]
     pub fn into_string(self) -> Result<String, FromUtf8Error> {
         match utf8::validate(self.as_bytes()) {
             Err(err) => {
@@ -638,6 +657,7 @@ impl BString {
     /// let string = bytes.into_string_lossy();
     /// assert_eq!(string, "foo\u{FFFD}bar");
     /// ```
+    #[inline]
     pub fn into_string_lossy(self) -> String {
         self.to_string()
     }
@@ -690,6 +710,7 @@ impl BString {
     /// let os_str = bs.into_os_string().expect("should be valid UTF-8");
     /// assert_eq!(os_str, OsStr::new("foo"));
     /// ```
+    #[inline]
     pub fn into_os_string(self) -> Result<OsString, BString> {
         self.into_os_string_imp()
     }
@@ -730,6 +751,7 @@ impl BString {
     /// let os_str = bs.into_os_string_lossy();
     /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
+    #[inline]
     pub fn into_os_string_lossy(self) -> OsString {
         self.into_os_string_lossy_imp()
     }
@@ -762,6 +784,7 @@ impl BString {
     /// let path = bs.into_path_buf().expect("should be valid UTF-8");
     /// assert_eq!(path.as_os_str(), "foo");
     /// ```
+    #[inline]
     pub fn into_path_buf(self) -> Result<PathBuf, BString> {
         self.into_os_string().map(PathBuf::from)
     }
@@ -787,6 +810,7 @@ impl BString {
     /// let path = bs.into_path_buf_lossy();
     /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
+    #[inline]
     pub fn into_path_buf_lossy(self) -> PathBuf {
         PathBuf::from(self.into_os_string_lossy())
     }
@@ -806,6 +830,7 @@ impl BString {
     /// let b = s.into_boxed_bstr();
     /// assert_eq!(6, b.len());
     /// ```
+    #[inline]
     pub fn into_boxed_bstr(self) -> Box<BStr> {
         unsafe {
             let slice = self.bytes.into_boxed_slice();
@@ -825,6 +850,7 @@ impl BString {
     /// let s = BString::with_capacity(10);
     /// assert_eq!(10, s.capacity());
     /// ```
+    #[inline]
     pub fn capacity(&self) -> usize {
         self.bytes.capacity()
     }
@@ -833,6 +859,7 @@ impl BString {
     ///
     /// The resulting byte string will always have length `0`, but its capacity
     /// remains unchanged.
+    #[inline]
     pub fn clear(&mut self) {
         self.bytes.clear();
     }
@@ -861,6 +888,7 @@ impl BString {
     /// s.reserve(10);
     /// assert!(s.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.bytes.reserve(additional);
     }
@@ -886,6 +914,7 @@ impl BString {
     /// s.reserve_exact(10);
     /// assert!(s.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.bytes.reserve_exact(additional);
     }
@@ -905,6 +934,7 @@ impl BString {
     /// s.shrink_to_fit();
     /// assert_eq!(3, s.capacity());
     /// ```
+    #[inline]
     pub fn shrink_to_fit(&mut self) {
         self.bytes.shrink_to_fit();
     }
@@ -928,6 +958,7 @@ impl BString {
     /// s.truncate(3);
     /// assert_eq!("foo", s);
     /// ```
+    #[inline]
     pub fn truncate(&mut self, new_len: usize) {
         if new_len < self.len() {
             self.bytes.truncate(new_len);
@@ -955,6 +986,7 @@ impl BString {
     /// s.resize(1, b'o');
     /// assert_eq!(s, "f");
     /// ```
+    #[inline]
     pub fn resize(&mut self, new_len: usize, value: u8) {
         self.bytes.resize(new_len, value);
     }
@@ -1000,6 +1032,7 @@ impl BString {
     /// assert_eq!(s.pop_char(), Some('f'));
     /// assert_eq!(s.pop_char(), None);
     /// ```
+    #[inline]
     pub fn pop_char(&mut self) -> Option<char> {
         let (ch, size) = utf8::decode_last_lossy(self.as_bytes());
         if size == 0 {
@@ -1031,6 +1064,7 @@ impl BString {
     /// assert_eq!(s.pop_byte(), Some(b'f'));
     /// assert_eq!(s.pop_byte(), None);
     /// ```
+    #[inline]
     pub fn pop_byte(&mut self) -> Option<u8> {
         self.bytes.pop()
     }
@@ -1083,6 +1117,7 @@ impl BString {
     /// assert_eq!(s.pop(), None);
     /// ```
     #[deprecated(since = "0.1.1", note = "use pop_char or pop_byte instead")]
+    #[inline]
     pub fn pop(&mut self) -> Option<char> {
         self.pop_char()
     }
@@ -1120,6 +1155,7 @@ impl BString {
     /// assert_eq!('\u{FFFD}', s.remove(3));
     /// assert_eq!("foobar", s);
     /// ```
+    #[inline]
     pub fn remove(&mut self, at: usize) -> char {
         let (ch, size) = utf8::decode_lossy(self[at..].as_bytes());
         assert!(size > 0, "expected {} to be less than {}", at, self.len());
@@ -1148,6 +1184,7 @@ impl BString {
     /// s.insert_char(3, '☃');
     /// assert_eq!("foo☃bar", s);
     /// ```
+    #[inline]
     pub fn insert_char(&mut self, at: usize, ch: char) {
         self.insert(at, ch.encode_utf8(&mut [0; 4]).as_bytes());
     }
@@ -1177,6 +1214,7 @@ impl BString {
     /// s.insert(3, "☃☃☃");
     /// assert_eq!("foo☃☃☃bar", s);
     /// ```
+    #[inline]
     pub fn insert<B: AsRef<[u8]>>(&mut self, at: usize, bytes: B) {
         assert!(at <= self.len(), "expected {} to be <= {}", at, self.len());
 
@@ -1234,6 +1272,7 @@ impl BString {
     /// assert_eq!(s, "foo");
     /// assert_eq!(bar, "bar");
     /// ```
+    #[inline]
     pub fn split_off(&mut self, at: usize) -> BString {
         BString::from(self.bytes.split_off(at))
     }
@@ -1257,6 +1296,7 @@ impl BString {
     /// s.replace_range(2..4, "xxxxx");
     /// assert_eq!(s, "foxxxxxar");
     /// ```
+    #[inline]
     pub fn replace_range<R, B>(
         &mut self,
         range: R,
@@ -1296,6 +1336,7 @@ impl BString {
     /// }
     /// assert_eq!(s, "foar");
     /// ```
+    #[inline]
     pub fn drain_bytes<R>(
         &mut self,
         range: R,
@@ -1337,18 +1378,21 @@ impl<'a> iter::FusedIterator for DrainBytes<'a> {}
 impl<'a> Iterator for DrainBytes<'a> {
     type Item = u8;
 
+    #[inline]
     fn next(&mut self) -> Option<u8> {
         self.it.next()
     }
 }
 
 impl<'a> DoubleEndedIterator for DrainBytes<'a> {
+    #[inline]
     fn next_back(&mut self) -> Option<u8> {
         self.it.next_back()
     }
 }
 
 impl<'a> ExactSizeIterator for DrainBytes<'a> {
+    #[inline]
     fn len(&self) -> usize {
         self.it.len()
     }
@@ -1400,6 +1444,7 @@ impl FromUtf8Error {
     /// // At no point in this example is an allocation performed.
     /// assert_eq!(err.as_bstr(), B(b"foo\xFFbar"));
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &BStr {
         &self.original
     }
@@ -1421,6 +1466,7 @@ impl FromUtf8Error {
     /// // At no point in this example is an allocation performed.
     /// assert_eq!(original, B(b"foo\xFFbar"));
     /// ```
+    #[inline]
     pub fn into_bstring(self) -> BString {
         self.original
     }
@@ -1441,16 +1487,19 @@ impl FromUtf8Error {
     /// assert_eq!(err.utf8_error().valid_up_to(), 3);
     /// assert_eq!(err.utf8_error().error_len(), Some(1));
     /// ```
+    #[inline]
     pub fn utf8_error(&self) -> &Utf8Error {
         &self.err
     }
 }
 
 impl error::Error for FromUtf8Error {
+    #[inline]
     fn description(&self) -> &str { "invalid UTF-8 vector" }
 }
 
 impl fmt::Display for FromUtf8Error {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.err)
     }

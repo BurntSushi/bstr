@@ -52,6 +52,7 @@ impl<'a> Words<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.0.as_bstr()
     }
@@ -127,6 +128,7 @@ impl<'a> WordIndices<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.0.as_bstr()
     }
@@ -197,6 +199,7 @@ impl<'a> WordsWithBreaks<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }
@@ -276,6 +279,7 @@ impl<'a> WordsWithBreakIndices<'a> {
     /// it.next();
     /// assert_eq!("", it.as_bstr());
     /// ```
+    #[inline]
     pub fn as_bstr(&self) -> &'a BStr {
         self.bs
     }

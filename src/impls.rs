@@ -70,12 +70,14 @@ mod bstring {
     use bstring::BString;
 
     impl fmt::Display for BString {
+        #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             fmt::Display::fmt(self.as_bstr(), f)
         }
     }
 
     impl fmt::Debug for BString {
+        #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             fmt::Debug::fmt(self.as_bstr(), f)
         }
@@ -98,30 +100,35 @@ mod bstring {
     }
 
     impl AsRef<[u8]> for BString {
+        #[inline]
         fn as_ref(&self) -> &[u8] {
             self.as_bytes()
         }
     }
 
     impl AsRef<BStr> for BString {
+        #[inline]
         fn as_ref(&self) -> &BStr {
             self.as_bstr()
         }
     }
 
     impl AsMut<[u8]> for BString {
+        #[inline]
         fn as_mut(&mut self) -> &mut [u8] {
             self.as_bytes_mut()
         }
     }
 
     impl AsMut<BStr> for BString {
+        #[inline]
         fn as_mut(&mut self) -> &mut BStr {
             self.as_mut_bstr()
         }
     }
 
     impl Borrow<BStr> for BString {
+        #[inline]
         fn borrow(&self) -> &BStr {
             self.as_bstr()
         }
@@ -130,6 +137,7 @@ mod bstring {
     impl ToOwned for BStr {
         type Owned = BString;
 
+        #[inline]
         fn to_owned(&self) -> BString {
             self.to_bstring()
         }
@@ -178,18 +186,21 @@ mod bstring {
     }
 
     impl FromIterator<char> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=char>>(iter: T) -> BString {
             BString::from(iter.into_iter().collect::<String>())
         }
     }
 
     impl FromIterator<u8> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=u8>>(iter: T) -> BString {
             BString::from(iter.into_iter().collect::<Vec<u8>>())
         }
     }
 
     impl<'a> FromIterator<&'a str> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=&'a str>>(iter: T) -> BString {
             let mut buf = BString::new();
             for b in iter {
@@ -200,6 +211,7 @@ mod bstring {
     }
 
     impl<'a> FromIterator<&'a [u8]> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=&'a [u8]>>(iter: T) -> BString {
             let mut buf = BString::new();
             for b in iter {
@@ -210,6 +222,7 @@ mod bstring {
     }
 
     impl<'a> FromIterator<&'a BStr> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=&'a BStr>>(iter: T) -> BString {
             let mut buf = BString::new();
             for b in iter {
@@ -220,6 +233,7 @@ mod bstring {
     }
 
     impl FromIterator<BString> for BString {
+        #[inline]
         fn from_iter<T: IntoIterator<Item=BString>>(iter: T) -> BString {
             let mut buf = BString::new();
             for b in iter {
@@ -282,6 +296,7 @@ mod bstr {
     use bstr::BStr;
 
     impl fmt::Display for BStr {
+        #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             if let Ok(allutf8) = self.to_str() {
                 return fmt::Display::fmt(allutf8, f);
@@ -294,6 +309,7 @@ mod bstr {
     }
 
     impl fmt::Debug for BStr {
+        #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "\"")?;
             for (s, e, ch) in self.char_indices() {
@@ -423,30 +439,35 @@ mod bstr {
     }
 
     impl AsRef<[u8]> for BStr {
+        #[inline]
         fn as_ref(&self) -> &[u8] {
             self.as_bytes()
         }
     }
 
     impl AsRef<BStr> for [u8] {
+        #[inline]
         fn as_ref(&self) -> &BStr {
             BStr::new(self)
         }
     }
 
     impl AsRef<BStr> for str {
+        #[inline]
         fn as_ref(&self) -> &BStr {
             BStr::new(self)
         }
     }
 
     impl AsMut<[u8]> for BStr {
+        #[inline]
         fn as_mut(&mut self) -> &mut [u8] {
             self.as_bytes_mut()
         }
     }
 
     impl AsMut<BStr> for [u8] {
+        #[inline]
         fn as_mut(&mut self) -> &mut BStr {
             BStr::new_mut(self)
         }
