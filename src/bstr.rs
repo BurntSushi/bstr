@@ -354,6 +354,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(unix)]
+    #[inline]
     fn from_os_str_imp(os_str: &OsStr) -> Option<&BStr> {
         use std::os::unix::ffi::OsStrExt;
 
@@ -362,6 +363,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(not(unix))]
+    #[inline]
     fn from_os_str_imp(os_str: &OsStr) -> Option<&BStr> {
         os_str.to_str().map(BStr::new)
     }
@@ -723,6 +725,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(unix)]
+    #[inline]
     fn to_os_str_imp(&self) -> Result<&OsStr, Utf8Error> {
         use std::os::unix::ffi::OsStrExt;
 
@@ -731,6 +734,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(not(unix))]
+    #[inline]
     fn to_os_str_imp(&self) -> Result<&OsStr, Utf8Error> {
         self.to_str().map(OsStr::new)
     }
@@ -764,6 +768,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(unix)]
+    #[inline]
     fn to_os_str_lossy_imp(&self) -> Cow<OsStr> {
         use std::os::unix::ffi::OsStrExt;
 
@@ -772,6 +777,7 @@ impl BStr {
 
     #[cfg(feature = "std")]
     #[cfg(not(unix))]
+    #[inline]
     fn to_os_str_lossy_imp(&self) -> Cow<OsStr> {
         use std::ffi::OsString;
 
@@ -2203,12 +2209,14 @@ impl BStr {
     }
 
     #[cfg(feature = "unicode")]
+    #[inline]
     fn trim_start_imp(&self) -> &BStr {
         let start = whitespace_len_fwd(self.as_bytes());
         &self[start..]
     }
 
     #[cfg(not(feature = "unicode"))]
+    #[inline]
     fn trim_start_imp(&self) -> &BStr {
         self.trim_start_with(|c| c.is_whitespace())
     }
@@ -2234,12 +2242,14 @@ impl BStr {
     }
 
     #[cfg(feature = "unicode")]
+    #[inline]
     fn trim_end_imp(&self) -> &BStr {
         let end = whitespace_len_rev(self.as_bytes());
         &self[..end]
     }
 
     #[cfg(not(feature = "unicode"))]
+    #[inline]
     fn trim_end_imp(&self) -> &BStr {
         self.trim_end_with(|c| c.is_whitespace())
     }

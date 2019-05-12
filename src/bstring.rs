@@ -330,6 +330,7 @@ impl BString {
     }
 
     #[cfg(unix)]
+    #[inline]
     fn from_os_string_imp(os_str: OsString) -> Result<BString, OsString> {
         use std::os::unix::ffi::OsStringExt;
 
@@ -337,6 +338,7 @@ impl BString {
     }
 
     #[cfg(not(unix))]
+    #[inline]
     fn from_os_string_imp(os_str: OsString) -> Result<BString, OsString> {
         os_str.into_string().map(BString::from)
     }
@@ -367,6 +369,7 @@ impl BString {
     }
 
     #[cfg(unix)]
+    #[inline]
     fn from_os_str_lossy_imp<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
         use std::os::unix::ffi::OsStrExt;
 
@@ -374,6 +377,7 @@ impl BString {
     }
 
     #[cfg(not(unix))]
+    #[inline]
     fn from_os_str_lossy_imp<'a>(os_str: &'a OsStr) -> Cow<'a, BStr> {
         match os_str.to_string_lossy() {
             Cow::Borrowed(x) => Cow::Borrowed(BStr::new(x)),
@@ -716,6 +720,7 @@ impl BString {
     }
 
     #[cfg(unix)]
+    #[inline]
     fn into_os_string_imp(self) -> Result<OsString, BString> {
         use std::os::unix::ffi::OsStringExt;
 
@@ -723,6 +728,7 @@ impl BString {
     }
 
     #[cfg(not(unix))]
+    #[inline]
     fn into_os_string_imp(self) -> Result<OsString, BString> {
         match self.into_string() {
             Ok(s) => Ok(OsString::from(s)),
@@ -757,6 +763,7 @@ impl BString {
     }
 
     #[cfg(unix)]
+    #[inline]
     fn into_os_string_lossy_imp(self) -> OsString {
         use std::os::unix::ffi::OsStringExt;
 
@@ -764,6 +771,7 @@ impl BString {
     }
 
     #[cfg(not(unix))]
+    #[inline]
     fn into_os_string_lossy_imp(self) -> OsString {
         OsString::from(self.into_string_lossy())
     }
