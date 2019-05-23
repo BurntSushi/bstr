@@ -60,7 +60,7 @@ macro_rules! impl_partial_ord {
 
 #[cfg(feature = "std")]
 mod bstring {
-    use std::borrow::{Borrow, ToOwned};
+    use std::borrow::{Borrow, Cow, ToOwned};
     use std::cmp::Ordering;
     use std::fmt;
     use std::iter::FromIterator;
@@ -182,6 +182,13 @@ mod bstring {
         #[inline]
         fn from(s: &'a BStr) -> BString {
             s.to_bstring()
+        }
+    }
+
+    impl<'a> From<BString> for Cow<'a, BStr> {
+        #[inline]
+        fn from(s: BString) -> Cow<'a, BStr> {
+            Cow::Owned(s)
         }
     }
 
@@ -484,6 +491,14 @@ mod bstr {
         #[inline]
         fn from(s: &'a str) -> &'a BStr {
             BStr::from_bytes(s.as_bytes())
+        }
+    }
+
+    #[cfg(feature = "std")]
+    impl<'a> From<&'a BStr> for Cow<'a, BStr> {
+        #[inline]
+        fn from(s: &'a BStr) -> Cow<'a, BStr> {
+            Cow::Borrowed(s)
         }
     }
 
