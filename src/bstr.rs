@@ -3555,7 +3555,7 @@ impl<'a> Iterator for FindReverse<'a> {
 /// An iterator over the bytes in a byte string.
 ///
 /// `'a` is the lifetime of the byte string being traversed.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Bytes<'a> {
     it: slice::Iter<'a, u8>,
 }
