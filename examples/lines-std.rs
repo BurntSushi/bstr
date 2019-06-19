@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io::{self, BufRead, Write};
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let stdin = io::stdin();
     let mut stdin = stdin.lock();
     let mut stdout = io::BufWriter::new(io::stdout());

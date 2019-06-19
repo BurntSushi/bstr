@@ -1,7 +1,7 @@
 use core::cmp;
 
-use bstr::BStr;
-use cow::CowBStr;
+use cow::CowBytes;
+use ext_slice::ByteSlice;
 use search::prefilter::{Freqy, PrefilterState};
 
 /// An implementation of the TwoWay substring search algorithm, with heuristics
@@ -30,7 +30,7 @@ use search::prefilter::{Freqy, PrefilterState};
 #[derive(Clone, Debug)]
 pub struct TwoWay<'b> {
     /// The needle that we're looking for.
-    needle: CowBStr<'b>,
+    needle: CowBytes<'b>,
     /// An implementation of a fast skip loop based on hard-coded frequency
     /// data. This is only used when conditions are deemed favorable.
     freqy: Freqy,
@@ -51,11 +51,11 @@ pub struct TwoWay<'b> {
 impl<'b> TwoWay<'b> {
     /// Create a searcher that uses the Two-Way algorithm by searching forwards
     /// through any haystack.
-    pub fn forward(needle: &'b BStr) -> TwoWay<'b> {
+    pub fn forward(needle: &'b [u8]) -> TwoWay<'b> {
         let freqy = Freqy::forward(needle);
         if needle.is_empty() {
             return TwoWay {
-                needle: CowBStr::new(needle),
+                needle: CowBytes::new(needle),
                 freqy,
                 critical_pos: 0,
                 shift: Shift::Large { shift: 0  },
@@ -71,17 +71,17 @@ impl<'b> TwoWay<'b> {
                 (max_suffix.period, max_suffix.pos)
             };
         let shift = Shift::forward(needle, period_lower_bound, critical_pos);
-        let needle = CowBStr::new(needle);
+        let needle = CowBytes::new(needle);
         TwoWay { needle, freqy, critical_pos, shift }
     }
 
     /// Create a searcher that uses the Two-Way algorithm by searching in
     /// reverse through any haystack.
-    pub fn reverse(needle: &'b BStr) -> TwoWay<'b> {
+    pub fn reverse(needle: &'b [u8]) -> TwoWay<'b> {
         let freqy = Freqy::reverse(needle);
         if needle.is_empty() {
             return TwoWay {
-                needle: CowBStr::new(needle),
+                needle: CowBytes::new(needle),
                 freqy,
                 critical_pos: 0,
                 shift: Shift::Large { shift: 0  },
@@ -97,7 +97,7 @@ impl<'b> TwoWay<'b> {
                 (max_suffix.period, max_suffix.pos)
             };
         let shift = Shift::reverse(needle, period_lower_bound, critical_pos);
-        let needle = CowBStr::new(needle);
+        let needle = CowBytes::new(needle);
         TwoWay { needle, freqy, critical_pos, shift }
     }
 
@@ -115,8 +115,8 @@ impl<'b> TwoWay<'b> {
     }
 
     /// Return the needle used by this searcher.
-    pub fn needle(&self) -> &BStr {
-        self.needle.as_bstr()
+    pub fn needle(&self) -> &[u8] {
+        self.needle.as_slice()
     }
 
     /// Convert this searched into an owned version, where the needle is
@@ -136,7 +136,7 @@ impl<'b> TwoWay<'b> {
     ///
     /// This will automatically initialize prefilter state. This should only
     /// be used for one-off searches.
-    pub fn find(&self, haystack: &BStr) -> Option<usize> {
+    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
         self.find_with(&mut self.prefilter_state(), haystack)
     }
 
@@ -145,7 +145,7 @@ impl<'b> TwoWay<'b> {
     ///
     /// This will automatically initialize prefilter state. This should only
     /// be used for one-off searches.
-    pub fn rfind(&self, haystack: &BStr) -> Option<usize> {
+    pub fn rfind(&self, haystack: &[u8]) -> Option<usize> {
         self.rfind_with(&mut self.prefilter_state(), haystack)
     }
 
@@ -157,7 +157,7 @@ impl<'b> TwoWay<'b> {
     pub fn find_with(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
     ) -> Option<usize> {
         if self.needle.is_empty() {
             return Some(0);
@@ -184,7 +184,7 @@ impl<'b> TwoWay<'b> {
     pub fn rfind_with(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
     ) -> Option<usize> {
         if self.needle.is_empty() {
             return Some(haystack.len());
@@ -218,7 +218,7 @@ impl<'b> TwoWay<'b> {
     fn find_small(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
         period: usize,
     ) -> Option<usize> {
         if prestate.is_effective() {
@@ -233,10 +233,10 @@ impl<'b> TwoWay<'b> {
         &self,
         prestate: &mut PrefilterState,
         prefilter: bool,
-        haystack: &BStr,
+        haystack: &[u8],
         period: usize,
     ) -> Option<usize> {
-        let needle = self.needle.as_bstr();
+        let needle = self.needle.as_slice();
         let mut pos = 0;
         let mut shift = 0;
         while pos + needle.len() <= haystack.len() {
@@ -279,7 +279,7 @@ impl<'b> TwoWay<'b> {
     fn find_large(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
         shift: usize,
     ) -> Option<usize> {
         if prestate.is_effective() {
@@ -294,10 +294,10 @@ impl<'b> TwoWay<'b> {
         &self,
         prestate: &mut PrefilterState,
         prefilter: bool,
-        haystack: &BStr,
+        haystack: &[u8],
         shift: usize,
     ) -> Option<usize> {
-        let needle = self.needle.as_bstr();
+        let needle = self.needle.as_slice();
         let mut pos = 0;
         while pos + needle.len() <= haystack.len() {
             let mut i = self.critical_pos;
@@ -335,7 +335,7 @@ impl<'b> TwoWay<'b> {
     fn rfind_small(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
         period: usize,
     ) -> Option<usize> {
         if prestate.is_effective() {
@@ -350,7 +350,7 @@ impl<'b> TwoWay<'b> {
         &self,
         prestate: &mut PrefilterState,
         prefilter: bool,
-        haystack: &BStr,
+        haystack: &[u8],
         period: usize,
     ) -> Option<usize> {
         let needle = &*self.needle;
@@ -397,7 +397,7 @@ impl<'b> TwoWay<'b> {
     fn rfind_large(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
         shift: usize,
     ) -> Option<usize> {
         if prestate.is_effective() {
@@ -412,7 +412,7 @@ impl<'b> TwoWay<'b> {
         &self,
         prestate: &mut PrefilterState,
         prefilter: bool,
-        haystack: &BStr,
+        haystack: &[u8],
         shift: usize,
     ) -> Option<usize> {
         let needle = &*self.needle;
@@ -496,7 +496,7 @@ impl Shift {
     /// lexicographic suffixes, and choosing the right-most starting position.
     /// The lower bound on the period is then the period of the chosen suffix.
     fn forward(
-        needle: &BStr,
+        needle: &[u8],
         period_lower_bound: usize,
         critical_pos: usize,
     ) -> Shift {
@@ -519,7 +519,7 @@ impl Shift {
     /// lexicographic suffixes, and choosing the left-most starting position.
     /// The lower bound on the period is then the period of the chosen suffix.
     fn reverse(
-        needle: &BStr,
+        needle: &[u8],
         period_lower_bound: usize,
         critical_pos: usize,
     ) -> Shift {
@@ -555,7 +555,7 @@ struct Suffix {
 }
 
 impl Suffix {
-    fn forward(needle: &BStr, kind: SuffixKind) -> Suffix {
+    fn forward(needle: &[u8], kind: SuffixKind) -> Suffix {
         debug_assert!(!needle.is_empty());
 
         // suffix represents our maximal (or minimal) suffix, along with
@@ -605,7 +605,7 @@ impl Suffix {
         suffix
     }
 
-    fn reverse(needle: &BStr, kind: SuffixKind) -> Suffix {
+    fn reverse(needle: &[u8], kind: SuffixKind) -> Suffix {
         debug_assert!(!needle.is_empty());
 
         // See the comments in `forward` for how this works.
@@ -703,30 +703,28 @@ impl SuffixKind {
 // N.B. There are more holistic tests in src/search/tests.rs.
 #[cfg(test)]
 mod tests {
-    use bstr::{B, BStr};
-    use bstring::BString;
-
+    use ext_slice::B;
     use super::*;
 
     /// Convenience wrapper for computing the suffix as a byte string.
-    fn get_suffix_forward(needle: &BStr, kind: SuffixKind) -> (&BStr, usize) {
+    fn get_suffix_forward(needle: &[u8], kind: SuffixKind) -> (&[u8], usize) {
         let s = Suffix::forward(needle, kind);
         (&needle[s.pos..], s.period)
     }
 
     /// Convenience wrapper for computing the reverse suffix as a byte string.
-    fn get_suffix_reverse(needle: &BStr, kind: SuffixKind) -> (&BStr, usize) {
+    fn get_suffix_reverse(needle: &[u8], kind: SuffixKind) -> (&[u8], usize) {
         let s = Suffix::reverse(needle, kind);
         (&needle[..s.pos], s.period)
     }
 
     /// Return all of the non-empty suffixes in the given byte string.
-    fn suffixes(bytes: &BStr) -> Vec<&BStr> {
+    fn suffixes(bytes: &[u8]) -> Vec<&[u8]> {
         (0..bytes.len()).map(|i| &bytes[i..]).collect()
     }
 
     /// Return the lexicographically maximal suffix of the given byte string.
-    fn naive_maximal_suffix_forward(needle: &BStr) -> &BStr {
+    fn naive_maximal_suffix_forward(needle: &[u8]) -> &[u8] {
         let mut sufs = suffixes(needle);
         sufs.sort();
         sufs.pop().unwrap()
@@ -734,11 +732,11 @@ mod tests {
 
     /// Return the lexicographically maximal suffix of the reverse of the given
     /// byte string.
-    fn naive_maximal_suffix_reverse(needle: &BStr) -> BString {
-        let mut reversed = needle.to_bstring();
-        reversed.reverse_bytes();
-        let mut got = naive_maximal_suffix_forward(&reversed).to_bstring();
-        got.reverse_bytes();
+    fn naive_maximal_suffix_reverse(needle: &[u8]) -> Vec<u8> {
+        let mut reversed = needle.to_vec();
+        reversed.reverse();
+        let mut got = naive_maximal_suffix_forward(&reversed).to_vec();
+        got.reverse();
         got
     }
 
@@ -747,7 +745,7 @@ mod tests {
         macro_rules! assert_suffix_min {
             ($given:expr, $expected:expr, $period:expr) => {
                 let (got_suffix, got_period) = get_suffix_forward(
-                    B($given),
+                    $given.as_bytes(),
                     SuffixKind::Minimal,
                 );
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
@@ -757,7 +755,7 @@ mod tests {
         macro_rules! assert_suffix_max {
             ($given:expr, $expected:expr, $period:expr) => {
                 let (got_suffix, got_period) = get_suffix_forward(
-                    B($given),
+                    $given.as_bytes(),
                     SuffixKind::Maximal,
                 );
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
@@ -806,7 +804,7 @@ mod tests {
         macro_rules! assert_suffix_min {
             ($given:expr, $expected:expr, $period:expr) => {
                 let (got_suffix, got_period) = get_suffix_reverse(
-                    B($given),
+                    $given.as_bytes(),
                     SuffixKind::Minimal,
                 );
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
@@ -816,7 +814,7 @@ mod tests {
         macro_rules! assert_suffix_max {
             ($given:expr, $expected:expr, $period:expr) => {
                 let (got_suffix, got_period) = get_suffix_reverse(
-                    B($given),
+                    $given.as_bytes(),
                     SuffixKind::Maximal,
                 );
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
@@ -859,7 +857,6 @@ mod tests {
 
     quickcheck! {
         fn qc_suffix_forward_maximal(bytes: Vec<u8>) -> bool {
-            let bytes = BString::from(bytes);
             if bytes.is_empty() {
                 return true;
             }
@@ -870,14 +867,13 @@ mod tests {
         }
 
         fn qc_suffix_reverse_maximal(bytes: Vec<u8>) -> bool {
-            let bytes = BString::from(bytes);
             if bytes.is_empty() {
                 return true;
             }
 
             let (got, _) = get_suffix_reverse(&bytes, SuffixKind::Maximal);
             let expected = naive_maximal_suffix_reverse(&bytes);
-            got == expected
+            expected == got
         }
     }
 }

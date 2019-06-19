@@ -1,6 +1,6 @@
 use regex_automata::DFA;
 
-use bstr::BStr;
+use ext_slice::ByteSlice;
 use unicode::fsm::grapheme_break_fwd::GRAPHEME_BREAK_FWD;
 use unicode::fsm::grapheme_break_rev::GRAPHEME_BREAK_REV;
 use unicode::fsm::regional_indicator_rev::REGIONAL_INDICATOR_REV;
@@ -9,7 +9,7 @@ use utf8;
 /// An iterator over grapheme clusters in a byte string.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::graphemes`](struct.BStr.html#method.graphemes).
+/// [`ByteSlice::graphemes`](trait.ByteSlice.html#method.graphemes).
 ///
 /// Unicode defines a grapheme cluster as an *approximation* to a single user
 /// visible character. A grapheme cluster, or just "grapheme," is made up of
@@ -28,11 +28,11 @@ use utf8;
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Grapheme_Cluster_Boundaries).
 #[derive(Clone, Debug)]
 pub struct Graphemes<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
 }
 
 impl<'a> Graphemes<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> Graphemes<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> Graphemes<'a> {
         Graphemes { bs }
     }
 
@@ -44,19 +44,19 @@ impl<'a> Graphemes<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("abc").graphemes();
+    /// let mut it = b"abc".graphemes();
     ///
-    /// assert_eq!("abc", it.as_bstr());
+    /// assert_eq!(b"abc", it.as_bytes());
     /// it.next();
-    /// assert_eq!("bc", it.as_bstr());
+    /// assert_eq!(b"bc", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -91,7 +91,7 @@ impl<'a> DoubleEndedIterator for Graphemes<'a> {
 /// positions.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::grapheme_indices`](struct.BStr.html#method.grapheme_indices).
+/// [`ByteSlice::grapheme_indices`](trait.ByteSlice.html#method.grapheme_indices).
 ///
 /// Unicode defines a grapheme cluster as an *approximation* to a single user
 /// visible character. A grapheme cluster, or just "grapheme," is made up of
@@ -118,13 +118,13 @@ impl<'a> DoubleEndedIterator for Graphemes<'a> {
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Grapheme_Cluster_Boundaries).
 #[derive(Clone, Debug)]
 pub struct GraphemeIndices<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
     forward_index: usize,
     reverse_index: usize,
 }
 
 impl<'a> GraphemeIndices<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> GraphemeIndices<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> GraphemeIndices<'a> {
         GraphemeIndices { bs: bs, forward_index: 0, reverse_index: bs.len() }
     }
 
@@ -136,19 +136,19 @@ impl<'a> GraphemeIndices<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("abc").grapheme_indices();
+    /// let mut it = b"abc".grapheme_indices();
     ///
-    /// assert_eq!("abc", it.as_bstr());
+    /// assert_eq!(b"abc", it.as_bytes());
     /// it.next();
-    /// assert_eq!("bc", it.as_bstr());
+    /// assert_eq!(b"bc", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -188,25 +188,25 @@ impl<'a> DoubleEndedIterator for GraphemeIndices<'a> {
 /// codepoint if invalid UTF-8 was found), along with the number of bytes
 /// decoded in the byte string. The number of bytes decoded may not be the
 /// same as the length of grapheme in the case where invalid UTF-8 is found.
-pub fn decode_grapheme(bs: &BStr) -> (&str, usize) {
+pub fn decode_grapheme(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
-    } else if let Some(end) = GRAPHEME_BREAK_FWD.find(bs.as_bytes()) {
+    } else if let Some(end) = GRAPHEME_BREAK_FWD.find(bs) {
         // Safe because a match can only occur for valid UTF-8.
         let grapheme = unsafe { bs[..end].to_str_unchecked() };
         (grapheme, grapheme.len())
     } else {
         const INVALID: &'static str = "\u{FFFD}";
         // No match on non-empty bytes implies we found invalid UTF-8.
-        let (_, size) = utf8::decode_lossy(bs.as_bytes());
+        let (_, size) = utf8::decode_lossy(bs);
         (INVALID, size)
     }
 }
 
-fn decode_last_grapheme(bs: &BStr) -> (&str, usize) {
+fn decode_last_grapheme(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
-    } else if let Some(mut start) = GRAPHEME_BREAK_REV.rfind(bs.as_bytes()) {
+    } else if let Some(mut start) = GRAPHEME_BREAK_REV.rfind(bs) {
         start = adjust_rev_for_regional_indicator(bs, start);
         // Safe because a match can only occur for valid UTF-8.
         let grapheme = unsafe { bs[start..].to_str_unchecked() };
@@ -214,7 +214,7 @@ fn decode_last_grapheme(bs: &BStr) -> (&str, usize) {
     } else {
         const INVALID: &'static str = "\u{FFFD}";
         // No match on non-empty bytes implies we found invalid UTF-8.
-        let (_, size) = utf8::decode_last_lossy(bs.as_bytes());
+        let (_, size) = utf8::decode_last_lossy(bs);
         (INVALID, size)
     }
 }
@@ -232,7 +232,7 @@ fn decode_last_grapheme(bs: &BStr) -> (&str, usize) {
 /// occur between regional indicators where it would cause an odd number of
 /// regional indicators to exist before the break from the *start* of the
 /// string. A reverse regex cannot detect this case easily without look-around.
-fn adjust_rev_for_regional_indicator(mut bs: &BStr, i: usize) -> usize {
+fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
     // All regional indicators use a 4 byte encoding, and we only care about
     // the case where we found a pair of regional indicators.
     if bs.len() - i != 8 {
@@ -246,7 +246,7 @@ fn adjust_rev_for_regional_indicator(mut bs: &BStr, i: usize) -> usize {
     // regional indicator codepoints. A fix probably requires refactoring this
     // code a bit such that we don't rescan regional indicators.
     let mut count = 0;
-    while let Some(start) = REGIONAL_INDICATOR_REV.rfind(bs.as_bytes()) {
+    while let Some(start) = REGIONAL_INDICATOR_REV.rfind(bs) {
         bs = &bs[..start];
         count += 1;
     }
@@ -261,7 +261,7 @@ fn adjust_rev_for_regional_indicator(mut bs: &BStr, i: usize) -> usize {
 mod tests {
     use ucd_parse::GraphemeClusterBreakTest;
 
-    use bstr::B;
+    use ext_slice::ByteSlice;
     use tests::LOSSY_TESTS;
     use super::*;
 
@@ -269,7 +269,7 @@ mod tests {
     fn forward_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.grapheme_clusters.concat();
-            let got: Vec<String> = Graphemes::new(B(&given))
+            let got: Vec<String> = Graphemes::new(given.as_bytes())
                 .map(|cluster| cluster.to_string())
                 .collect();
             assert_eq!(
@@ -291,7 +291,7 @@ mod tests {
     fn reverse_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.grapheme_clusters.concat();
-            let mut got: Vec<String> = Graphemes::new(B(&given))
+            let mut got: Vec<String> = Graphemes::new(given.as_bytes())
                 .rev()
                 .map(|cluster| cluster.to_string())
                 .collect();
@@ -314,7 +314,7 @@ mod tests {
     #[test]
     fn forward_lossy() {
         for &(expected, input) in LOSSY_TESTS {
-            let got = Graphemes::new(B(input)).collect::<String>();
+            let got = Graphemes::new(input.as_bytes()).collect::<String>();
             assert_eq!(expected, got);
         }
     }
@@ -323,7 +323,7 @@ mod tests {
     fn reverse_lossy() {
         for &(expected, input) in LOSSY_TESTS {
             let expected: String = expected.chars().rev().collect();
-            let got = Graphemes::new(B(input))
+            let got = Graphemes::new(input.as_bytes())
                 .rev()
                 .collect::<String>();
             assert_eq!(expected, got);

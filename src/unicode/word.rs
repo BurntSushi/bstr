@@ -1,6 +1,6 @@
 use regex_automata::DFA;
 
-use bstr::BStr;
+use ext_slice::ByteSlice;
 use unicode::fsm::simple_word_fwd::SIMPLE_WORD_FWD;
 use unicode::fsm::word_break_fwd::WORD_BREAK_FWD;
 use utf8;
@@ -8,7 +8,7 @@ use utf8;
 /// An iterator over words in a byte string.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::words`](struct.BStr.html#method.words).
+/// [`ByteSlice::words`](trait.ByteSlice.html#method.words).
 ///
 /// This is similar to the [`WordsWithBreaks`](struct.WordsWithBreaks.html)
 /// iterator, except it only returns elements that contain a "word" character.
@@ -29,7 +29,7 @@ use utf8;
 pub struct Words<'a>(WordsWithBreaks<'a>);
 
 impl<'a> Words<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> Words<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> Words<'a> {
         Words(WordsWithBreaks::new(bs))
     }
 
@@ -41,20 +41,20 @@ impl<'a> Words<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("foo bar baz").words();
+    /// let mut it = b"foo bar baz".words();
     ///
-    /// assert_eq!("foo bar baz", it.as_bstr());
+    /// assert_eq!(b"foo bar baz", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!(" baz", it.as_bstr());
+    /// assert_eq!(b" baz", it.as_bytes());
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
-        self.0.as_bstr()
+    pub fn as_bytes(&self) -> &'a [u8] {
+        self.0.as_bytes()
     }
 }
 
@@ -75,7 +75,7 @@ impl<'a> Iterator for Words<'a> {
 /// An iterator over words in a byte string and their byte index positions.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::word_indices`](struct.BStr.html#method.word_indices).
+/// [`ByteSlice::word_indices`](trait.ByteSlice.html#method.word_indices).
 ///
 /// This is similar to the
 /// [`WordsWithBreakIndices`](struct.WordsWithBreakIndices.html) iterator,
@@ -104,7 +104,7 @@ impl<'a> Iterator for Words<'a> {
 pub struct WordIndices<'a>(WordsWithBreakIndices<'a>);
 
 impl<'a> WordIndices<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> WordIndices<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> WordIndices<'a> {
         WordIndices(WordsWithBreakIndices::new(bs))
     }
 
@@ -116,21 +116,21 @@ impl<'a> WordIndices<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("foo bar baz").word_indices();
+    /// let mut it = b"foo bar baz".word_indices();
     ///
-    /// assert_eq!("foo bar baz", it.as_bstr());
+    /// assert_eq!(b"foo bar baz", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!(" baz", it.as_bstr());
+    /// assert_eq!(b" baz", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
-        self.0.as_bstr()
+    pub fn as_bytes(&self) -> &'a [u8] {
+        self.0.as_bytes()
     }
 }
 
@@ -151,7 +151,7 @@ impl<'a> Iterator for WordIndices<'a> {
 /// An iterator over all word breaks in a byte string.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::words_with_breaks`](struct.BStr.html#method.words_with_breaks).
+/// [`ByteSlice::words_with_breaks`](trait.ByteSlice.html#method.words_with_breaks).
 ///
 /// This iterator yields not only all words, but the content that comes between
 /// words. In particular, if all elements yielded by this iterator are
@@ -169,11 +169,11 @@ impl<'a> Iterator for WordIndices<'a> {
 /// that do not use spaces between words.
 #[derive(Clone, Debug)]
 pub struct WordsWithBreaks<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
 }
 
 impl<'a> WordsWithBreaks<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> WordsWithBreaks<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> WordsWithBreaks<'a> {
         WordsWithBreaks { bs }
     }
 
@@ -185,22 +185,22 @@ impl<'a> WordsWithBreaks<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("foo bar baz").words_with_breaks();
+    /// let mut it = b"foo bar baz".words_with_breaks();
     ///
-    /// assert_eq!("foo bar baz", it.as_bstr());
+    /// assert_eq!(b"foo bar baz", it.as_bytes());
     /// it.next();
-    /// assert_eq!(" bar baz", it.as_bstr());
-    /// it.next();
-    /// it.next();
-    /// assert_eq!(" baz", it.as_bstr());
+    /// assert_eq!(b" bar baz", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b" baz", it.as_bytes());
+    /// it.next();
+    /// it.next();
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -223,7 +223,7 @@ impl<'a> Iterator for WordsWithBreaks<'a> {
 /// index positions.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::words_with_break_indices`](struct.BStr.html#method.words_with_break_indices).
+/// [`ByteSlice::words_with_break_indices`](trait.ByteSlice.html#method.words_with_break_indices).
 ///
 /// This iterator yields not only all words, but the content that comes between
 /// words. In particular, if all elements yielded by this iterator are
@@ -248,12 +248,12 @@ impl<'a> Iterator for WordsWithBreaks<'a> {
 /// that do not use spaces between words.
 #[derive(Clone, Debug)]
 pub struct WordsWithBreakIndices<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
     forward_index: usize,
 }
 
 impl<'a> WordsWithBreakIndices<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> WordsWithBreakIndices<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> WordsWithBreakIndices<'a> {
         WordsWithBreakIndices { bs: bs, forward_index: 0 }
     }
 
@@ -265,22 +265,22 @@ impl<'a> WordsWithBreakIndices<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("foo bar baz").words_with_break_indices();
+    /// let mut it = b"foo bar baz".words_with_break_indices();
     ///
-    /// assert_eq!("foo bar baz", it.as_bstr());
+    /// assert_eq!(b"foo bar baz", it.as_bytes());
     /// it.next();
-    /// assert_eq!(" bar baz", it.as_bstr());
-    /// it.next();
-    /// it.next();
-    /// assert_eq!(" baz", it.as_bstr());
+    /// assert_eq!(b" bar baz", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b" baz", it.as_bytes());
+    /// it.next();
+    /// it.next();
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -301,17 +301,17 @@ impl<'a> Iterator for WordsWithBreakIndices<'a> {
     }
 }
 
-fn decode_word(bs: &BStr) -> (&str, usize) {
+fn decode_word(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
-    } else if let Some(end) = WORD_BREAK_FWD.find(bs.as_bytes()) {
+    } else if let Some(end) = WORD_BREAK_FWD.find(bs) {
         // Safe because a match can only occur for valid UTF-8.
         let word = unsafe { bs[..end].to_str_unchecked() };
         (word, word.len())
     } else {
         const INVALID: &'static str = "\u{FFFD}";
         // No match on non-empty bytes implies we found invalid UTF-8.
-        let (_, size) = utf8::decode_lossy(bs.as_bytes());
+        let (_, size) = utf8::decode_lossy(bs);
         (INVALID, size)
     }
 }
@@ -320,7 +320,7 @@ fn decode_word(bs: &BStr) -> (&str, usize) {
 mod tests {
     use ucd_parse::WordBreakTest;
 
-    use bstr::BStr;
+    use ext_slice::ByteSlice;
 
     #[test]
     fn forward_ucd() {
@@ -335,7 +335,7 @@ mod tests {
                    expected: {:?}\n\
                    got:      {:?}\n",
                 i,
-                BStr::new(&given),
+                given,
                 strs_to_bstrs(&test.words),
                 strs_to_bstrs(&got),
             );
@@ -421,11 +421,11 @@ mod tests {
     }
 
     fn words(bytes: &[u8]) -> Vec<&str> {
-        BStr::new(bytes).words_with_breaks().collect()
+        bytes.words_with_breaks().collect()
     }
 
-    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&BStr> {
-        strs.iter().map(|s| BStr::new(s.as_ref())).collect()
+    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&[u8]> {
+        strs.iter().map(|s| s.as_ref().as_bytes()).collect()
     }
 
     /// Return all of the UCD for word breaks.

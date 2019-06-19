@@ -1,6 +1,6 @@
 use core::mem;
 
-use bstr::BStr;
+use ext_slice::ByteSlice;
 use search::byte_frequencies::BYTE_FREQUENCIES;
 
 /// PrefilterState tracks state associated with the effectiveness of a
@@ -148,7 +148,7 @@ impl Freqy {
     }
 
     /// Return search info for the given needle in the forward direction.
-    pub fn forward(needle: &BStr) -> Freqy {
+    pub fn forward(needle: &[u8]) -> Freqy {
         if needle.is_empty() {
             return Freqy::inert();
         }
@@ -184,7 +184,7 @@ impl Freqy {
     }
 
     /// Return search info for the given needle in the reverse direction.
-    pub fn reverse(needle: &BStr) -> Freqy {
+    pub fn reverse(needle: &[u8]) -> Freqy {
         if needle.is_empty() {
             return Freqy::inert();
         }
@@ -233,7 +233,7 @@ impl Freqy {
     pub fn find_candidate(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
     ) -> Option<usize> {
         debug_assert!(!self.inert);
 
@@ -289,7 +289,7 @@ impl Freqy {
     pub fn rfind_candidate(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &BStr,
+        haystack: &[u8],
     ) -> Option<usize> {
         debug_assert!(!self.inert);
 
@@ -341,7 +341,7 @@ impl Freqy {
 
 #[cfg(test)]
 mod tests {
-    use bstr::B;
+    use ext_slice::B;
     use super::*;
 
     #[test]

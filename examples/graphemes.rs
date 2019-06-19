@@ -3,9 +3,9 @@ extern crate bstr;
 use std::error::Error;
 use std::io::{self, Write};
 
-use bstr::io::BufReadExt;
+use bstr::{ByteSlice, io::BufReadExt};
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let stdin = io::stdin();
     let mut stdout = io::BufWriter::new(io::stdout());
 
@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<Error>> {
             .take(10)
             .last()
             .unwrap_or(line.len());
-        stdout.write_all(line[..end].trim_end().as_bytes())?;
+        stdout.write_all(line[..end].trim_end())?;
         stdout.write_all(b"\n")?;
         Ok(true)
     })?;

@@ -5,7 +5,7 @@ use std::io::{self, BufRead};
 
 use unicode_segmentation::UnicodeSegmentation;
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let stdin = io::stdin();
     let mut stdin = stdin.lock();
 

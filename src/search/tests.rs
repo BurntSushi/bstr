@@ -1,5 +1,3 @@
-use bstr::{B, BStr};
-use bstring::BString;
 use search::twoway::TwoWay;
 
 /// Each test is a (needle, haystack, expected_fwd, expected_rev) tuple.
@@ -63,10 +61,10 @@ fn unit_twoway_rev() {
 /// needle in the haystack, or `None` if one doesn't exist.
 fn run_search_tests_fwd(
     name: &str,
-    mut search: impl FnMut(&BStr, &BStr) -> Option<usize>,
+    mut search: impl FnMut(&[u8], &[u8]) -> Option<usize>,
 ) {
     for &(needle, haystack, expected_fwd, _) in SEARCH_TESTS {
-        let (n, h) = (B(needle), B(haystack));
+        let (n, h) = (needle.as_bytes(), haystack.as_bytes());
         assert_eq!(
             expected_fwd,
             search(n, h),
@@ -82,10 +80,10 @@ fn run_search_tests_fwd(
 /// needle in the haystack, or `None` if one doesn't exist.
 fn run_search_tests_rev(
     name: &str,
-    mut search: impl FnMut(&BStr, &BStr) -> Option<usize>,
+    mut search: impl FnMut(&[u8], &[u8]) -> Option<usize>,
 ) {
     for &(needle, haystack, _, expected_rev) in SEARCH_TESTS {
-        let (n, h) = (B(needle), B(haystack));
+        let (n, h) = (needle.as_bytes(), haystack.as_bytes());
         assert_eq!(
             expected_rev,
             search(n, h),
@@ -96,25 +94,25 @@ fn run_search_tests_rev(
 }
 
 quickcheck! {
-    fn qc_twoway_fwd_prefix_is_substring(bs: BString) -> bool {
+    fn qc_twoway_fwd_prefix_is_substring(bs: Vec<u8>) -> bool {
         prop_prefix_is_substring(false, &bs, |n, h| TwoWay::forward(n).find(h))
     }
 
-    fn qc_twoway_fwd_suffix_is_substring(bs: BString) -> bool {
+    fn qc_twoway_fwd_suffix_is_substring(bs: Vec<u8>) -> bool {
         prop_suffix_is_substring(false, &bs, |n, h| TwoWay::forward(n).find(h))
     }
 
-    fn qc_twoway_rev_prefix_is_substring(bs: BString) -> bool {
+    fn qc_twoway_rev_prefix_is_substring(bs: Vec<u8>) -> bool {
         prop_prefix_is_substring(true, &bs, |n, h| TwoWay::reverse(n).rfind(h))
     }
 
-    fn qc_twoway_rev_suffix_is_substring(bs: BString) -> bool {
+    fn qc_twoway_rev_suffix_is_substring(bs: Vec<u8>) -> bool {
         prop_suffix_is_substring(true, &bs, |n, h| TwoWay::reverse(n).rfind(h))
     }
 
     fn qc_twoway_fwd_matches_naive(
-        needle: BString,
-        haystack: BString
+        needle: Vec<u8>,
+        haystack: Vec<u8>
     ) -> bool {
         prop_matches_naive(
             false,
@@ -125,8 +123,8 @@ quickcheck! {
     }
 
     fn qc_twoway_rev_matches_naive(
-        needle: BString,
-        haystack: BString
+        needle: Vec<u8>,
+        haystack: Vec<u8>
     ) -> bool {
         prop_matches_naive(
             true,
@@ -140,8 +138,8 @@ quickcheck! {
 /// Check that every prefix of the given byte string is a substring.
 fn prop_prefix_is_substring(
     reverse: bool,
-    bs: &BStr,
-    mut search: impl FnMut(&BStr, &BStr) -> Option<usize>,
+    bs: &[u8],
+    mut search: impl FnMut(&[u8], &[u8]) -> Option<usize>,
 ) -> bool {
     if bs.is_empty() {
         return true;
@@ -160,8 +158,8 @@ fn prop_prefix_is_substring(
 /// Check that every suffix of the given byte string is a substring.
 fn prop_suffix_is_substring(
     reverse: bool,
-    bs: &BStr,
-    mut search: impl FnMut(&BStr, &BStr) -> Option<usize>,
+    bs: &[u8],
+    mut search: impl FnMut(&[u8], &[u8]) -> Option<usize>,
 ) -> bool {
     if bs.is_empty() {
         return true;
@@ -181,9 +179,9 @@ fn prop_suffix_is_substring(
 /// algorithm.
 fn prop_matches_naive(
     reverse: bool,
-    needle: &BStr,
-    haystack: &BStr,
-    mut search: impl FnMut(&BStr, &BStr) -> Option<usize>,
+    needle: &[u8],
+    haystack: &[u8],
+    mut search: impl FnMut(&[u8], &[u8]) -> Option<usize>,
 ) -> bool {
     if reverse {
         naive_rfind(needle, haystack) == search(needle, haystack)
@@ -193,7 +191,7 @@ fn prop_matches_naive(
 }
 
 /// Naively search forwards for the given needle in the given haystack.
-fn naive_find(needle: &BStr, haystack: &BStr) -> Option<usize> {
+fn naive_find(needle: &[u8], haystack: &[u8]) -> Option<usize> {
     if needle.is_empty() {
         return Some(0);
     } else if haystack.len() < needle.len() {
@@ -208,7 +206,7 @@ fn naive_find(needle: &BStr, haystack: &BStr) -> Option<usize> {
 }
 
 /// Naively search in reverse for the given needle in the given haystack.
-fn naive_rfind(needle: &BStr, haystack: &BStr) -> Option<usize> {
+fn naive_rfind(needle: &[u8], haystack: &[u8]) -> Option<usize> {
     if needle.is_empty() {
         return Some(haystack.len());
     } else if haystack.len() < needle.len() {
