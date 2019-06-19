@@ -1,13 +1,13 @@
 use regex_automata::DFA;
 
-use bstr::BStr;
+use ext_slice::ByteSlice;
 use unicode::fsm::sentence_break_fwd::SENTENCE_BREAK_FWD;
 use utf8;
 
 /// An iterator over sentences in a byte string.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::sentences`](struct.BStr.html#method.sentences).
+/// [`ByteSlice::sentences`](trait.ByteSlice.html#method.sentences).
 ///
 /// Sentences typically include their trailing punctuation and whitespace.
 ///
@@ -20,11 +20,11 @@ use utf8;
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Sentence_Boundaries).
 #[derive(Clone, Debug)]
 pub struct Sentences<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
 }
 
 impl<'a> Sentences<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> Sentences<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> Sentences<'a> {
         Sentences { bs }
     }
 
@@ -36,19 +36,19 @@ impl<'a> Sentences<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("I want this. Not that. Right now.").sentences();
+    /// let mut it = b"I want this. Not that. Right now.".sentences();
     ///
-    /// assert_eq!("I want this. Not that. Right now.", it.as_bstr());
+    /// assert_eq!(&b"I want this. Not that. Right now."[..], it.as_bytes());
     /// it.next();
-    /// assert_eq!("Not that. Right now.", it.as_bstr());
+    /// assert_eq!(b"Not that. Right now.", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -70,7 +70,7 @@ impl<'a> Iterator for Sentences<'a> {
 /// An iterator over sentences in a byte string, along with their byte offsets.
 ///
 /// This iterator is typically constructed by
-/// [`bstr::sentence_indices`](struct.BStr.html#method.sentence_indices).
+/// [`ByteSlice::sentence_indices`](trait.ByteSlice.html#method.sentence_indices).
 ///
 /// Sentences typically include their trailing punctuation and whitespace.
 ///
@@ -91,12 +91,12 @@ impl<'a> Iterator for Sentences<'a> {
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Sentence_Boundaries).
 #[derive(Clone, Debug)]
 pub struct SentenceIndices<'a> {
-    bs: &'a BStr,
+    bs: &'a [u8],
     forward_index: usize,
 }
 
 impl<'a> SentenceIndices<'a> {
-    pub(crate) fn new(bs: &'a BStr) -> SentenceIndices<'a> {
+    pub(crate) fn new(bs: &'a [u8]) -> SentenceIndices<'a> {
         SentenceIndices { bs: bs, forward_index: 0 }
     }
 
@@ -108,19 +108,19 @@ impl<'a> SentenceIndices<'a> {
     /// # Examples
     ///
     /// ```
-    /// use bstr::B;
+    /// use bstr::ByteSlice;
     ///
-    /// let mut it = B("I want this. Not that. Right now.").sentence_indices();
+    /// let mut it = b"I want this. Not that. Right now.".sentence_indices();
     ///
-    /// assert_eq!("I want this. Not that. Right now.", it.as_bstr());
+    /// assert_eq!(&b"I want this. Not that. Right now."[..], it.as_bytes());
     /// it.next();
-    /// assert_eq!("Not that. Right now.", it.as_bstr());
+    /// assert_eq!(b"Not that. Right now.", it.as_bytes());
     /// it.next();
     /// it.next();
-    /// assert_eq!("", it.as_bstr());
+    /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bstr(&self) -> &'a BStr {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.bs
     }
 }
@@ -141,17 +141,17 @@ impl<'a> Iterator for SentenceIndices<'a> {
     }
 }
 
-fn decode_sentence(bs: &BStr) -> (&str, usize) {
+fn decode_sentence(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
-    } else if let Some(end) = SENTENCE_BREAK_FWD.find(bs.as_bytes()) {
+    } else if let Some(end) = SENTENCE_BREAK_FWD.find(bs) {
         // Safe because a match can only occur for valid UTF-8.
         let sentence = unsafe { bs[..end].to_str_unchecked() };
         (sentence, sentence.len())
     } else {
         const INVALID: &'static str = "\u{FFFD}";
         // No match on non-empty bytes implies we found invalid UTF-8.
-        let (_, size) = utf8::decode_lossy(bs.as_bytes());
+        let (_, size) = utf8::decode_lossy(bs);
         (INVALID, size)
     }
 }
@@ -160,7 +160,7 @@ fn decode_sentence(bs: &BStr) -> (&str, usize) {
 mod tests {
     use ucd_parse::SentenceBreakTest;
 
-    use bstr::{B, BStr};
+    use ext_slice::ByteSlice;
 
     #[test]
     fn forward_ucd() {
@@ -175,7 +175,7 @@ mod tests {
                    expected: {:?}\n\
                    got:      {:?}\n",
                 i,
-                BStr::new(&given),
+                given,
                 strs_to_bstrs(&test.sentences),
                 strs_to_bstrs(&got),
             );
@@ -195,11 +195,11 @@ mod tests {
     }
 
     fn sentences(bytes: &[u8]) -> Vec<&str> {
-        BStr::new(bytes).sentences().collect()
+        bytes.sentences().collect()
     }
 
-    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&BStr> {
-        strs.iter().map(|s| B(s.as_ref())).collect()
+    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&[u8]> {
+        strs.iter().map(|s| s.as_ref().as_bytes()).collect()
     }
 
     /// Return all of the UCD for sentence breaks.

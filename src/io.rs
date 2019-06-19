@@ -9,8 +9,8 @@ More APIs may be added in the future.
 
 use std::io;
 
-use bstr::BStr;
-use bstring::BString;
+use ext_slice::ByteSlice;
+use ext_vec::ByteVec;
 
 /// An extention trait for
 /// [`std::io::BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html)
@@ -19,7 +19,7 @@ pub trait BufReadExt: io::BufRead {
     /// Returns an iterator over the lines of this reader, where each line
     /// is represented as a byte string.
     ///
-    /// Each item yielded by this iterator is a `io::Result<BString>`, where
+    /// Each item yielded by this iterator is a `io::Result<Vec<u8>>`, where
     /// an error is yielded if there was a problem reading from the underlying
     /// reader.
     ///
@@ -44,9 +44,9 @@ pub trait BufReadExt: io::BufRead {
     ///     lines.push(line);
     /// }
     /// assert_eq!(lines.len(), 3);
-    /// assert_eq!(lines[0], "lorem");
-    /// assert_eq!(lines[1], "ipsum");
-    /// assert_eq!(lines[2], "dolor");
+    /// assert_eq!(lines[0], "lorem".as_bytes());
+    /// assert_eq!(lines[1], "ipsum".as_bytes());
+    /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
     fn byte_lines(self) -> ByteLines<Self> where Self: Sized {
@@ -80,13 +80,13 @@ pub trait BufReadExt: io::BufRead {
     ///
     /// let mut lines = vec![];
     /// cursor.for_byte_line(|line| {
-    ///     lines.push(line.to_bstring());
+    ///     lines.push(line.to_vec());
     ///     Ok(true)
     /// })?;
     /// assert_eq!(lines.len(), 3);
-    /// assert_eq!(lines[0], "lorem");
-    /// assert_eq!(lines[1], "ipsum");
-    /// assert_eq!(lines[2], "dolor");
+    /// assert_eq!(lines[0], "lorem".as_bytes());
+    /// assert_eq!(lines[1], "ipsum".as_bytes());
+    /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
     fn for_byte_line<F>(
@@ -94,10 +94,10 @@ pub trait BufReadExt: io::BufRead {
         mut for_each_line: F,
     ) -> io::Result<()>
     where Self: Sized,
-          F: FnMut(&BStr) -> io::Result<bool>
+          F: FnMut(&[u8]) -> io::Result<bool>
     {
-        let mut bytes = BString::new();
-        while self.read_until(b'\n', bytes.as_mut_vec())? > 0 {
+        let mut bytes = vec![];
+        while self.read_until(b'\n', &mut bytes)? > 0 {
             trim_line(&mut bytes);
             if !for_each_line(&bytes)? {
                 break;
@@ -135,13 +135,13 @@ pub trait BufReadExt: io::BufRead {
     ///
     /// let mut lines = vec![];
     /// cursor.for_byte_line_with_terminator(|line| {
-    ///     lines.push(line.to_bstring());
+    ///     lines.push(line.to_vec());
     ///     Ok(true)
     /// })?;
     /// assert_eq!(lines.len(), 3);
-    /// assert_eq!(lines[0], "lorem\n");
-    /// assert_eq!(lines[1], "ipsum\r\n");
-    /// assert_eq!(lines[2], "dolor");
+    /// assert_eq!(lines[0], "lorem\n".as_bytes());
+    /// assert_eq!(lines[1], "ipsum\r\n".as_bytes());
+    /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
     fn for_byte_line_with_terminator<F>(
@@ -149,10 +149,10 @@ pub trait BufReadExt: io::BufRead {
         mut for_each_line: F,
     ) -> io::Result<()>
     where Self: Sized,
-          F: FnMut(&BStr) -> io::Result<bool>
+          F: FnMut(&[u8]) -> io::Result<bool>
     {
-        let mut bytes = BString::new();
-        while self.read_until(b'\n', bytes.as_mut_vec())? > 0 {
+        let mut bytes = vec![];
+        while self.read_until(b'\n', &mut bytes)? > 0 {
             if !for_each_line(&bytes)? {
                 break;
             }
@@ -178,11 +178,11 @@ pub struct ByteLines<B> {
 }
 
 impl<B: io::BufRead> Iterator for ByteLines<B> {
-    type Item = io::Result<BString>;
+    type Item = io::Result<Vec<u8>>;
 
-    fn next(&mut self) -> Option<io::Result<BString>> {
-        let mut bytes = BString::new();
-        match self.buf.read_until(b'\n', bytes.as_mut_vec()) {
+    fn next(&mut self) -> Option<io::Result<Vec<u8>>> {
+        let mut bytes = vec![];
+        match self.buf.read_until(b'\n', &mut bytes) {
             Err(e) => Some(Err(e)),
             Ok(0) => None,
             Ok(_) => {
@@ -193,10 +193,10 @@ impl<B: io::BufRead> Iterator for ByteLines<B> {
     }
 }
 
-fn trim_line(line: &mut BString) {
-    if line.last() == Some(b'\n') {
+fn trim_line(line: &mut Vec<u8>) {
+    if line.last_byte() == Some(b'\n') {
         line.pop_byte();
-        if line.last() == Some(b'\r') {
+        if line.last_byte() == Some(b'\r') {
             line.pop_byte();
         }
     }

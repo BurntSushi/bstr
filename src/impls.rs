@@ -68,6 +68,7 @@ mod bstring {
 
     use bstr::BStr;
     use bstring::BString;
+    use ext_vec::ByteVec;
 
     impl fmt::Display for BString {
         #[inline]
@@ -84,25 +85,25 @@ mod bstring {
     }
 
     impl ops::Deref for BString {
-        type Target = BStr;
+        type Target = Vec<u8>;
 
         #[inline]
-        fn deref(&self) -> &BStr {
-            self.as_bstr()
+        fn deref(&self) -> &Vec<u8> {
+            &self.bytes
         }
     }
 
     impl ops::DerefMut for BString {
         #[inline]
-        fn deref_mut(&mut self) -> &mut BStr {
-            self.as_mut_bstr()
+        fn deref_mut(&mut self) -> &mut Vec<u8> {
+            &mut self.bytes
         }
     }
 
     impl AsRef<[u8]> for BString {
         #[inline]
         fn as_ref(&self) -> &[u8] {
-            self.as_bytes()
+            &self.bytes
         }
     }
 
@@ -116,7 +117,7 @@ mod bstring {
     impl AsMut<[u8]> for BString {
         #[inline]
         fn as_mut(&mut self) -> &mut [u8] {
-            self.as_bytes_mut()
+            &mut self.bytes
         }
     }
 
@@ -139,49 +140,49 @@ mod bstring {
 
         #[inline]
         fn to_owned(&self) -> BString {
-            self.to_bstring()
+            BString::from(self)
         }
     }
 
     impl<'a> From<&'a [u8]> for BString {
         #[inline]
         fn from(s: &'a [u8]) -> BString {
-            BString::from_vec(s.to_vec())
+            BString::from(s.to_vec())
         }
     }
 
     impl From<Vec<u8>> for BString {
         #[inline]
         fn from(s: Vec<u8>) -> BString {
-            BString::from_vec(s)
+            BString { bytes: s }
         }
     }
 
     impl From<BString> for Vec<u8> {
         #[inline]
         fn from(s: BString) -> Vec<u8> {
-            s.into_vec()
+            s.bytes
         }
     }
 
     impl<'a> From<&'a str> for BString {
         #[inline]
         fn from(s: &'a str) -> BString {
-            BString::from_vec(s.as_bytes().to_vec())
+            BString::from(s.as_bytes().to_vec())
         }
     }
 
     impl From<String> for BString {
         #[inline]
         fn from(s: String) -> BString {
-            BString::from_vec(s.into_bytes())
+            BString::from(s.into_bytes())
         }
     }
 
     impl<'a> From<&'a BStr> for BString {
         #[inline]
         fn from(s: &'a BStr) -> BString {
-            s.to_bstring()
+            BString::from(s.bytes.to_vec())
         }
     }
 
@@ -209,44 +210,44 @@ mod bstring {
     impl<'a> FromIterator<&'a str> for BString {
         #[inline]
         fn from_iter<T: IntoIterator<Item=&'a str>>(iter: T) -> BString {
-            let mut buf = BString::new();
+            let mut buf = vec![];
             for b in iter {
-                buf.push(b);
+                buf.push_str(b);
             }
-            buf
+            BString::from(buf)
         }
     }
 
     impl<'a> FromIterator<&'a [u8]> for BString {
         #[inline]
         fn from_iter<T: IntoIterator<Item=&'a [u8]>>(iter: T) -> BString {
-            let mut buf = BString::new();
+            let mut buf = vec![];
             for b in iter {
-                buf.push(b);
+                buf.push_str(b);
             }
-            buf
+            BString::from(buf)
         }
     }
 
     impl<'a> FromIterator<&'a BStr> for BString {
         #[inline]
         fn from_iter<T: IntoIterator<Item=&'a BStr>>(iter: T) -> BString {
-            let mut buf = BString::new();
+            let mut buf = vec![];
             for b in iter {
-                buf.push(b);
+                buf.push_str(b);
             }
-            buf
+            BString::from(buf)
         }
     }
 
     impl FromIterator<BString> for BString {
         #[inline]
         fn from_iter<T: IntoIterator<Item=BString>>(iter: T) -> BString {
-            let mut buf = BString::new();
+            let mut buf = vec![];
             for b in iter {
-                buf.push(b);
+                buf.push_str(b);
             }
-            buf
+            BString::from(buf)
         }
     }
 
@@ -271,7 +272,7 @@ mod bstring {
     impl PartialOrd for BString {
         #[inline]
         fn partial_cmp(&self, other: &BString) -> Option<Ordering> {
-            PartialOrd::partial_cmp(self.as_bytes(), other.as_bytes())
+            PartialOrd::partial_cmp(&self.bytes, &other.bytes)
         }
     }
 
@@ -301,6 +302,7 @@ mod bstr {
     use core::ops;
 
     use bstr::BStr;
+    use ext_slice::ByteSlice;
 
     impl fmt::Display for BStr {
         #[inline]
@@ -330,6 +332,22 @@ mod bstr {
             }
             write!(f, "\"")?;
             Ok(())
+        }
+    }
+
+    impl ops::Deref for BStr {
+        type Target = [u8];
+
+        #[inline]
+        fn deref(&self) -> &[u8] {
+            &self.bytes
+        }
+    }
+
+    impl ops::DerefMut for BStr {
+        #[inline]
+        fn deref_mut(&mut self) -> &mut [u8] {
+            &mut self.bytes
         }
     }
 
@@ -399,7 +417,7 @@ mod bstr {
     impl ops::IndexMut<usize> for BStr {
         #[inline]
         fn index_mut(&mut self, idx: usize) -> &mut u8 {
-            &mut self.as_bytes_mut()[idx]
+            &mut self.bytes[idx]
         }
     }
 
@@ -413,35 +431,35 @@ mod bstr {
     impl ops::IndexMut<ops::Range<usize>> for BStr {
         #[inline]
         fn index_mut(&mut self, r: ops::Range<usize>) -> &mut BStr {
-            BStr::from_bytes_mut(&mut self.as_bytes_mut()[r.start..r.end])
+            BStr::from_bytes_mut(&mut self.bytes[r.start..r.end])
         }
     }
 
     impl ops::IndexMut<ops::RangeInclusive<usize>> for BStr {
         #[inline]
         fn index_mut(&mut self, r: ops::RangeInclusive<usize>) -> &mut BStr {
-            BStr::from_bytes_mut(&mut self.as_bytes_mut()[*r.start()..=*r.end()])
+            BStr::from_bytes_mut(&mut self.bytes[*r.start()..=*r.end()])
         }
     }
 
     impl ops::IndexMut<ops::RangeFrom<usize>> for BStr {
         #[inline]
         fn index_mut(&mut self, r: ops::RangeFrom<usize>) -> &mut BStr {
-            BStr::from_bytes_mut(&mut self.as_bytes_mut()[r.start..])
+            BStr::from_bytes_mut(&mut self.bytes[r.start..])
         }
     }
 
     impl ops::IndexMut<ops::RangeTo<usize>> for BStr {
         #[inline]
         fn index_mut(&mut self, r: ops::RangeTo<usize>) -> &mut BStr {
-            BStr::from_bytes_mut(&mut self.as_bytes_mut()[..r.end])
+            BStr::from_bytes_mut(&mut self.bytes[..r.end])
         }
     }
 
     impl ops::IndexMut<ops::RangeToInclusive<usize>> for BStr {
         #[inline]
         fn index_mut(&mut self, r: ops::RangeToInclusive<usize>) -> &mut BStr {
-            BStr::from_bytes_mut(&mut self.as_bytes_mut()[..=r.end])
+            BStr::from_bytes_mut(&mut self.bytes[..=r.end])
         }
     }
 
@@ -469,7 +487,7 @@ mod bstr {
     impl AsMut<[u8]> for BStr {
         #[inline]
         fn as_mut(&mut self) -> &mut [u8] {
-            self.as_bytes_mut()
+            &mut self.bytes
         }
     }
 
@@ -724,7 +742,7 @@ mod bstring_arbitrary {
         }
 
         fn shrink(&self) -> Box<dyn Iterator<Item=BString>> {
-            Box::new(self.as_vec().shrink().map(BString::from))
+            Box::new(self.bytes.shrink().map(BString::from))
         }
     }
 }

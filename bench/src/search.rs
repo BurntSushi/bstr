@@ -1,6 +1,6 @@
 use std::str;
 
-use bstr::BStr;
+use bstr::ByteSlice;
 use criterion::Criterion;
 
 use inputs::*;
@@ -108,7 +108,7 @@ pub fn rfind_iter(c: &mut Criterion) {
 pub fn find_char(c: &mut Criterion) {
     let corpus = str::from_utf8(SUBTITLE_EN_HUGE).unwrap();
     define(c, "bstr/find_char", "en-huge-ascii", corpus.as_bytes(), move |b| {
-        let corpus = BStr::new(corpus);
+        let corpus = corpus.as_bytes();
         b.iter(|| {
             assert_eq!(None, corpus.find_char('γ'));
         });
@@ -133,7 +133,7 @@ fn define_find_iter(
 
     let name = format!("bstr/{}", group_name);
     define(c, &name, bench_name, corpus.as_bytes(), move |b| {
-        let corpus = BStr::new(corpus);
+        let corpus = corpus.as_bytes();
         b.iter(|| {
             assert_eq!(expected, corpus.find_iter(needle).count());
         });
@@ -159,7 +159,7 @@ fn define_rfind_iter(
 
     let name = format!("bstr/{}", group_name);
     define(c, &name, bench_name, corpus.as_bytes(), move |b| {
-        let corpus = BStr::new(corpus);
+        let corpus = corpus.as_bytes();
         b.iter(|| {
             assert_eq!(expected, corpus.rfind_iter(needle).count());
         });

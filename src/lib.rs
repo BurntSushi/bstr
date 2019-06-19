@@ -4,32 +4,42 @@ An experimental byte string library.
 Byte strings are just like standard Unicode strings with one very important
 difference: byte strings are only *conventionally* UTF-8 while Rust's standard
 Unicode strings are *guaranteed* to be valid UTF-8. The primary motivation for
-this type is for handling arbitrary bytes that are mostly UTF-8.
+byte strings is for handling arbitrary bytes that are mostly UTF-8.
 
 # Overview
 
-There are two primary types in this crate:
+This crate provides two important traits that provide string oriented methods
+on `&[u8]` and `Vec<u8>` types:
 
+* [`ByteSlice`](trait.ByteSlice.html) extends the `[u8]` type with additional
+  string oriented methods.
+* [`ByteVec`](trait.ByteVec.html) extends the `Vec<u8>` type with additional
+  string oriented methods.
+
+Additionally, this crate provides two concrete byte string types that deref to
+`[u8]` and `Vec<u8>`. These are useful for storing byte string types, and come
+with convenient `std::fmt::Debug` implementations:
+
+* [`BStr`](struct.BStr.html) is a byte string slice, analogous to `str`.
 * [`BString`](struct.BString.html) is an owned growable byte string buffer,
   analogous to `String`.
-* [`BStr`](struct.BStr.html) is a byte string slice, analogous to `str`.
 
 Additionally, the free function [`B`](fn.B.html) serves as a convenient short
 hand for writing byte string literals.
 
 # Quick examples
 
-Byte strings are effectively the same thing as a `Vec<u8>` or a `&[u8]`, except
-they provide a string oriented API. Operations such as iterating over
+Byte strings build on the existing APIs for `Vec<u8>` and `&[u8]`, with
+additional string oriented methods. Operations such as iterating over
 graphemes, searching for substrings, replacing substrings, trimming and case
-conversion are examples of things not provided on the standard `&[u8]` APIs
-but are provided by this crate. For example, this code iterates over all of
-occurrences of a subtring:
+conversion are examples of things not provided on the standard library `&[u8]`
+APIs but are provided by this crate. For example, this code iterates over all
+of occurrences of a subtring:
 
 ```
-use bstr::B;
+use bstr::ByteSlice;
 
-let s = B("foo bar foo foo quux foo");
+let s = b"foo bar foo foo quux foo";
 
 let mut matches = vec![];
 for start in s.find_iter("foo") {
@@ -38,27 +48,53 @@ for start in s.find_iter("foo") {
 assert_eq!(matches, [0, 8, 12, 21]);
 ```
 
-Here's another example showing how to do a search and replace:
+Here's another example showing how to do a search and replace (and also showing
+use of the `B` function):
 
 ```
-use bstr::B;
+use bstr::{B, ByteSlice};
 
-let old = B("foo bar foo foo quux foo");
+let old = B("foo ☃☃☃ foo foo quux foo");
 let new = old.replace("foo", "hello");
-assert_eq!(new, "hello bar hello hello quux hello");
+assert_eq!(new, B("hello ☃☃☃ hello hello quux hello"));
 ```
 
 And here's an example that shows case conversion, even in the presence of
 invalid UTF-8:
 
 ```
-use bstr::{B, BString};
+use bstr::{ByteSlice, ByteVec};
 
-let mut lower = BString::from("hello β");
+let mut lower = Vec::from("hello β");
 lower[0] = b'\xFF';
 // lowercase β is uppercased to Β
-assert_eq!(lower.to_uppercase(), B(b"\xFFELLO \xCE\x92"));
+assert_eq!(lower.to_uppercase(), b"\xFFELLO \xCE\x92");
 ```
+
+# Convenient debug representation
+
+When working with byte strings, it is often useful to be able to print them
+as if they were byte strings and not sequences of integers. While this crate
+cannot affect the `std::fmt::Debug` implementations for `[u8]` and `Vec<u8>`,
+this crate does provide the `BStr` and `BString` types which have convenient
+`std::fmt::Debug` implementations.
+
+For example, this
+
+```
+use bstr::ByteSlice;
+
+let mut bytes = Vec::from("hello β");
+bytes[0] = b'\xFF';
+
+println!("{:?}", bytes.as_bstr());
+```
+
+will output `"\xFFello β"`.
+
+This example works because the
+[`ByteSlice::as_bstr`](trait.ByteSlice.html#method.as_bstr)
+method converts any `&[u8]` to a `&BStr`.
 
 # When should I use byte strings?
 
@@ -106,33 +142,36 @@ useful they are more broadly isn't clear yet.
 
 Since this library is still experimental, you should not use it in the public
 API of your crates until it hits `1.0` (unless you're OK with with tracking
-breaking releases of `bstr`). It is a priority to move this crate to `1.0`
-expediently so that `BString` and `BStr` may be used in the public APIs of
-other crates. While both `BString` and `BStr` do provide zero cost ways of
-converting between `Vec<u8>` and `&[u8]`, it is often convenient to provide
-trait implementations for `BString` and `BStr`, which requires making `bstr` a
-public dependency.
+breaking releases of `bstr`).
+
+In general, it should be possible to avoid putting anything in this crate into
+your public APIs. Namely, you should never need to use the `ByteSlice` or
+`ByteVec` traits as bounds on public APIs, since their only purpose is to
+extend the methods on the concrete types `[u8]` and `Vec<u8>`, respectively.
+Similarly, it should not be necessary to put either the `BStr` or `BString`
+types into public APIs. If you want to use them internally, then they can
+be converted to/from `[u8]`/`Vec<u8>` as needed.
 
 # Differences with standard strings
 
-The primary difference between `BStr` and `str` is that the former is
+The primary difference between `[u8]` and `str` is that the former is
 conventionally UTF-8 while the latter is guaranteed to be UTF-8. The phrase
-"conventionally UTF-8" means that a `BStr` may contain bytes that do not form
-a valid UTF-8 sequence, but operations defined on the type are generally most
-useful on valid UTF-8 sequences. For example, iterating over Unicode codepoints
-or grapheme clusters is an operation that is only defined on valid UTF-8.
-Therefore, when invalid UTF-8 is encountered, the Unicode replacement codepoint
-is substituted. Thus, a byte string that is not UTF-8 at all is of limited
-utility when using these methods.
+"conventionally UTF-8" means that a `[u8]` may contain bytes that do not form
+a valid UTF-8 sequence, but operations defined on the type in this crate are
+generally most useful on valid UTF-8 sequences. For example, iterating over
+Unicode codepoints or grapheme clusters is an operation that is only defined
+on valid UTF-8. Therefore, when invalid UTF-8 is encountered, the Unicode
+replacement codepoint is substituted. Thus, a byte string that is not UTF-8 at
+all is of limited utility when using these crate.
 
 However, not all operations on byte strings are specifically Unicode aware. For
 example, substring search has no specific Unicode semantics ascribed to it. It
 works just as well for byte strings that are completely valid UTF-8 as for byte
 strings that contain no valid UTF-8 at all. Similarly for replacements and
-various other operations.
+various other operations that do not need any Unicode specific tailoring.
 
-Aside from the difference in how UTF-8 is handled, the APIs between `BStr` and
-`str` (and `BString` and `String`) are intentionally very similar, including
+Aside from the difference in how UTF-8 is handled, the APIs between `[u8]` and
+`str` (and `Vec<u8>` and `String`) are intentionally very similar, including
 maintaining the same behavior for corner cases in things like substring
 splitting. There are, however, some differences:
 
@@ -155,9 +194,16 @@ splitting. There are, however, some differences:
   in this crate, as is consistent with treating byte strings as a sequence of
   bytes. This means callers are responsible for maintaining a UTF-8 invariant
   if that's important.
+* Some routines provided by this crate, such as `starts_with_str`, have a
+  `_str` suffix to differentiate them from similar routines already defined
+  on the `[u8]` type. The difference is that `starts_with` requires its
+  parameter to be a `&[u8]`, where as `starts_with_str` permits its parameter
+  to by anything that implements `AsRef<[u8]>`, which is more flexible. This
+  means you can write `bytes.starts_with_str("☃")` instead of
+  `bytes.starts_with("☃".as_bytes())`.
 
 Otherwise, you should find most of the APIs between this crate and the standard
-library to be very similar, if not identical.
+library string APIs to be very similar, if not identical.
 
 # Handling of invalid UTF-8
 
@@ -176,9 +222,9 @@ codepoint, `U+FFFD`, which looks like this: `�`. For example, an
 replacement codepoint whenever it comes across bytes that are not valid UTF-8:
 
 ```
-use bstr::B;
+use bstr::ByteSlice;
 
-let bs = B(b"a\xFF\xFFz");
+let bs = b"a\xFF\xFFz";
 let chars: Vec<char> = bs.chars().collect();
 assert_eq!(vec!['a', '\u{FFFD}', '\u{FFFD}', 'z'], chars);
 ```
@@ -196,9 +242,9 @@ sequence, then all of those bytes (up to 3) are substituted with a single
 replacement codepoint. For example:
 
 ```
-use bstr::B;
+use bstr::ByteSlice;
 
-let bs = B(b"a\xF0\x9F\x87z");
+let bs = b"a\xF0\x9F\x87z";
 let chars: Vec<char> = bs.chars().collect();
 // The bytes \xF0\x9F\x87 could lead to a valid UTF-8 sequence, but 3 of them
 // on their own are invalid. Only one replacement codepoint is substituted,
@@ -212,9 +258,9 @@ the byte offsets containing the invalid UTF-8 bytes that were substituted with
 the replacement codepoint. For example:
 
 ```
-use bstr::{B, BStr};
+use bstr::{B, ByteSlice};
 
-let bs = B(b"a\xE2\x98z");
+let bs = b"a\xE2\x98z";
 let chars: Vec<(usize, usize, char)> = bs.char_indices().collect();
 // Even though the replacement codepoint is encoded as 3 bytes itself, the
 // byte range given here is only two bytes, corresponding to the original
@@ -223,7 +269,7 @@ assert_eq!(vec![(0, 1, 'a'), (1, 3, '\u{FFFD}'), (3, 4, 'z')], chars);
 
 // Thus, getting the original raw bytes is as simple as slicing the original
 // byte string:
-let chars: Vec<&BStr> = bs.char_indices().map(|(s, e, _)| &bs[s..e]).collect();
+let chars: Vec<&[u8]> = bs.char_indices().map(|(s, e, _)| &bs[s..e]).collect();
 assert_eq!(vec![B("a"), B(b"\xE2\x98"), B("z")], chars);
 ```
 
@@ -281,25 +327,25 @@ they can do:
 While this library may provide facilities for (1) in the future, currently,
 this library only provides facilities for (2) and (3). In particular, a suite
 of conversion functions are provided that permit converting between byte
-strings, OS strings and file paths. For owned `BString`s, they are:
+strings, OS strings and file paths. For owned byte strings, they are:
 
-* [`BString::from_os_string`](struct.BString.html#method.from_os_string)
-* [`BString::from_os_str_lossy`](struct.BString.html#method.from_os_str_lossy)
-* [`BString::from_path_buf`](struct.BString.html#method.from_path_buf)
-* [`BString::from_path_lossy`](struct.BString.html#method.from_path_lossy)
-* [`BString::into_os_string`](struct.BString.html#method.into_os_string)
-* [`BString::into_os_string_lossy`](struct.BString.html#method.into_os_string_lossy)
-* [`BString::into_path_buf`](struct.BString.html#method.into_path_buf)
-* [`BString::into_path_buf_lossy`](struct.BString.html#method.into_path_buf_lossy)
+* [`ByteVec::from_os_string`](trait.ByteVec.html#method.from_os_string)
+* [`ByteVec::from_os_str_lossy`](trait.ByteVec.html#method.from_os_str_lossy)
+* [`ByteVec::from_path_buf`](trait.ByteVec.html#method.from_path_buf)
+* [`ByteVec::from_path_lossy`](trait.ByteVec.html#method.from_path_lossy)
+* [`ByteVec::into_os_string`](trait.ByteVec.html#method.into_os_string)
+* [`ByteVec::into_os_string_lossy`](trait.ByteVec.html#method.into_os_string_lossy)
+* [`ByteVec::into_path_buf`](trait.ByteVec.html#method.into_path_buf)
+* [`ByteVec::into_path_buf_lossy`](trait.ByteVec.html#method.into_path_buf_lossy)
 
 For byte string slices, they are:
 
-* [`BStr::from_os_str`](struct.BStr.html#method.from_os_str)
-* [`BStr::from_path`](struct.BStr.html#method.from_path)
-* [`BStr::to_os_str`](struct.BStr.html#method.to_os_str)
-* [`BStr::to_os_str_lossy`](struct.BStr.html#method.to_os_str_lossy)
-* [`BStr::to_path`](struct.BStr.html#method.to_path)
-* [`BStr::to_path_lossy`](struct.BStr.html#method.to_path_lossy)
+* [`ByteSlice::from_os_str`](trait.ByteSlice.html#method.from_os_str)
+* [`ByteSlice::from_path`](trait.ByteSlice.html#method.from_path)
+* [`ByteSlice::to_os_str`](trait.ByteSlice.html#method.to_os_str)
+* [`ByteSlice::to_os_str_lossy`](trait.ByteSlice.html#method.to_os_str_lossy)
+* [`ByteSlice::to_path`](trait.ByteSlice.html#method.to_path)
+* [`ByteSlice::to_path_lossy`](trait.ByteSlice.html#method.to_path_lossy)
 
 On Unix, all of these conversions are rigorously zero cost, which gives one
 a way to ergonomically deal with raw file paths exactly as they are using
@@ -321,6 +367,7 @@ Windows.
 */
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(dead_code)]
 
 #[cfg(feature = "std")]
 extern crate core;
@@ -339,8 +386,10 @@ extern crate serde;
 #[cfg(test)]
 extern crate ucd_parse;
 
-pub use bstr::{
-    B, BStr,
+pub use bstr::BStr;
+pub use bstring::BString;
+pub use ext_slice::{
+    B, ByteSlice,
     Bytes,
     Finder, FinderReverse, Find, FindReverse,
     Split, SplitReverse, SplitN, SplitNReverse,
@@ -348,8 +397,7 @@ pub use bstr::{
     Lines, LinesWithTerminator,
 };
 #[cfg(feature = "std")]
-pub use bstring::{BString, DrainBytes, FromUtf8Error, concat, join};
-pub use slice_index::SliceIndex;
+pub use ext_vec::{ByteVec, DrainBytes, FromUtf8Error, concat, join};
 #[cfg(feature = "unicode")]
 pub use unicode::{
     Graphemes, GraphemeIndices,
@@ -367,11 +415,12 @@ mod bstr;
 #[cfg(feature = "std")]
 mod bstring;
 mod cow;
+mod ext_slice;
+mod ext_vec;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
 mod search;
-mod slice_index;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "unicode")]
@@ -380,7 +429,9 @@ mod utf8;
 
 #[cfg(test)]
 mod apitests {
-    use super::*;
+    use bstr::BStr;
+    use bstring::BString;
+    use ext_slice::{Finder, FinderReverse};
 
     #[test]
     fn oibits() {

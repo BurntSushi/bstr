@@ -5,7 +5,7 @@ extern crate criterion;
 extern crate bstr;
 extern crate unicode_segmentation;
 
-use bstr::BStr;
+use bstr::{B, ByteSlice};
 use criterion::{Bencher, Benchmark, Criterion, Throughput};
 
 use inputs::*;
@@ -48,35 +48,35 @@ fn is_ascii(c: &mut Criterion) {
     let corpus = SHERLOCK_HUGE;
     define(c, "is_ascii", "huge-ascii", corpus, move |b| {
         b.iter(|| {
-            assert!(BStr::from_bytes(corpus).is_ascii());
+            assert!(corpus.is_ascii());
         });
     });
 
     let corpus = SHERLOCK_SMALL;
     define(c, "is_ascii", "small-ascii", corpus, move |b| {
         b.iter(|| {
-            assert!(BStr::from_bytes(corpus).is_ascii());
+            assert!(corpus.is_ascii());
         });
     });
 
     let corpus = SHERLOCK_TINY;
     define(c, "is_ascii", "tiny-ascii", corpus, move |b| {
         b.iter(|| {
-            assert!(BStr::from_bytes(corpus).is_ascii());
+            assert!(corpus.is_ascii());
         });
     });
 
     let corpus = EMPTY;
     define(c, "is_ascii", "empty-ascii", corpus, move |b| {
         b.iter(|| {
-            assert!(BStr::from_bytes(corpus).is_ascii());
+            assert!(corpus.is_ascii());
         });
     });
 
     let corpus = "abcdefghijklm☃abcdefghijklmnopqrstuvwxyz".as_bytes();
     define(c, "is_ascii", "tiny-non-ascii", corpus, move |b| {
         b.iter(|| {
-            assert!(!BStr::from_bytes(corpus).is_ascii());
+            assert!(!corpus.is_ascii());
         });
     });
 }
@@ -86,7 +86,7 @@ fn to_str(c: &mut Criterion) {
     for &(name, corpus) in CORPORA_HUGE {
         define(c, "bstr/to_str", name, corpus, move |b| {
             b.iter(|| {
-                assert!(BStr::from_bytes(corpus).to_str().is_ok());
+                assert!(corpus.to_str().is_ok());
             });
         });
     }
@@ -107,7 +107,7 @@ fn to_str_lossy_valid(c: &mut Criterion) {
     for &(name, corpus) in CORPORA_HUGE {
         define(c, "bstr/to_str_lossy_valid", name, corpus, move |b| {
             b.iter(|| {
-                assert!(BStr::from_bytes(corpus).to_str_lossy().len() > 0);
+                assert!(corpus.to_str_lossy().len() > 0);
             });
         });
     }
@@ -127,7 +127,7 @@ fn trim(c: &mut Criterion) {
     // benchmark our impl
     define(c, "bstr/trim", "tiny", corpus.as_bytes(), move |b| {
         b.iter(|| {
-            assert_eq!("foo\tbar", BStr::new(corpus).trim());
+            assert_eq!("foo\tbar".as_bytes(), B(corpus).trim());
         });
     });
 
@@ -145,7 +145,7 @@ fn chars(c: &mut Criterion) {
         define(c, "bstr/chars", name, corpus, move |b| {
             b.iter(|| {
                 let mut count = 0;
-                for ch in BStr::from_bytes(corpus).chars() {
+                for ch in corpus.chars() {
                     count += ch.len_utf8();
                 }
                 assert!(count > 0);
@@ -175,7 +175,7 @@ fn graphemes(c: &mut Criterion) {
         define(c, "bstr/graphemes", name, corpus, move |b| {
             b.iter(|| {
                 let mut count = 0;
-                for g in BStr::from_bytes(corpus).graphemes() {
+                for g in corpus.graphemes() {
                     count += g.len();
                 }
                 assert!(count > 0);
@@ -206,7 +206,7 @@ fn words(c: &mut Criterion) {
         define(c, "bstr/words", name, corpus, move |b| {
             b.iter(|| {
                 let mut count = 0;
-                for g in BStr::from_bytes(corpus).words() {
+                for g in corpus.words() {
                     count += g.len();
                 }
                 assert!(count > 0);
@@ -237,7 +237,7 @@ fn sentences(c: &mut Criterion) {
         define(c, "bstr/sentences", name, corpus, move |b| {
             b.iter(|| {
                 let mut count = 0;
-                for g in BStr::from_bytes(corpus).sentences() {
+                for g in corpus.sentences() {
                     count += g.len();
                 }
                 assert!(count > 0);
