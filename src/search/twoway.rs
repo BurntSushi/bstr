@@ -58,7 +58,7 @@ impl<'b> TwoWay<'b> {
                 needle: CowBytes::new(needle),
                 freqy,
                 critical_pos: 0,
-                shift: Shift::Large { shift: 0  },
+                shift: Shift::Large { shift: 0 },
             };
         }
 
@@ -84,7 +84,7 @@ impl<'b> TwoWay<'b> {
                 needle: CowBytes::new(needle),
                 freqy,
                 critical_pos: 0,
-                shift: Shift::Large { shift: 0  },
+                shift: Shift::Large { shift: 0 },
             };
         }
 
@@ -703,8 +703,8 @@ impl SuffixKind {
 // N.B. There are more holistic tests in src/search/tests.rs.
 #[cfg(test)]
 mod tests {
-    use ext_slice::B;
     use super::*;
+    use ext_slice::B;
 
     /// Convenience wrapper for computing the suffix as a byte string.
     fn get_suffix_forward(needle: &[u8], kind: SuffixKind) -> (&[u8], usize) {
@@ -744,20 +744,16 @@ mod tests {
     fn suffix_forward() {
         macro_rules! assert_suffix_min {
             ($given:expr, $expected:expr, $period:expr) => {
-                let (got_suffix, got_period) = get_suffix_forward(
-                    $given.as_bytes(),
-                    SuffixKind::Minimal,
-                );
+                let (got_suffix, got_period) =
+                    get_suffix_forward($given.as_bytes(), SuffixKind::Minimal);
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
             };
         }
 
         macro_rules! assert_suffix_max {
             ($given:expr, $expected:expr, $period:expr) => {
-                let (got_suffix, got_period) = get_suffix_forward(
-                    $given.as_bytes(),
-                    SuffixKind::Maximal,
-                );
+                let (got_suffix, got_period) =
+                    get_suffix_forward($given.as_bytes(), SuffixKind::Maximal);
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
             };
         }
@@ -803,20 +799,16 @@ mod tests {
     fn suffix_reverse() {
         macro_rules! assert_suffix_min {
             ($given:expr, $expected:expr, $period:expr) => {
-                let (got_suffix, got_period) = get_suffix_reverse(
-                    $given.as_bytes(),
-                    SuffixKind::Minimal,
-                );
+                let (got_suffix, got_period) =
+                    get_suffix_reverse($given.as_bytes(), SuffixKind::Minimal);
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
             };
         }
 
         macro_rules! assert_suffix_max {
             ($given:expr, $expected:expr, $period:expr) => {
-                let (got_suffix, got_period) = get_suffix_reverse(
-                    $given.as_bytes(),
-                    SuffixKind::Maximal,
-                );
+                let (got_suffix, got_period) =
+                    get_suffix_reverse($given.as_bytes(), SuffixKind::Maximal);
                 assert_eq!((B($expected), $period), (got_suffix, got_period));
             };
         }

@@ -389,25 +389,20 @@ extern crate ucd_parse;
 pub use bstr::BStr;
 pub use bstring::BString;
 pub use ext_slice::{
-    B, ByteSlice,
-    Bytes,
-    Finder, FinderReverse, Find, FindReverse,
-    Split, SplitReverse, SplitN, SplitNReverse,
-    Fields, FieldsWith,
-    Lines, LinesWithTerminator,
+    ByteSlice, Bytes, Fields, FieldsWith, Find, FindReverse, Finder,
+    FinderReverse, Lines, LinesWithTerminator, Split, SplitN, SplitNReverse,
+    SplitReverse, B,
 };
 #[cfg(feature = "std")]
-pub use ext_vec::{ByteVec, DrainBytes, FromUtf8Error, concat, join};
+pub use ext_vec::{concat, join, ByteVec, DrainBytes, FromUtf8Error};
 #[cfg(feature = "unicode")]
 pub use unicode::{
-    Graphemes, GraphemeIndices,
-    Sentences, SentenceIndices,
-    Words, WordIndices, WordsWithBreaks, WordsWithBreakIndices,
+    GraphemeIndices, Graphemes, SentenceIndices, Sentences, WordIndices,
+    Words, WordsWithBreakIndices, WordsWithBreaks,
 };
 pub use utf8::{
-    Utf8Error, Chars, CharIndices,
-    decode as decode_utf8,
-    decode_last as decode_last_utf8,
+    decode as decode_utf8, decode_last as decode_last_utf8, CharIndices,
+    Chars, Utf8Error,
 };
 
 mod ascii;

@@ -1,8 +1,8 @@
 use core::char;
 use core::cmp;
+use core::fmt;
 #[cfg(feature = "std")]
 use std::error;
-use core::fmt;
 
 use ascii;
 
@@ -39,6 +39,7 @@ use ascii;
 const ACCEPT: usize = 12;
 const REJECT: usize = 0;
 
+#[cfg_attr(rustfmt, rustfmt::skip)]
 static CLASSES: [u8; 256] = [
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -50,6 +51,7 @@ static CLASSES: [u8; 256] = [
   10,3,3,3,3,3,3,3,3,3,3,3,3,4,3,3, 11,6,6,6,5,8,8,8,8,8,8,8,8,8,8,8,
 ];
 
+#[cfg_attr(rustfmt, rustfmt::skip)]
 static STATES_FORWARD: &'static [u8] = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   12, 0, 24, 36, 60, 96, 84, 0, 0, 0, 48, 72,
@@ -127,7 +129,7 @@ impl<'a> DoubleEndedIterator for Chars<'a> {
         if size == 0 {
             return None;
         }
-        self.bs = &self.bs[..self.bs.len()-size];
+        self.bs = &self.bs[..self.bs.len() - size];
         Some(ch)
     }
 }
@@ -210,7 +212,7 @@ impl<'a> DoubleEndedIterator for CharIndices<'a> {
         if size == 0 {
             return None;
         }
-        self.bs = &self.bs[..self.bs.len()-size];
+        self.bs = &self.bs[..self.bs.len() - size];
         self.reverse_index -= size;
         Some((self.reverse_index, self.reverse_index + size, ch))
     }
@@ -311,7 +313,9 @@ impl Utf8Error {
 
 #[cfg(feature = "std")]
 impl error::Error for Utf8Error {
-    fn description(&self) -> &str { "invalid UTF-8" }
+    fn description(&self) -> &str {
+        "invalid UTF-8"
+    }
 }
 
 impl fmt::Display for Utf8Error {
@@ -340,7 +344,7 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
             // to validate as much ASCII as possible very quickly.
             if state == ACCEPT
                 && b <= 0x7F
-                && slice.get(i+1).map_or(false, |&b| b <= 0x7F)
+                && slice.get(i + 1).map_or(false, |&b| b <= 0x7F)
             {
                 i += ascii::first_non_ascii_byte(&slice[i..]);
                 continue;
@@ -693,7 +697,7 @@ fn is_leading_utf8_byte(b: u8) -> bool {
 mod tests {
     use std::char;
 
-    use ext_slice::{B, ByteSlice};
+    use ext_slice::{ByteSlice, B};
     use tests::LOSSY_TESTS;
     use utf8::{self, Utf8Error};
 
@@ -723,15 +727,15 @@ mod tests {
         assert_eq!(Ok(()), utf8::validate(b"abc"));
         assert_eq!(Ok(()), utf8::validate(b"a\xE2\x98\x83a"));
         assert_eq!(Ok(()), utf8::validate(b"a\xF0\x9D\x9C\xB7a"));
-        assert_eq!(Ok(()), utf8::validate(
-            b"\xE2\x98\x83\xF0\x9D\x9C\xB7",
-        ));
-        assert_eq!(Ok(()), utf8::validate(
-            b"a\xE2\x98\x83a\xF0\x9D\x9C\xB7a",
-        ));
-        assert_eq!(Ok(()), utf8::validate(
-            b"\xEF\xBF\xBD\xE2\x98\x83\xEF\xBF\xBD",
-        ));
+        assert_eq!(Ok(()), utf8::validate(b"\xE2\x98\x83\xF0\x9D\x9C\xB7",));
+        assert_eq!(
+            Ok(()),
+            utf8::validate(b"a\xE2\x98\x83a\xF0\x9D\x9C\xB7a",)
+        );
+        assert_eq!(
+            Ok(()),
+            utf8::validate(b"\xEF\xBF\xBD\xE2\x98\x83\xEF\xBF\xBD",)
+        );
     }
 
     #[test]
@@ -759,39 +763,45 @@ mod tests {
         // overlong sequences, but that we get valid_up_to correct.
         assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xF0\x82\x82\xAC"));
         assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xF0\x82\x82\xAC"));
-        assert_eq!(Err(utf8e2(3, 1)), utf8::validate(
-            b"\xE2\x98\x83\xF0\x82\x82\xAC",
-        ));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xF0\x82\x82\xAC",)
+        );
 
         // Check that encoding a surrogate codepoint using the UTF-8 scheme
         // fails validation.
         assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xED\xA0\x80"));
         assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xED\xA0\x80"));
-        assert_eq!(Err(utf8e2(3, 1)), utf8::validate(
-            b"\xE2\x98\x83\xED\xA0\x80",
-        ));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xED\xA0\x80",)
+        );
 
         // Check that an incomplete 2-byte sequence fails.
         assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xCEa"));
         assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xCEa"));
-        assert_eq!(Err(utf8e2(3, 1)), utf8::validate(
-            b"\xE2\x98\x83\xCE\xE2\x98\x83",
-        ));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xCE\xE2\x98\x83",)
+        );
         // Check that an incomplete 3-byte sequence fails.
         assert_eq!(Err(utf8e2(0, 2)), utf8::validate(b"\xE2\x98a"));
         assert_eq!(Err(utf8e2(1, 2)), utf8::validate(b"a\xE2\x98a"));
-        assert_eq!(Err(utf8e2(3, 2)), utf8::validate(
-            b"\xE2\x98\x83\xE2\x98\xE2\x98\x83",
-        ));
+        assert_eq!(
+            Err(utf8e2(3, 2)),
+            utf8::validate(b"\xE2\x98\x83\xE2\x98\xE2\x98\x83",)
+        );
         // Check that an incomplete 4-byte sequence fails.
         assert_eq!(Err(utf8e2(0, 3)), utf8::validate(b"\xF0\x9D\x9Ca"));
         assert_eq!(Err(utf8e2(1, 3)), utf8::validate(b"a\xF0\x9D\x9Ca"));
-        assert_eq!(Err(utf8e2(4, 3)), utf8::validate(
-            b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C\xE2\x98\x83",
-        ));
-        assert_eq!(Err(utf8e2(6, 3)), utf8::validate(
-            b"foobar\xF1\x80\x80quux",
-        ));
+        assert_eq!(
+            Err(utf8e2(4, 3)),
+            utf8::validate(b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C\xE2\x98\x83",)
+        );
+        assert_eq!(
+            Err(utf8e2(6, 3)),
+            utf8::validate(b"foobar\xF1\x80\x80quux",)
+        );
 
         // Check that an incomplete (EOF) 2-byte sequence fails.
         assert_eq!(Err(utf8e(0)), utf8::validate(b"\xCE"));
@@ -804,15 +814,17 @@ mod tests {
         // Check that an incomplete (EOF) 4-byte sequence fails.
         assert_eq!(Err(utf8e(0)), utf8::validate(b"\xF0\x9D\x9C"));
         assert_eq!(Err(utf8e(1)), utf8::validate(b"a\xF0\x9D\x9C"));
-        assert_eq!(Err(utf8e(4)), utf8::validate(
-            b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C",
-        ));
+        assert_eq!(
+            Err(utf8e(4)),
+            utf8::validate(b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C",)
+        );
 
         // Test that we errors correct even after long valid sequences. This
         // checks that our "backup" logic for detecting errors is correct.
-        assert_eq!(Err(utf8e2(8, 1)), utf8::validate(
-            b"\xe2\x98\x83\xce\xb2\xe3\x83\x84\xFF",
-        ));
+        assert_eq!(
+            Err(utf8e2(8, 1)),
+            utf8::validate(b"\xe2\x98\x83\xce\xb2\xe3\x83\x84\xFF",)
+        );
     }
 
     #[test]
@@ -831,7 +843,10 @@ mod tests {
         assert_eq!(vec!['☃', '☃'], d("☃☃"));
         assert_eq!(vec!['α', 'β', 'γ', 'δ', 'ε'], d("αβγδε"));
         assert_eq!(vec!['☃', '⛄', '⛇'], d("☃⛄⛇"));
-        assert_eq!(vec!['𝗮', '𝗯', '𝗰', '𝗱', '𝗲'], d("𝗮𝗯𝗰𝗱𝗲"));
+        assert_eq!(
+            vec!['𝗮', '𝗯', '𝗰', '𝗱', '𝗲'],
+            d("𝗮𝗯𝗰𝗱𝗲")
+        );
     }
 
     #[test]
@@ -930,7 +945,7 @@ mod tests {
             let mut chars = vec![];
             while !s.is_empty() {
                 let (ch, size) = utf8::decode_last(s.as_bytes());
-                s = &s[..s.len()-size];
+                s = &s[..s.len() - size];
                 chars.push(ch.unwrap());
             }
             chars
@@ -940,7 +955,10 @@ mod tests {
         assert_eq!(vec!['☃', '☃'], d("☃☃"));
         assert_eq!(vec!['ε', 'δ', 'γ', 'β', 'α'], d("αβγδε"));
         assert_eq!(vec!['⛇', '⛄', '☃'], d("☃⛄⛇"));
-        assert_eq!(vec!['𝗲', '𝗱', '𝗰', '𝗯', '𝗮'], d("𝗮𝗯𝗰𝗱𝗲"));
+        assert_eq!(
+            vec!['𝗲', '𝗱', '𝗰', '𝗯', '𝗮'],
+            d("𝗮𝗯𝗰𝗱𝗲")
+        );
     }
 
     #[test]
@@ -1075,15 +1093,15 @@ mod tests {
             let got: String = B(input).chars().collect();
             assert_eq!(
                 expected, got,
-                "chars(ith: {:?}, given: {:?})", i, input,
+                "chars(ith: {:?}, given: {:?})",
+                i, input,
             );
-            let got: String = B(input)
-                .char_indices()
-                .map(|(_, _, ch)| ch)
-                .collect();
+            let got: String =
+                B(input).char_indices().map(|(_, _, ch)| ch).collect();
             assert_eq!(
                 expected, got,
-                "char_indices(ith: {:?}, given: {:?})", i, input,
+                "char_indices(ith: {:?}, given: {:?})",
+                i, input,
             );
 
             let expected: String = expected.chars().rev().collect();
@@ -1091,16 +1109,15 @@ mod tests {
             let got: String = B(input).chars().rev().collect();
             assert_eq!(
                 expected, got,
-                "chars.rev(ith: {:?}, given: {:?})", i, input,
+                "chars.rev(ith: {:?}, given: {:?})",
+                i, input,
             );
-            let got: String = B(input)
-                .char_indices()
-                .rev()
-                .map(|(_, _, ch)| ch)
-                .collect();
+            let got: String =
+                B(input).char_indices().rev().map(|(_, _, ch)| ch).collect();
             assert_eq!(
                 expected, got,
-                "char_indices.rev(ith: {:?}, given: {:?})", i, input,
+                "char_indices.rev(ith: {:?}, given: {:?})",
+                i, input,
             );
         }
     }

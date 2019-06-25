@@ -31,11 +31,10 @@ use utf8::{self, Utf8Error};
 /// assert_eq!(s, "foobarbaz".as_bytes());
 /// ```
 #[inline]
-pub fn concat<T, I>(
-    elements: I,
-) -> Vec<u8>
-where T: AsRef<[u8]>,
-      I: IntoIterator<Item=T>
+pub fn concat<T, I>(elements: I) -> Vec<u8>
+where
+    T: AsRef<[u8]>,
+    I: IntoIterator<Item = T>,
 {
     let mut dest = vec![];
     for element in elements {
@@ -62,13 +61,11 @@ where T: AsRef<[u8]>,
 /// assert_eq!(s, "foo,bar,baz".as_bytes());
 /// ```
 #[inline]
-pub fn join<B, T, I>(
-    separator: B,
-    elements: I,
-) -> Vec<u8>
-where B: AsRef<[u8]>,
-      T: AsRef<[u8]>,
-      I: IntoIterator<Item=T>
+pub fn join<B, T, I>(separator: B, elements: I) -> Vec<u8>
+where
+    B: AsRef<[u8]>,
+    T: AsRef<[u8]>,
+    I: IntoIterator<Item = T>,
 {
     let mut it = elements.into_iter();
     let mut dest = vec![];
@@ -86,9 +83,15 @@ where B: AsRef<[u8]>,
 }
 
 impl ByteVec for Vec<u8> {
-    fn as_vec(&self) -> &Vec<u8> { self }
-    fn as_vec_mut(&mut self) -> &mut Vec<u8> { self }
-    fn into_vec(self) -> Vec<u8> { self }
+    fn as_vec(&self) -> &Vec<u8> {
+        self
+    }
+    fn as_vec_mut(&mut self) -> &mut Vec<u8> {
+        self
+    }
+    fn into_vec(self) -> Vec<u8> {
+        self
+    }
 }
 
 /// Ensure that callers cannot implement `ByteSlice` by making an
@@ -114,7 +117,9 @@ pub trait ByteVec: Sealed {
     /// and callers shouldn't care about it. This only exists for making the
     /// extension trait work.
     #[doc(hidden)]
-    fn into_vec(self) -> Vec<u8> where Self: Sized;
+    fn into_vec(self) -> Vec<u8>
+    where
+        Self: Sized;
 
     /// Create a new owned byte string from the given byte slice.
     ///
@@ -304,9 +309,8 @@ pub trait ByteVec: Sealed {
             self.push_byte(ch as u8);
             return;
         }
-        self.as_vec_mut().extend_from_slice(
-            ch.encode_utf8(&mut [0; 4]).as_bytes(),
-        );
+        self.as_vec_mut()
+            .extend_from_slice(ch.encode_utf8(&mut [0; 4]).as_bytes());
     }
 
     /// Appends the given slice to the end of this byte string. This accepts
@@ -370,7 +374,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(bytes, B(b"foo\xFFbar"));
     /// ```
     #[inline]
-    fn into_string(self) -> Result<String, FromUtf8Error> where Self: Sized {
+    fn into_string(self) -> Result<String, FromUtf8Error>
+    where
+        Self: Sized,
+    {
         match utf8::validate(self.as_vec()) {
             Err(err) => {
                 Err(FromUtf8Error { original: self.into_vec(), err: err })
@@ -399,7 +406,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(string, "foo\u{FFFD}bar");
     /// ```
     #[inline]
-    fn into_string_lossy(self) -> String where Self: Sized {
+    fn into_string_lossy(self) -> String
+    where
+        Self: Sized,
+    {
         let v = self.as_vec();
         if let Ok(allutf8) = v.to_str() {
             return allutf8.to_string();
@@ -437,7 +447,10 @@ pub trait ByteVec: Sealed {
     /// let s = unsafe { Vec::from("☃βツ").into_string_unchecked() };
     /// assert_eq!("☃βツ", s);
     /// ```
-    unsafe fn into_string_unchecked(self) -> String where Self: Sized {
+    unsafe fn into_string_unchecked(self) -> String
+    where
+        Self: Sized,
+    {
         String::from_utf8_unchecked(self.into_vec())
     }
 
@@ -460,7 +473,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(os_str, OsStr::new("foo"));
     /// ```
     #[inline]
-    fn into_os_string(self) -> Result<OsString, Vec<u8>> where Self: Sized {
+    fn into_os_string(self) -> Result<OsString, Vec<u8>>
+    where
+        Self: Sized,
+    {
         #[cfg(unix)]
         #[inline]
         fn imp(v: Vec<u8>) -> Result<OsString, Vec<u8>> {
@@ -503,7 +519,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[inline]
-    fn into_os_string_lossy(self) -> OsString where Self: Sized {
+    fn into_os_string_lossy(self) -> OsString
+    where
+        Self: Sized,
+    {
         #[cfg(unix)]
         #[inline]
         fn imp(v: Vec<u8>) -> OsString {
@@ -538,7 +557,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(path.as_os_str(), "foo");
     /// ```
     #[inline]
-    fn into_path_buf(self) -> Result<PathBuf, Vec<u8>> where Self: Sized {
+    fn into_path_buf(self) -> Result<PathBuf, Vec<u8>>
+    where
+        Self: Sized,
+    {
         self.into_os_string().map(PathBuf::from)
     }
 
@@ -564,7 +586,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[inline]
-    fn into_path_buf_lossy(self) -> PathBuf where Self: Sized {
+    fn into_path_buf_lossy(self) -> PathBuf
+    where
+        Self: Sized,
+    {
         PathBuf::from(self.into_os_string_lossy())
     }
 
@@ -799,12 +824,10 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(s, "foxxxxxar".as_bytes());
     /// ```
     #[inline]
-    fn replace_range<R, B>(
-        &mut self,
-        range: R,
-        replace_with: B,
-    ) where R: ops::RangeBounds<usize>,
-            B: AsRef<[u8]>
+    fn replace_range<R, B>(&mut self, range: R, replace_with: B)
+    where
+        R: ops::RangeBounds<usize>,
+        B: AsRef<[u8]>,
     {
         self.as_vec_mut().splice(range, replace_with.as_ref().iter().cloned());
     }
@@ -839,11 +862,9 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(s, "foar".as_bytes());
     /// ```
     #[inline]
-    fn drain_bytes<R>(
-        &mut self,
-        range: R,
-    ) -> DrainBytes
-    where R: ops::RangeBounds<usize>
+    fn drain_bytes<R>(&mut self, range: R) -> DrainBytes
+    where
+        R: ops::RangeBounds<usize>,
     {
         DrainBytes { it: self.as_vec_mut().drain(range) }
     }
@@ -997,7 +1018,9 @@ impl FromUtf8Error {
 
 impl error::Error for FromUtf8Error {
     #[inline]
-    fn description(&self) -> &str { "invalid UTF-8 vector" }
+    fn description(&self) -> &str {
+        "invalid UTF-8 vector"
+    }
 }
 
 impl fmt::Display for FromUtf8Error {

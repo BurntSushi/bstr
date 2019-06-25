@@ -341,8 +341,8 @@ impl Freqy {
 
 #[cfg(test)]
 mod tests {
-    use ext_slice::B;
     use super::*;
+    use ext_slice::B;
 
     #[test]
     fn freqy_forward() {

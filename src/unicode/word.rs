@@ -331,9 +331,9 @@ mod tests {
                 test.words,
                 got,
                 "\n\nword forward break test {} failed:\n\
-                   given:    {:?}\n\
-                   expected: {:?}\n\
-                   got:      {:?}\n",
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
                 i,
                 given,
                 strs_to_bstrs(&test.words),
@@ -350,10 +350,7 @@ mod tests {
     #[test]
     fn forward_additional() {
         assert_eq!(vec!["a", ".", "  ", "Y"], words(b"a.  Y"));
-        assert_eq!(
-            vec!["r", ".", "  ", "Yo"],
-            words(b"r.  Yo")
-        );
+        assert_eq!(vec!["r", ".", "  ", "Yo"], words(b"r.  Yo"));
         assert_eq!(
             vec!["whatsoever", ".", "  ", "You", " ", "may"],
             words(b"whatsoever.  You may")
@@ -363,61 +360,25 @@ mod tests {
             words(b"21stcentury'syesterday")
         );
 
-        assert_eq!(
-            vec!["Bonta_", "'", "s"],
-            words(b"Bonta_'s")
-        );
-        assert_eq!(
-            vec!["_vhat's"],
-            words(b"_vhat's")
-        );
-        assert_eq!(
-            vec!["__on'anima"],
-            words(b"__on'anima")
-        );
-        assert_eq!(
-            vec!["123_", "'", "4"],
-            words(b"123_'4")
-        );
-        assert_eq!(
-            vec!["_123'4"],
-            words(b"_123'4")
-        );
-        assert_eq!(
-            vec!["__12'345"],
-            words(b"__12'345")
-        );
+        assert_eq!(vec!["Bonta_", "'", "s"], words(b"Bonta_'s"));
+        assert_eq!(vec!["_vhat's"], words(b"_vhat's"));
+        assert_eq!(vec!["__on'anima"], words(b"__on'anima"));
+        assert_eq!(vec!["123_", "'", "4"], words(b"123_'4"));
+        assert_eq!(vec!["_123'4"], words(b"_123'4"));
+        assert_eq!(vec!["__12'345"], words(b"__12'345"));
 
         assert_eq!(
             vec!["tomorrowat4", ":", "00", ","],
             words(b"tomorrowat4:00,")
         );
-        assert_eq!(
-            vec!["RS1", "'", "s"],
-            words(b"RS1's")
-        );
-        assert_eq!(
-            vec!["X38"],
-            words(b"X38")
-        );
+        assert_eq!(vec!["RS1", "'", "s"], words(b"RS1's"));
+        assert_eq!(vec!["X38"], words(b"X38"));
 
-        assert_eq!(
-            vec!["4abc", ":", "00", ","],
-            words(b"4abc:00,")
-        );
-        assert_eq!(
-            vec!["12S", "'", "1"],
-            words(b"12S'1")
-        );
-        assert_eq!(
-            vec!["1XY"],
-            words(b"1XY")
-        );
+        assert_eq!(vec!["4abc", ":", "00", ","], words(b"4abc:00,"));
+        assert_eq!(vec!["12S", "'", "1"], words(b"12S'1"));
+        assert_eq!(vec!["1XY"], words(b"1XY"));
 
-        assert_eq!(
-            vec!["\u{FEFF}", "Ты"],
-            words("\u{FEFF}Ты".as_bytes())
-        );
+        assert_eq!(vec!["\u{FEFF}", "Ты"], words("\u{FEFF}Ты".as_bytes()));
     }
 
     fn words(bytes: &[u8]) -> Vec<&str> {
@@ -430,9 +391,7 @@ mod tests {
 
     /// Return all of the UCD for word breaks.
     fn ucdtests() -> Vec<WordBreakTest> {
-        const TESTDATA: &'static str = include_str!(
-            "data/WordBreakTest.txt"
-        );
+        const TESTDATA: &'static str = include_str!("data/WordBreakTest.txt");
 
         let mut tests = vec![];
         for mut line in TESTDATA.lines() {
