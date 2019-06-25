@@ -20,12 +20,11 @@ use ext_vec::ByteVec;
 use search::{PrefilterState, TwoWay};
 #[cfg(feature = "unicode")]
 use unicode::{
-    Graphemes, GraphemeIndices,
-    Sentences, SentenceIndices,
-    Words, WordIndices, WordsWithBreaks, WordsWithBreakIndices,
-    whitespace_len_fwd, whitespace_len_rev,
+    whitespace_len_fwd, whitespace_len_rev, GraphemeIndices, Graphemes,
+    SentenceIndices, Sentences, WordIndices, Words, WordsWithBreakIndices,
+    WordsWithBreaks,
 };
-use utf8::{self, Chars, CharIndices, Utf8Error};
+use utf8::{self, CharIndices, Chars, Utf8Error};
 
 /// A short-hand constructor for building a `&[u8]`.
 ///
@@ -78,8 +77,12 @@ pub fn B<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a [u8] {
 }
 
 impl ByteSlice for [u8] {
-    fn as_bytes(&self) -> &[u8] { self }
-    fn as_bytes_mut(&mut self) -> &mut [u8] { self }
+    fn as_bytes(&self) -> &[u8] {
+        self
+    }
+    fn as_bytes_mut(&mut self) -> &mut [u8] {
+        self
+    }
 }
 
 /// Ensure that callers cannot implement `ByteSlice` by making an
@@ -244,9 +247,7 @@ pub trait ByteSlice: Sealed {
         utf8::validate(self.as_bytes()).map(|_| {
             // SAFETY: This is safe because of the guarantees provided by
             // utf8::validate.
-            unsafe {
-                str::from_utf8_unchecked(self.as_bytes())
-            }
+            unsafe { str::from_utf8_unchecked(self.as_bytes()) }
         })
     }
 
@@ -352,9 +353,8 @@ pub trait ByteSlice: Sealed {
             }
             Err(err) => {
                 let mut lossy = String::with_capacity(self.as_bytes().len());
-                let (valid, after) = self
-                    .as_bytes()
-                    .split_at(err.valid_up_to());
+                let (valid, after) =
+                    self.as_bytes().split_at(err.valid_up_to());
                 // SAFETY: This is safe because utf8::validate guarantees
                 // that all of `valid` is valid UTF-8.
                 lossy.push_str(unsafe { str::from_utf8_unchecked(valid) });
@@ -589,7 +589,7 @@ pub trait ByteSlice: Sealed {
         let bs = self.as_bytes();
         let mut dst = vec![0; bs.len() * n];
         for i in 0..n {
-            dst[i * bs.len()..(i+1) * bs.len()].copy_from_slice(bs);
+            dst[i * bs.len()..(i + 1) * bs.len()].copy_from_slice(bs);
         }
         dst
     }
@@ -2006,10 +2006,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(s.trim_start_with(|c| c.is_numeric()), B("foo5bar789"));
     /// ```
     #[inline]
-    fn trim_start_with<F: FnMut(char) -> bool>(
-        &self,
-        mut trim: F,
-    ) -> &[u8] {
+    fn trim_start_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &[u8] {
         for (s, _, ch) in self.char_indices() {
             if !trim(ch) {
                 return &self.as_bytes()[s..];
@@ -2032,10 +2029,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(s.trim_end_with(|c| c.is_numeric()), B("123foo5bar"));
     /// ```
     #[inline]
-    fn trim_end_with<F: FnMut(char) -> bool>(
-        &self,
-        mut trim: F,
-    ) -> &[u8] {
+    fn trim_end_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &[u8] {
         for (_, e, ch) in self.char_indices().rev() {
             if !trim(ch) {
                 return &self.as_bytes()[..e];
@@ -2714,11 +2708,9 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(s, B("Hello, Wello!"));
     /// ```
     #[inline]
-    fn copy_within_str<R>(
-        &mut self,
-        src: R,
-        dest: usize,
-    ) where R: ops::RangeBounds<usize>
+    fn copy_within_str<R>(&mut self, src: R, dest: usize)
+    where
+        R: ops::RangeBounds<usize>,
     {
         // TODO: Deprecate this once slice::copy_within stabilizes.
         let src_start = match src.start_bound() {
@@ -2957,10 +2949,9 @@ impl<'a> Iterator for Find<'a> {
         if self.pos > self.haystack.len() {
             return None;
         }
-        let result = self.searcher.find_with(
-            &mut self.prestate,
-            &self.haystack[self.pos..],
-        );
+        let result = self
+            .searcher
+            .find_with(&mut self.prestate, &self.haystack[self.pos..]);
         match result {
             None => None,
             Some(i) => {
@@ -3014,10 +3005,9 @@ impl<'a> Iterator for FindReverse<'a> {
             None => return None,
             Some(pos) => pos,
         };
-        let result = self.searcher.rfind_with(
-            &mut self.prestate,
-            &self.haystack[..pos],
-        );
+        let result = self
+            .searcher
+            .rfind_with(&mut self.prestate, &self.haystack[..pos]);
         match result {
             None => None,
             Some(i) => {
@@ -3107,11 +3097,7 @@ pub struct FieldsWith<'a, F> {
 
 impl<'a, F: FnMut(char) -> bool> FieldsWith<'a, F> {
     fn new(bytes: &'a [u8], f: F) -> FieldsWith<'a, F> {
-        FieldsWith {
-            f: f,
-            bytes: bytes,
-            chars: bytes.char_indices(),
-        }
+        FieldsWith { f: f, bytes: bytes, chars: bytes.char_indices() }
     }
 }
 
@@ -3294,7 +3280,6 @@ impl<'a> Iterator for SplitN<'a> {
     }
 }
 
-
 /// An iterator over at most `n` substrings in a byte string, split by a
 /// separator, in reverse.
 ///
@@ -3412,7 +3397,7 @@ impl<'a> Iterator for LinesWithTerminator<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ext_slice::{B, ByteSlice};
+    use ext_slice::{ByteSlice, B};
     use tests::LOSSY_TESTS;
 
     #[test]
@@ -3423,13 +3408,16 @@ mod tests {
                 expected.as_bytes(),
                 got.as_bytes(),
                 "to_str_lossy(ith: {:?}, given: {:?})",
-                i, input,
+                i,
+                input,
             );
 
             let mut got = String::new();
             B(input).to_str_lossy_into(&mut got);
             assert_eq!(
-                expected.as_bytes(), got.as_bytes(), "to_str_lossy_into",
+                expected.as_bytes(),
+                got.as_bytes(),
+                "to_str_lossy_into",
             );
 
             let got = String::from_utf8_lossy(input);

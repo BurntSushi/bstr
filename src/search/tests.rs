@@ -36,10 +36,8 @@ const SEARCH_TESTS: &'static [SearchTest] = &[
     ("abc", "zzabc", Some(2), Some(2)),
     ("abc", "azbc", None, None),
     ("abc", "abzc", None, None),
-
     ("abczdef", "abczdefzzzzzzzzzzzzzzzzzzzz", Some(0), Some(0)),
     ("abczdef", "zzzzzzzzzzzzzzzzzzzzabczdef", Some(20), Some(20)),
-
     // Failures caught by quickcheck.
     ("\u{0}\u{15}", "\u{0}\u{15}\u{15}\u{0}", Some(0), Some(0)),
     ("\u{0}\u{1e}", "\u{1e}\u{0}", None, None),
@@ -69,7 +67,10 @@ fn run_search_tests_fwd(
             expected_fwd,
             search(n, h),
             "{}: needle: {:?}, haystack: {:?}, expected: {:?}",
-            name, n, h, expected_fwd
+            name,
+            n,
+            h,
+            expected_fwd
         );
     }
 }
@@ -88,7 +89,10 @@ fn run_search_tests_rev(
             expected_rev,
             search(n, h),
             "{}: needle: {:?}, haystack: {:?}, expected: {:?}",
-            name, n, h, expected_rev
+            name,
+            n,
+            h,
+            expected_rev
         );
     }
 }

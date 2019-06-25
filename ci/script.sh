@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# vim: tabstop=2 shiftwidth=2 softtabstop=2
+
 set -ex
 
 cargo build --verbose
@@ -13,5 +15,7 @@ fi
 
 cargo test --verbose
 if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+  rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+  cargo fmt -- --check
   cargo bench --verbose --manifest-path bench/Cargo.toml -- --test
 fi

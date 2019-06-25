@@ -1,6 +1,6 @@
+use core::ops;
 #[cfg(feature = "std")]
 use std::borrow::Cow;
-use core::ops;
 
 /// A specialized copy-on-write byte string.
 ///

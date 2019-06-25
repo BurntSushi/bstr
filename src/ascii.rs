@@ -147,8 +147,10 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
 
                 let a = _mm_load_si128(ptr as *const __m128i);
                 let b = _mm_load_si128(ptr.add(VECTOR_SIZE) as *const __m128i);
-                let c = _mm_load_si128(ptr.add(2 * VECTOR_SIZE) as *const __m128i);
-                let d = _mm_load_si128(ptr.add(3 * VECTOR_SIZE) as *const __m128i);
+                let c =
+                    _mm_load_si128(ptr.add(2 * VECTOR_SIZE) as *const __m128i);
+                let d =
+                    _mm_load_si128(ptr.add(3 * VECTOR_SIZE) as *const __m128i);
 
                 let or1 = _mm_or_si128(a, b);
                 let or2 = _mm_or_si128(c, d);
@@ -222,9 +224,13 @@ unsafe fn first_non_ascii_byte_slow(
 #[cfg(any(test, not(target_arch = "x86_64")))]
 fn first_non_ascii_byte_mask(mask: usize) -> usize {
     #[cfg(target_endian = "little")]
-    { mask.trailing_zeros() as usize / 8 }
+    {
+        mask.trailing_zeros() as usize / 8
+    }
     #[cfg(target_endian = "big")]
-    { mask.leading_zeros() as usize / 8 }
+    {
+        mask.leading_zeros() as usize / 8
+    }
 }
 
 /// Increment the given pointer by the given amount.
@@ -271,7 +277,9 @@ mod tests {
                 i,
                 first_non_ascii_byte_fallback(s.as_bytes()),
                 "i: {:?}, len: {:?}, s: {:?}",
-                i, s.len(), s
+                i,
+                s.len(),
+                s
             );
         }
     }
@@ -290,13 +298,18 @@ mod tests {
         for i in 0..517 {
             for align in 0..65 {
                 let mut s = "a".repeat(i);
-                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
+                s.push_str(
+                    "☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃",
+                );
                 let s = s.get(align..).unwrap_or("");
                 assert_eq!(
                     i.saturating_sub(align),
                     first_non_ascii_byte_fallback(s.as_bytes()),
                     "i: {:?}, align: {:?}, len: {:?}, s: {:?}",
-                    i, align, s.len(), s
+                    i,
+                    align,
+                    s.len(),
+                    s
                 );
             }
         }
@@ -308,13 +321,18 @@ mod tests {
         for i in 0..517 {
             for align in 0..65 {
                 let mut s = "a".repeat(i);
-                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
+                s.push_str(
+                    "☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃",
+                );
                 let s = s.get(align..).unwrap_or("");
                 assert_eq!(
                     i.saturating_sub(align),
                     first_non_ascii_byte_sse2(s.as_bytes()),
                     "i: {:?}, align: {:?}, len: {:?}, s: {:?}",
-                    i, align, s.len(), s
+                    i,
+                    align,
+                    s.len(),
+                    s
                 );
             }
         }

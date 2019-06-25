@@ -82,7 +82,7 @@ impl<'a> DoubleEndedIterator for Graphemes<'a> {
         if size == 0 {
             return None;
         }
-        self.bs = &self.bs[..self.bs.len()-size];
+        self.bs = &self.bs[..self.bs.len() - size];
         Some(grapheme)
     }
 }
@@ -176,7 +176,7 @@ impl<'a> DoubleEndedIterator for GraphemeIndices<'a> {
         if size == 0 {
             return None;
         }
-        self.bs = &self.bs[..self.bs.len()-size];
+        self.bs = &self.bs[..self.bs.len() - size];
         self.reverse_index -= size;
         Some((self.reverse_index, self.reverse_index + size, grapheme))
     }
@@ -261,9 +261,9 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
 mod tests {
     use ucd_parse::GraphemeClusterBreakTest;
 
+    use super::*;
     use ext_slice::ByteSlice;
     use tests::LOSSY_TESTS;
-    use super::*;
 
     #[test]
     fn forward_ucd() {
@@ -276,9 +276,9 @@ mod tests {
                 test.grapheme_clusters,
                 got,
                 "\ngrapheme forward break test {} failed:\n\
-                   given:    {:?}\n\
-                   expected: {:?}\n\
-                   got:      {:?}\n",
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
                 i,
                 uniescape(&given),
                 uniescape_vec(&test.grapheme_clusters),
@@ -300,9 +300,9 @@ mod tests {
                 test.grapheme_clusters,
                 got,
                 "\n\ngrapheme reverse break test {} failed:\n\
-                     given:    {:?}\n\
-                     expected: {:?}\n\
-                     got:      {:?}\n",
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
                 i,
                 uniescape(&given),
                 uniescape_vec(&test.grapheme_clusters),
@@ -323,9 +323,8 @@ mod tests {
     fn reverse_lossy() {
         for &(expected, input) in LOSSY_TESTS {
             let expected: String = expected.chars().rev().collect();
-            let got = Graphemes::new(input.as_bytes())
-                .rev()
-                .collect::<String>();
+            let got =
+                Graphemes::new(input.as_bytes()).rev().collect::<String>();
             assert_eq!(expected, got);
         }
     }
@@ -340,9 +339,8 @@ mod tests {
 
     /// Return all of the UCD for grapheme breaks.
     fn ucdtests() -> Vec<GraphemeClusterBreakTest> {
-        const TESTDATA: &'static str = include_str!(
-            "data/GraphemeBreakTest.txt"
-        );
+        const TESTDATA: &'static str =
+            include_str!("data/GraphemeBreakTest.txt");
 
         let mut tests = vec![];
         for mut line in TESTDATA.lines() {

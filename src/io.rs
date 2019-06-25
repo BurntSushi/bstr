@@ -49,7 +49,10 @@ pub trait BufReadExt: io::BufRead {
     /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
-    fn byte_lines(self) -> ByteLines<Self> where Self: Sized {
+    fn byte_lines(self) -> ByteLines<Self>
+    where
+        Self: Sized,
+    {
         ByteLines { buf: self }
     }
 
@@ -89,12 +92,10 @@ pub trait BufReadExt: io::BufRead {
     /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
-    fn for_byte_line<F>(
-        mut self,
-        mut for_each_line: F,
-    ) -> io::Result<()>
-    where Self: Sized,
-          F: FnMut(&[u8]) -> io::Result<bool>
+    fn for_byte_line<F>(mut self, mut for_each_line: F) -> io::Result<()>
+    where
+        Self: Sized,
+        F: FnMut(&[u8]) -> io::Result<bool>,
     {
         let mut bytes = vec![];
         while self.read_until(b'\n', &mut bytes)? > 0 {
@@ -148,8 +149,9 @@ pub trait BufReadExt: io::BufRead {
         mut self,
         mut for_each_line: F,
     ) -> io::Result<()>
-    where Self: Sized,
-          F: FnMut(&[u8]) -> io::Result<bool>
+    where
+        Self: Sized,
+        F: FnMut(&[u8]) -> io::Result<bool>,
     {
         let mut bytes = vec![];
         while self.read_until(b'\n', &mut bytes)? > 0 {

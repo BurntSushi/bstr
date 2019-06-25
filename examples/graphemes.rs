@@ -3,7 +3,7 @@ extern crate bstr;
 use std::error::Error;
 use std::io::{self, Write};
 
-use bstr::{ByteSlice, io::BufReadExt};
+use bstr::{io::BufReadExt, ByteSlice};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let stdin = io::stdin();

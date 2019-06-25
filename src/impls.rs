@@ -15,7 +15,7 @@ macro_rules! impl_partial_eq {
                 PartialEq::eq(this, other.as_bytes())
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_partial_eq_cow {
@@ -35,7 +35,7 @@ macro_rules! impl_partial_eq_cow {
                 PartialEq::eq(this, other.as_bytes())
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_partial_ord {
@@ -55,7 +55,7 @@ macro_rules! impl_partial_ord {
                 PartialOrd::partial_cmp(this, other.as_bytes())
             }
         }
-    }
+    };
 }
 
 #[cfg(feature = "std")]
@@ -195,21 +195,21 @@ mod bstring {
 
     impl FromIterator<char> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=char>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = char>>(iter: T) -> BString {
             BString::from(iter.into_iter().collect::<String>())
         }
     }
 
     impl FromIterator<u8> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=u8>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = u8>>(iter: T) -> BString {
             BString::from(iter.into_iter().collect::<Vec<u8>>())
         }
     }
 
     impl<'a> FromIterator<&'a str> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=&'a str>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> BString {
             let mut buf = vec![];
             for b in iter {
                 buf.push_str(b);
@@ -220,7 +220,7 @@ mod bstring {
 
     impl<'a> FromIterator<&'a [u8]> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=&'a [u8]>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = &'a [u8]>>(iter: T) -> BString {
             let mut buf = vec![];
             for b in iter {
                 buf.push_str(b);
@@ -231,7 +231,7 @@ mod bstring {
 
     impl<'a> FromIterator<&'a BStr> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=&'a BStr>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = &'a BStr>>(iter: T) -> BString {
             let mut buf = vec![];
             for b in iter {
                 buf.push_str(b);
@@ -242,7 +242,7 @@ mod bstring {
 
     impl FromIterator<BString> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item=BString>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = BString>>(iter: T) -> BString {
             let mut buf = vec![];
             for b in iter {
                 buf.push_str(b);
@@ -583,19 +583,17 @@ mod bstr_serde {
     use std::fmt;
 
     use serde::{
-        Serialize, Serializer,
-        Deserialize, Deserializer, de::Error, de::Visitor,
+        de::Error, de::Visitor, Deserialize, Deserializer, Serialize,
+        Serializer,
     };
 
     use bstr::BStr;
 
     impl Serialize for BStr {
         #[inline]
-        fn serialize<S>(
-            &self,
-            serializer: S,
-        ) -> Result<S::Ok, S::Error>
-        where S: Serializer
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
         {
             serializer.serialize_bytes(self.as_bytes())
         }
@@ -603,10 +601,9 @@ mod bstr_serde {
 
     impl<'a, 'de: 'a> Deserialize<'de> for &'a BStr {
         #[inline]
-        fn deserialize<D>(
-            deserializer: D,
-        ) -> Result<&'a BStr, D::Error>
-        where D: Deserializer<'de>
+        fn deserialize<D>(deserializer: D) -> Result<&'a BStr, D::Error>
+        where
+            D: Deserializer<'de>,
         {
             struct BStrVisitor;
 
@@ -645,19 +642,17 @@ mod bstring_serde {
     use std::fmt;
 
     use serde::{
+        de::Error, de::SeqAccess, de::Visitor, Deserialize, Deserializer,
         Serialize, Serializer,
-        Deserialize, Deserializer, de::Error, de::SeqAccess, de::Visitor,
     };
 
     use bstring::BString;
 
     impl Serialize for BString {
         #[inline]
-        fn serialize<S>(
-            &self,
-            serializer: S,
-        ) -> Result<S::Ok, S::Error>
-        where S: Serializer
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
         {
             serializer.serialize_bytes(self.as_bytes())
         }
@@ -665,10 +660,9 @@ mod bstring_serde {
 
     impl<'de> Deserialize<'de> for BString {
         #[inline]
-        fn deserialize<D>(
-            deserializer: D,
-        ) -> Result<BString, D::Error>
-        where D: Deserializer<'de>
+        fn deserialize<D>(deserializer: D) -> Result<BString, D::Error>
+        where
+            D: Deserializer<'de>,
         {
             struct BStringVisitor;
 
@@ -741,7 +735,7 @@ mod bstring_arbitrary {
             BString::from(Vec::<u8>::arbitrary(g))
         }
 
-        fn shrink(&self) -> Box<dyn Iterator<Item=BString>> {
+        fn shrink(&self) -> Box<dyn Iterator<Item = BString>> {
             Box::new(self.bytes.shrink().map(BString::from))
         }
     }

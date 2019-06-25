@@ -171,9 +171,9 @@ mod tests {
                 test.sentences,
                 got,
                 "\n\nsentence forward break test {} failed:\n\
-                   given:    {:?}\n\
-                   expected: {:?}\n\
-                   got:      {:?}\n",
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
                 i,
                 given,
                 strs_to_bstrs(&test.sentences),
@@ -204,9 +204,8 @@ mod tests {
 
     /// Return all of the UCD for sentence breaks.
     fn ucdtests() -> Vec<SentenceBreakTest> {
-        const TESTDATA: &'static str = include_str!(
-            "data/SentenceBreakTest.txt"
-        );
+        const TESTDATA: &'static str =
+            include_str!("data/SentenceBreakTest.txt");
 
         let mut tests = vec![];
         for mut line in TESTDATA.lines() {
