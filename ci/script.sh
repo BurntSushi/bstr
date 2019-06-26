@@ -5,6 +5,7 @@
 set -ex
 
 cargo build --verbose
+cargo build --verbose --features serde1
 cargo doc --verbose
 
 # Our dev dependencies are increasing their MSRV more quickly then we want to,

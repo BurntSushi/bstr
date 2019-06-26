@@ -679,11 +679,11 @@ mod bstring_serde {
                     mut visitor: V,
                 ) -> Result<BString, V::Error> {
                     let len = cmp::min(visitor.size_hint().unwrap_or(0), 256);
-                    let mut bytes = BString::with_capacity(len);
+                    let mut bytes = Vec::with_capacity(len);
                     while let Some(v) = visitor.next_element()? {
-                        bytes.push_byte(v);
+                        bytes.push(v);
                     }
-                    Ok(bytes)
+                    Ok(BString::from(bytes))
                 }
 
                 #[inline]
