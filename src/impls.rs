@@ -144,6 +144,12 @@ mod bstring {
         }
     }
 
+    impl Default for BString {
+        fn default() -> BString {
+            BString::from(vec![])
+        }
+    }
+
     impl<'a> From<&'a [u8]> for BString {
         #[inline]
         fn from(s: &'a [u8]) -> BString {
@@ -495,6 +501,18 @@ mod bstr {
         #[inline]
         fn as_mut(&mut self) -> &mut BStr {
             BStr::new_mut(self)
+        }
+    }
+
+    impl<'a> Default for &'a BStr {
+        fn default() -> &'a BStr {
+            BStr::from_bytes(b"")
+        }
+    }
+
+    impl<'a> Default for &'a mut BStr {
+        fn default() -> &'a mut BStr {
+            BStr::from_bytes_mut(&mut [])
         }
     }
 
