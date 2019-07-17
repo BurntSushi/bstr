@@ -269,4 +269,6 @@ criterion_group!(g8, trim);
 criterion_group!(g9, search::find_iter);
 criterion_group!(g10, search::rfind_iter);
 criterion_group!(g11, search::find_char);
-criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11);
+criterion_group!(g12, search::find_byteset);
+criterion_group!(g13, search::find_not_byteset);
+criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13);
