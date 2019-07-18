@@ -655,7 +655,8 @@ pub trait ByteSlice: Sealed {
     /// The `byteset` may be any type that can be cheaply converted into a
     /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
     /// note that passing a `&str` which contains multibyte characters may not
-    /// behave as you expect.
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
     ///
     /// Note that order is irrelevant for the `byteset` parameter, and
     /// duplicate bytes present in its body are ignored.
@@ -685,13 +686,14 @@ pub trait ByteSlice: Sealed {
         byteset::find(self.as_bytes(), byteset.as_ref())
     }
 
-    /// Returns the index of the first occurrence of any of the bytes in the
-    /// provided set.
+    /// Returns the index of the first occurrence of a byte that is not a member
+    /// of the provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
     /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
     /// note that passing a `&str` which contains multibyte characters may not
-    /// behave as you expect.
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
     ///
     /// Note that order is irrelevant for the `byteset` parameter, and
     /// duplicate bytes present in its body are ignored.
@@ -721,13 +723,14 @@ pub trait ByteSlice: Sealed {
         byteset::find_not(self.as_bytes(), byteset.as_ref())
     }
 
-    /// Returns the index of the first occurrence of a byte that is not a member
-    /// of the provided set.
+    /// Returns the index of the last occurrence of any of the bytes in the
+    /// provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
     /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
     /// note that passing a `&str` which contains multibyte characters may not
-    /// behave as you expect.
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
     ///
     /// Note that order is irrelevant for the `byteset` parameter, and duplicate
     /// bytes present in its body are ignored.
@@ -763,7 +766,8 @@ pub trait ByteSlice: Sealed {
     /// The `byteset` may be any type that can be cheaply converted into a
     /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
     /// note that passing a `&str` which contains multibyte characters may not
-    /// behave as you expect.
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
     ///
     /// Note that order is irrelevant for the `byteset` parameter, and
     /// duplicate bytes present in its body are ignored.

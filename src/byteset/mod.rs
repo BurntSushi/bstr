@@ -11,31 +11,15 @@ fn build_table(byteset: &[u8]) -> [u8; 256] {
 }
 
 #[inline]
-fn should_use_table(set_size: usize) -> bool {
-    // This probably should depend on `size_of::<usize>` as well as the size
-    // of `haystack`.
-    set_size >= 4
-}
-
-#[inline]
 pub(crate) fn find(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
     match byteset.len() {
         0 => return None,
         1 => memchr(byteset[0], haystack),
         2 => memchr2(byteset[0], byteset[1], haystack),
         3 => memchr3(byteset[0], byteset[1], byteset[2], haystack),
-        n => {
-            if should_use_table(n) {
-                let table = build_table(byteset);
-                scalar::forward_search_bytes(haystack, |b| {
-                    table[b as usize] != 0
-                })
-            } else {
-                scalar::forward_search_bytes(haystack, |b| {
-                    scalar::forward_search_bytes(byteset, |sb| b == sb)
-                        .is_some()
-                })
-            }
+        _ => {
+            let table = build_table(byteset);
+            scalar::forward_search_bytes(haystack, |b| table[b as usize] != 0)
         }
     }
 }
@@ -47,18 +31,9 @@ pub(crate) fn rfind(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
         1 => memrchr(byteset[0], haystack),
         2 => memrchr2(byteset[0], byteset[1], haystack),
         3 => memrchr3(byteset[0], byteset[1], byteset[2], haystack),
-        n => {
-            if should_use_table(n) {
-                let table = build_table(byteset);
-                scalar::reverse_search_bytes(haystack, |b| {
-                    table[b as usize] != 0
-                })
-            } else {
-                scalar::reverse_search_bytes(haystack, |b| {
-                    scalar::forward_search_bytes(byteset, |sb| b == sb)
-                        .is_some()
-                })
-            }
+        _ => {
+            let table = build_table(byteset);
+            scalar::reverse_search_bytes(haystack, |b| table[b as usize] != 0)
         }
     }
 }
@@ -77,18 +52,9 @@ pub(crate) fn find_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
         3 => scalar::forward_search_bytes(haystack, |b| {
             b != byteset[0] && b != byteset[1] && b != byteset[2]
         }),
-        n => {
-            if should_use_table(n) {
-                let table = build_table(byteset);
-                scalar::forward_search_bytes(haystack, |b| {
-                    table[b as usize] == 0
-                })
-            } else {
-                scalar::forward_search_bytes(haystack, |b| {
-                    scalar::forward_search_bytes(byteset, |sb| b != sb)
-                        .is_some()
-                })
-            }
+        _ => {
+            let table = build_table(byteset);
+            scalar::forward_search_bytes(haystack, |b| table[b as usize] == 0)
         }
     }
 }
@@ -106,18 +72,9 @@ pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
         3 => scalar::reverse_search_bytes(haystack, |b| {
             b != byteset[0] && b != byteset[1] && b != byteset[2]
         }),
-        n => {
-            if should_use_table(n) {
-                let table = build_table(byteset);
-                scalar::reverse_search_bytes(haystack, |b| {
-                    table[b as usize] == 0
-                })
-            } else {
-                scalar::reverse_search_bytes(haystack, |b| {
-                    scalar::forward_search_bytes(byteset, |sb| b != sb)
-                        .is_some()
-                })
-            }
+        _ => {
+            let table = build_table(byteset);
+            scalar::reverse_search_bytes(haystack, |b| table[b as usize] == 0)
         }
     }
 }

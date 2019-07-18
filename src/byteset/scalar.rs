@@ -3,7 +3,6 @@
 // set. This is simple for the 1-byte case.
 
 use core::cmp;
-use core::ptr;
 use core::usize;
 
 #[cfg(target_pointer_width = "32")]
@@ -43,20 +42,20 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
 
-        ptr = ptr_add(ptr, USIZE_BYTES - (start_ptr as usize & align));
+        ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & align));
         debug_assert!(ptr > start_ptr);
-        debug_assert!(ptr_sub(end_ptr, USIZE_BYTES) >= start_ptr);
-        while loop_size == LOOP_SIZE && ptr <= ptr_sub(end_ptr, loop_size) {
+        debug_assert!(end_ptr.sub(USIZE_BYTES) >= start_ptr);
+        while loop_size == LOOP_SIZE && ptr <= end_ptr.sub(loop_size) {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
             let a = *(ptr as *const usize);
-            let b = *(ptr_add(ptr, USIZE_BYTES) as *const usize);
+            let b = *(ptr.add(USIZE_BYTES) as *const usize);
             let eqa = (a ^ vn1) != 0;
             let eqb = (b ^ vn1) != 0;
             if eqa || eqb {
                 break;
             }
-            ptr = ptr_add(ptr, LOOP_SIZE);
+            ptr = ptr.add(LOOP_SIZE);
         }
         forward_search(start_ptr, end_ptr, ptr, confirm)
     }
@@ -77,24 +76,24 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
 
-        let chunk = read_unaligned_usize(ptr_sub(ptr, USIZE_BYTES));
+        let chunk = read_unaligned_usize(ptr.sub(USIZE_BYTES));
         if (chunk ^ vn1) != 0 {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
 
         ptr = (end_ptr as usize & !align) as *const u8;
         debug_assert!(start_ptr <= ptr && ptr <= end_ptr);
-        while loop_size == LOOP_SIZE && ptr >= ptr_add(start_ptr, loop_size) {
+        while loop_size == LOOP_SIZE && ptr >= start_ptr.add(loop_size) {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
-            let a = *(ptr_sub(ptr, 2 * USIZE_BYTES) as *const usize);
-            let b = *(ptr_sub(ptr, 1 * USIZE_BYTES) as *const usize);
+            let a = *(ptr.sub(2 * USIZE_BYTES) as *const usize);
+            let b = *(ptr.sub(1 * USIZE_BYTES) as *const usize);
             let eqa = (a ^ vn1) != 0;
             let eqb = (b ^ vn1) != 0;
             if eqa || eqb {
                 break;
             }
-            ptr = ptr_sub(ptr, loop_size);
+            ptr = ptr.sub(loop_size);
         }
         reverse_search(start_ptr, end_ptr, ptr, confirm)
     }
@@ -138,22 +137,8 @@ unsafe fn reverse_search<F: Fn(u8) -> bool>(
     None
 }
 
-/// Increment the given pointer by the given amount.
-unsafe fn ptr_add(ptr: *const u8, amt: usize) -> *const u8 {
-    debug_assert!(amt < ::core::isize::MAX as usize);
-    ptr.offset(amt as isize)
-}
-
-/// Decrement the given pointer by the given amount.
-unsafe fn ptr_sub(ptr: *const u8, amt: usize) -> *const u8 {
-    debug_assert!(amt < ::core::isize::MAX as usize);
-    ptr.offset((amt as isize).wrapping_neg())
-}
-
 unsafe fn read_unaligned_usize(ptr: *const u8) -> usize {
-    let mut n: usize = 0;
-    ptr::copy_nonoverlapping(ptr, &mut n as *mut _ as *mut u8, USIZE_BYTES);
-    n
+    (ptr as *const usize).read_unaligned()
 }
 
 /// Subtract `b` from `a` and return the difference. `a` should be greater than
@@ -165,7 +150,7 @@ fn sub(a: *const u8, b: *const u8) -> usize {
 
 /// Safe wrapper around `forward_search`
 #[inline]
-pub(super) fn forward_search_bytes<F: Fn(u8) -> bool>(
+pub(crate) fn forward_search_bytes<F: Fn(u8) -> bool>(
     s: &[u8],
     confirm: F,
 ) -> Option<usize> {
@@ -178,7 +163,7 @@ pub(super) fn forward_search_bytes<F: Fn(u8) -> bool>(
 
 /// Safe wrapper around `reverse_search`
 #[inline]
-pub(super) fn reverse_search_bytes<F: Fn(u8) -> bool>(
+pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
     s: &[u8],
     confirm: F,
 ) -> Option<usize> {
@@ -186,5 +171,125 @@ pub(super) fn reverse_search_bytes<F: Fn(u8) -> bool>(
         let start = s.as_ptr();
         let end = start.add(s.len());
         reverse_search(start, end, end, confirm)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{inv_memchr, inv_memrchr};
+    // search string, search byte, inv_memchr result, inv_memrchr result.
+    // these are expanded into a much larger set of tests in build_tests
+    const TESTS: &[(&[u8], u8, usize, usize)] = &[
+        (b"z", b'a', 0, 0),
+        (b"zz", b'a', 0, 1),
+        (b"aza", b'a', 1, 1),
+        (b"zaz", b'a', 0, 2),
+        (b"zza", b'a', 0, 1),
+        (b"zaa", b'a', 0, 0),
+        (b"zzz", b'a', 0, 2),
+    ];
+
+    type TestCase = (Vec<u8>, u8, Option<(usize, usize)>);
+
+    fn build_tests() -> Vec<TestCase> {
+        let mut result = vec![];
+        for &(search, byte, fwd_pos, rev_pos) in TESTS {
+            result.push((search.to_vec(), byte, Some((fwd_pos, rev_pos))));
+            for i in 1..515 {
+                // add a bunch of copies of the search byte to the end.
+                let mut suffixed: Vec<u8> = search.into();
+                suffixed.extend(std::iter::repeat(byte).take(i));
+                result.push((suffixed, byte, Some((fwd_pos, rev_pos))));
+
+                // add a bunch of copies of the search byte to the start.
+                let mut prefixed: Vec<u8> =
+                    std::iter::repeat(byte).take(i).collect();
+                prefixed.extend(search);
+                result.push((
+                    prefixed,
+                    byte,
+                    Some((fwd_pos + i, rev_pos + i)),
+                ));
+
+                // add a bunch of copies of the search byte to both ends.
+                let mut surrounded: Vec<u8> =
+                    std::iter::repeat(byte).take(i).collect();
+                surrounded.extend(search);
+                surrounded.extend(std::iter::repeat(byte).take(i));
+                result.push((
+                    surrounded,
+                    byte,
+                    Some((fwd_pos + i, rev_pos + i)),
+                ));
+            }
+        }
+
+        // build non-matching tests for several sizes
+        for i in 0..515 {
+            result.push((
+                std::iter::repeat(b'\0').take(i).collect(),
+                b'\0',
+                None,
+            ));
+        }
+
+        result
+    }
+
+    #[test]
+    fn test_inv_memchr() {
+        use {ByteSlice, B};
+        for (search, byte, matching) in build_tests() {
+            assert_eq!(
+                inv_memchr(byte, &search),
+                matching.map(|m| m.0),
+                "inv_memchr when searching for {:?} in {:?}",
+                byte as char,
+                // better printing
+                B(&search).as_bstr(),
+            );
+            assert_eq!(
+                inv_memrchr(byte, &search),
+                matching.map(|m| m.1),
+                "inv_memrchr when searching for {:?} in {:?}",
+                byte as char,
+                // better printing
+                B(&search).as_bstr(),
+            );
+            // Test a rather large number off offsets for potential alignment issues
+            for offset in 1..130 {
+                if offset >= search.len() {
+                    break;
+                }
+                // If this would cause us to shift the results off the end, skip
+                // it so that we don't have to recompute them.
+                if let Some((f, r)) = matching {
+                    if offset > f || offset > r {
+                        break;
+                    }
+                }
+                let realigned = &search[offset..];
+
+                let forward_pos = matching.map(|m| m.0 - offset);
+                let reverse_pos = matching.map(|m| m.1 - offset);
+
+                assert_eq!(
+                    inv_memchr(byte, &realigned),
+                    forward_pos,
+                    "inv_memchr when searching (realigned by {}) for {:?} in {:?}",
+                    offset,
+                    byte as char,
+                    realigned.as_bstr(),
+                );
+                assert_eq!(
+                    inv_memrchr(byte, &realigned),
+                    reverse_pos,
+                    "inv_memrchr when searching (realigned by {}) for {:?} in {:?}",
+                    offset,
+                    byte as char,
+                    realigned.as_bstr(),
+                );
+            }
+        }
     }
 }
