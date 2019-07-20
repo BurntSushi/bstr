@@ -130,15 +130,14 @@ main() {
     # ucd-generate is used to compile regexes into DFAs.
     requires ucd-generate
 
-    # For development when ucd-generate needs to be updated.
-    cargo install -f --path /home/andrew/rust/ucd-generate
+    mkdir -p src/unicode/fsm/
 
-    all=
+    cmds=$*
     if [ $# -eq 0 ] || array_exists "all" "$@"; then
-        all=yes
+        cmds=$commands
     fi
-    for cmd in "$@"; do
-        if [ -n "$all" ] || array_exists "$cmd" $commands; then
+    for cmd in $cmds; do
+        if array_exists "$cmd" $commands; then
             fun="$(echo "$cmd" | sed 's/-/_/g')"
             eval "$fun"
         else
