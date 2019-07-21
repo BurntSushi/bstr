@@ -121,6 +121,137 @@ pub fn find_char(c: &mut Criterion) {
     });
 }
 
+pub fn find_byteset(c: &mut Criterion) {
+    let corpus = SUBTITLE_EN_SMALL;
+    define(c, "bstr/find_byteset/1", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.find_byteset(b"\0"));
+        });
+    });
+    define(c, "bstr/find_byteset/2", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.find_byteset(b"\0\xff"));
+        });
+    });
+    define(c, "bstr/find_byteset/3", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.find_byteset(b"\0\xff\xee"));
+        });
+    });
+    define(c, "bstr/find_byteset/4", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.find_byteset(b"\0\xff\xee\xdd"));
+        });
+    });
+    define(c, "bstr/find_byteset/10", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.find_byteset(b"0123456789"));
+        });
+    });
+
+    define(c, "bstr/rfind_byteset/1", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_byteset(b"\0"));
+        });
+    });
+    define(c, "bstr/rfind_byteset/2", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_byteset(b"\0\xff"));
+        });
+    });
+    define(c, "bstr/rfind_byteset/3", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_byteset(b"\0\xff\xee"));
+        });
+    });
+    define(c, "bstr/rfind_byteset/4", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_byteset(b"\0\xff\xee\xdd"));
+        });
+    });
+    define(c, "bstr/rfind_byteset/10", "en-small-ascii", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_byteset(b"0123456789"));
+        });
+    });
+}
+
+pub fn find_not_byteset(c: &mut Criterion) {
+    let corpus = REPEATED_RARE_SMALL;
+    define(c, "bstr/find_not_byteset/1", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(Some(1000), corpus.find_not_byteset(b"z"));
+        })
+    });
+    define(c, "bstr/find_not_byteset/2", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(Some(1000), corpus.find_not_byteset(b"zy"));
+        });
+    });
+    define(c, "bstr/find_not_byteset/3", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(Some(1000), corpus.find_not_byteset(b"zyx"));
+        });
+    });
+    define(c, "bstr/find_not_byteset/4", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(Some(1000), corpus.find_not_byteset(b"zyxw"));
+        });
+    });
+    define(c, "bstr/find_not_byteset/10", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(Some(1000), corpus.find_not_byteset(b"zyxwv12345"));
+        });
+    });
+
+    define(c, "bstr/rfind_not_byteset/1", "repeated-rare-small", corpus, move |b| {
+        // This file ends in \n, breaking our benchmark.... TODO find a better dataset...
+        let corpus = &corpus.as_bytes()[..(corpus.len()-1)];
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_not_byteset(b"z"));
+        });
+    });
+    define(c, "bstr/rfind_not_byteset/2", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_not_byteset(b"z\n"));
+        });
+    });
+    define(c, "bstr/rfind_not_byteset/3", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_not_byteset(b"zy\n"));
+        });
+    });
+    define(c, "bstr/rfind_not_byteset/4", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_not_byteset(b"zyx\n"));
+        });
+    });
+    define(c, "bstr/rfind_not_byteset/10", "repeated-rare-small", corpus, move |b| {
+        let corpus = corpus.as_bytes();
+        b.iter(|| {
+            assert_eq!(None, corpus.rfind_not_byteset(b"zyxwv1234\n"));
+        });
+    });
+}
+
 fn define_find_iter(
     c: &mut Criterion,
     group_name: &str,

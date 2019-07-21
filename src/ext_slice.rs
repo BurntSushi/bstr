@@ -15,6 +15,7 @@ use memchr::{memchr, memrchr};
 
 use ascii;
 use bstr::BStr;
+use byteset;
 #[cfg(feature = "std")]
 use ext_vec::ByteVec;
 use search::{PrefilterState, TwoWay};
@@ -646,6 +647,154 @@ pub trait ByteSlice: Sealed {
     #[inline]
     fn ends_with_str<B: AsRef<[u8]>>(&self, suffix: B) -> bool {
         self.as_bytes().ends_with(suffix.as_ref())
+    }
+
+    /// Returns the index of the first occurrence of any of the bytes in the
+    /// provided set.
+    ///
+    /// The `byteset` may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// note that passing a `&str` which contains multibyte characters may not
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
+    ///
+    /// Note that order is irrelevant for the `byteset` parameter, and
+    /// duplicate bytes present in its body are ignored.
+    ///
+    /// # Complexity
+    ///
+    /// This routine is guaranteed to have worst case linear time complexity
+    /// with respect to both the set of bytes and the haystack. That is, this
+    /// runs in `O(byteset.len() + haystack.len())` time.
+    ///
+    /// This routine is also guaranteed to have worst case constant space
+    /// complexity.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// assert_eq!(b"foo bar baz".find_byteset(b"zr"), Some(6));
+    /// assert_eq!(b"foo baz bar".find_byteset(b"bzr"), Some(4));
+    /// assert_eq!(None, b"foo baz bar".find_byteset(b"\t\n"));
+    /// ```
+    #[inline]
+    fn find_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize> {
+        byteset::find(self.as_bytes(), byteset.as_ref())
+    }
+
+    /// Returns the index of the first occurrence of a byte that is not a member
+    /// of the provided set.
+    ///
+    /// The `byteset` may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// note that passing a `&str` which contains multibyte characters may not
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
+    ///
+    /// Note that order is irrelevant for the `byteset` parameter, and
+    /// duplicate bytes present in its body are ignored.
+    ///
+    /// # Complexity
+    ///
+    /// This routine is guaranteed to have worst case linear time complexity
+    /// with respect to both the set of bytes and the haystack. That is, this
+    /// runs in `O(byteset.len() + haystack.len())` time.
+    ///
+    /// This routine is also guaranteed to have worst case constant space
+    /// complexity.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// assert_eq!(b"foo bar baz".find_not_byteset(b"fo "), Some(4));
+    /// assert_eq!(b"\t\tbaz bar".find_not_byteset(b" \t\r\n"), Some(2));
+    /// assert_eq!(b"foo\nbaz\tbar".find_not_byteset(b"\t\n"), Some(0));
+    /// ```
+    #[inline]
+    fn find_not_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize> {
+        byteset::find_not(self.as_bytes(), byteset.as_ref())
+    }
+
+    /// Returns the index of the last occurrence of any of the bytes in the
+    /// provided set.
+    ///
+    /// The `byteset` may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// note that passing a `&str` which contains multibyte characters may not
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
+    ///
+    /// Note that order is irrelevant for the `byteset` parameter, and duplicate
+    /// bytes present in its body are ignored.
+    ///
+    /// # Complexity
+    ///
+    /// This routine is guaranteed to have worst case linear time complexity
+    /// with respect to both the set of bytes and the haystack. That is, this
+    /// runs in `O(byteset.len() + haystack.len())` time.
+    ///
+    /// This routine is also guaranteed to have worst case constant space
+    /// complexity.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// assert_eq!(b"foo bar baz".rfind_byteset(b"agb"), Some(9));
+    /// assert_eq!(b"foo baz bar".rfind_byteset(b"rabz "), Some(10));
+    /// assert_eq!(b"foo baz bar".rfind_byteset(b"\n123"), None);
+    /// ```
+    #[inline]
+    fn rfind_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize> {
+        byteset::rfind(self.as_bytes(), byteset.as_ref())
+    }
+
+    /// Returns the index of the last occurrence of a byte that is not a member
+    /// of the provided set.
+    ///
+    /// The `byteset` may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// note that passing a `&str` which contains multibyte characters may not
+    /// behave as you expect: each byte in the `&str` is treated as an
+    /// individual member of the byte set.
+    ///
+    /// Note that order is irrelevant for the `byteset` parameter, and
+    /// duplicate bytes present in its body are ignored.
+    ///
+    /// # Complexity
+    ///
+    /// This routine is guaranteed to have worst case linear time complexity
+    /// with respect to both the set of bytes and the haystack. That is, this
+    /// runs in `O(byteset.len() + haystack.len())` time.
+    ///
+    /// This routine is also guaranteed to have worst case constant space
+    /// complexity.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// assert_eq!(b"foo bar baz,\t".rfind_not_byteset(b",\t"), Some(10));
+    /// assert_eq!(b"foo baz bar".rfind_not_byteset(b"rabz "), Some(2));
+    /// assert_eq!(None, b"foo baz bar".rfind_not_byteset(b"barfoz "));
+    /// ```
+    #[inline]
+    fn rfind_not_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize> {
+        byteset::rfind_not(self.as_bytes(), byteset.as_ref())
     }
 
     /// Returns the index of the first occurrence of the given needle.

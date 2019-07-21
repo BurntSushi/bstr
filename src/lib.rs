@@ -409,6 +409,7 @@ mod ascii;
 mod bstr;
 #[cfg(feature = "std")]
 mod bstring;
+mod byteset;
 mod cow;
 mod ext_slice;
 mod ext_vec;
