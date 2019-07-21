@@ -387,6 +387,7 @@ extern crate serde;
 extern crate ucd_parse;
 
 pub use bstr::BStr;
+#[cfg(feature = "std")]
 pub use bstring::BString;
 pub use ext_slice::{
     ByteSlice, Bytes, Fields, FieldsWith, Find, FindReverse, Finder,
@@ -412,6 +413,7 @@ mod bstring;
 mod byteset;
 mod cow;
 mod ext_slice;
+#[cfg(feature = "std")]
 mod ext_vec;
 mod impls;
 #[cfg(feature = "std")]

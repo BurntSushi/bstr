@@ -18,6 +18,7 @@ macro_rules! impl_partial_eq {
     };
 }
 
+#[cfg(feature = "std")]
 macro_rules! impl_partial_eq_cow {
     ($lhs:ty, $rhs:ty) => {
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
@@ -598,7 +599,7 @@ mod bstr {
 
 #[cfg(feature = "serde1-nostd")]
 mod bstr_serde {
-    use std::fmt;
+    use core::fmt;
 
     use serde::{
         de::Error, de::Visitor, Deserialize, Deserializer, Serialize,
