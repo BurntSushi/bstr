@@ -1073,7 +1073,9 @@ pub trait ByteSlice: Sealed {
     /// Returns an iterator over the fields in a byte string, separated by
     /// contiguous codepoints satisfying the given predicate.
     ///
-    /// If this byte
+    /// If this byte string is not valid UTF-8, then the given closure will
+    /// be called with a Unicode replacement codepoint when invalid UTF-8
+    /// bytes are seen.
     ///
     /// # Example
     ///
@@ -3280,8 +3282,7 @@ impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
 
 /// An iterator over substrings in a byte string, split by a separator.
 ///
-/// `'a` is the lifetime of the byte string being split, while `F` is the type
-/// of the predicate, i.e., `FnMut(char) -> bool`.
+/// `'a` is the lifetime of the byte string being split.
 #[derive(Debug)]
 pub struct Split<'a> {
     finder: Find<'a>,
