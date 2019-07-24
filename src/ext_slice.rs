@@ -2833,6 +2833,31 @@ pub trait ByteSlice: Sealed {
         bytes.get(bytes.len().saturating_sub(1)).map(|&b| b)
     }
 
+    /// Returns the index of the first non-ASCII byte in this byte string (if
+    /// any such indices exist). Specifically, it returns the index of the
+    /// first byte with a value greater than or equal to `0x80`.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::{ByteSlice, B};
+    ///
+    /// assert_eq!(Some(3), b"abc\xff".find_non_ascii_byte());
+    /// assert_eq!(None, b"abcde".find_non_ascii_byte());
+    /// assert_eq!(Some(0), B("😀").find_non_ascii_byte());
+    /// ```
+    #[inline]
+    fn find_non_ascii_byte(&self) -> Option<usize> {
+        let index = ascii::first_non_ascii_byte(self.as_bytes());
+        if index == self.as_bytes().len() {
+            None
+        } else {
+            Some(index)
+        }
+    }
+
     /// Copies elements from one part of the slice to another part of itself,
     /// where the parts may be overlapping.
     ///
