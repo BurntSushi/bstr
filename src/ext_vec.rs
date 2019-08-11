@@ -384,9 +384,7 @@ pub trait ByteVec: Sealed {
         Self: Sized,
     {
         match utf8::validate(self.as_vec()) {
-            Err(err) => {
-                Err(FromUtf8Error { original: self.into_vec(), err })
-            }
+            Err(err) => Err(FromUtf8Error { original: self.into_vec(), err }),
             Ok(()) => {
                 // SAFETY: This is safe because of the guarantees provided by
                 // utf8::validate.
