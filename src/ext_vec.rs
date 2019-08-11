@@ -83,12 +83,17 @@ where
 }
 
 impl ByteVec for Vec<u8> {
+    #[inline]
     fn as_vec(&self) -> &Vec<u8> {
         self
     }
+
+    #[inline]
     fn as_vec_mut(&mut self) -> &mut Vec<u8> {
         self
     }
+
+    #[inline]
     fn into_vec(self) -> Vec<u8> {
         self
     }
@@ -380,7 +385,7 @@ pub trait ByteVec: Sealed {
     {
         match utf8::validate(self.as_vec()) {
             Err(err) => {
-                Err(FromUtf8Error { original: self.into_vec(), err: err })
+                Err(FromUtf8Error { original: self.into_vec(), err })
             }
             Ok(()) => {
                 // SAFETY: This is safe because of the guarantees provided by

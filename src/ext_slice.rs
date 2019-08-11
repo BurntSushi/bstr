@@ -78,9 +78,12 @@ pub fn B<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a [u8] {
 }
 
 impl ByteSlice for [u8] {
+    #[inline]
     fn as_bytes(&self) -> &[u8] {
         self
     }
+
+    #[inline]
     fn as_bytes_mut(&mut self) -> &mut [u8] {
         self
     }
@@ -3273,7 +3276,7 @@ pub struct FieldsWith<'a, F> {
 
 impl<'a, F: FnMut(char) -> bool> FieldsWith<'a, F> {
     fn new(bytes: &'a [u8], f: F) -> FieldsWith<'a, F> {
-        FieldsWith { f: f, bytes: bytes, chars: bytes.char_indices() }
+        FieldsWith { f, bytes, chars: bytes.char_indices() }
     }
 }
 
