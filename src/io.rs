@@ -92,20 +92,14 @@ pub trait BufReadExt: io::BufRead {
     /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
-    fn for_byte_line<F>(mut self, mut for_each_line: F) -> io::Result<()>
+    fn for_byte_line<F>(self, mut for_each_line: F) -> io::Result<()>
     where
         Self: Sized,
         F: FnMut(&[u8]) -> io::Result<bool>,
     {
-        let mut bytes = vec![];
-        while self.read_until(b'\n', &mut bytes)? > 0 {
-            trim_line(&mut bytes);
-            if !for_each_line(&bytes)? {
-                break;
-            }
-            bytes.clear();
-        }
-        Ok(())
+        self.for_byte_line_with_terminator(|line| {
+            for_each_line(&trim_slice(&line))
+        })
     }
 
     /// Executes the given closure on each line in the underlying reader.
@@ -154,13 +148,48 @@ pub trait BufReadExt: io::BufRead {
         F: FnMut(&[u8]) -> io::Result<bool>,
     {
         let mut bytes = vec![];
-        while self.read_until(b'\n', &mut bytes)? > 0 {
-            if !for_each_line(&bytes)? {
+        let mut res = Ok(());
+        let mut consumed = 0;
+        'outer: loop {
+            // Lend out complete line slices from our buffer
+            {
+                let mut buf = self.fill_buf()?;
+                while let Some(index) = buf.find_byte(b'\n') {
+                    let (line, rest) = buf.split_at(index + 1);
+                    buf = rest;
+                    consumed += line.len();
+                    match for_each_line(&line) {
+                        Ok(false) => break 'outer,
+                        Err(err) => {
+                            res = Err(err);
+                            break 'outer;
+                        }
+                        _ => (),
+                    }
+                }
+
+                // Copy the final line fragment to our local buffer. This saves
+                // read_until() from re-scanning a buffer we know contains no
+                // remaining newlines.
+                bytes.extend_from_slice(&buf);
+                consumed += buf.len();
+            }
+
+            self.consume(consumed);
+            consumed = 0;
+
+            // N.B. read_until uses a different version of memchr that may
+            // be slower than the memchr crate that bstr uses. However, this
+            // should only run for a fairly small number of lines, assuming a
+            // decent buffer size.
+            self.read_until(b'\n', &mut bytes)?;
+            if bytes.is_empty() || !for_each_line(&bytes)? {
                 break;
             }
             bytes.clear();
         }
-        Ok(())
+        self.consume(consumed);
+        res
     }
 }
 
@@ -195,11 +224,96 @@ impl<B: io::BufRead> Iterator for ByteLines<B> {
     }
 }
 
+fn trim_slice(mut line: &[u8]) -> &[u8] {
+    if line.last_byte() == Some(b'\n') {
+        line = &line[..line.len() - 1];
+        if line.last_byte() == Some(b'\r') {
+            line = &line[..line.len() - 1];
+        }
+    }
+    line
+}
+
 fn trim_line(line: &mut Vec<u8>) {
     if line.last_byte() == Some(b'\n') {
         line.pop_byte();
         if line.last_byte() == Some(b'\r') {
             line.pop_byte();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BufReadExt;
+    use bstring::BString;
+
+    fn collect_lines<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
+        let mut lines = vec![];
+        slice
+            .as_ref()
+            .for_byte_line(|line| {
+                lines.push(BString::from(line.to_vec()));
+                Ok(true)
+            })
+            .unwrap();
+        lines
+    }
+
+    fn collect_lines_term<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
+        let mut lines = vec![];
+        slice
+            .as_ref()
+            .for_byte_line_with_terminator(|line| {
+                lines.push(BString::from(line.to_vec()));
+                Ok(true)
+            })
+            .unwrap();
+        lines
+    }
+
+    #[test]
+    fn lines_without_terminator() {
+        assert_eq!(collect_lines(""), Vec::<BString>::new());
+
+        assert_eq!(collect_lines("\n"), vec![""]);
+        assert_eq!(collect_lines("\n\n"), vec!["", ""]);
+        assert_eq!(collect_lines("a\nb\n"), vec!["a", "b"]);
+        assert_eq!(collect_lines("a\nb"), vec!["a", "b"]);
+        assert_eq!(collect_lines("abc\nxyz\n"), vec!["abc", "xyz"]);
+        assert_eq!(collect_lines("abc\nxyz"), vec!["abc", "xyz"]);
+
+        assert_eq!(collect_lines("\r\n"), vec![""]);
+        assert_eq!(collect_lines("\r\n\r\n"), vec!["", ""]);
+        assert_eq!(collect_lines("a\r\nb\r\n"), vec!["a", "b"]);
+        assert_eq!(collect_lines("a\r\nb"), vec!["a", "b"]);
+        assert_eq!(collect_lines("abc\r\nxyz\r\n"), vec!["abc", "xyz"]);
+        assert_eq!(collect_lines("abc\r\nxyz"), vec!["abc", "xyz"]);
+
+        assert_eq!(collect_lines("abc\rxyz"), vec!["abc\rxyz"]);
+    }
+
+    #[test]
+    fn lines_with_terminator() {
+        assert_eq!(collect_lines_term(""), Vec::<BString>::new());
+
+        assert_eq!(collect_lines_term("\n"), vec!["\n"]);
+        assert_eq!(collect_lines_term("\n\n"), vec!["\n", "\n"]);
+        assert_eq!(collect_lines_term("a\nb\n"), vec!["a\n", "b\n"]);
+        assert_eq!(collect_lines_term("a\nb"), vec!["a\n", "b"]);
+        assert_eq!(collect_lines_term("abc\nxyz\n"), vec!["abc\n", "xyz\n"]);
+        assert_eq!(collect_lines_term("abc\nxyz"), vec!["abc\n", "xyz"]);
+
+        assert_eq!(collect_lines_term("\r\n"), vec!["\r\n"]);
+        assert_eq!(collect_lines_term("\r\n\r\n"), vec!["\r\n", "\r\n"]);
+        assert_eq!(collect_lines_term("a\r\nb\r\n"), vec!["a\r\n", "b\r\n"]);
+        assert_eq!(collect_lines_term("a\r\nb"), vec!["a\r\n", "b"]);
+        assert_eq!(
+            collect_lines_term("abc\r\nxyz\r\n"),
+            vec!["abc\r\n", "xyz\r\n"]
+        );
+        assert_eq!(collect_lines_term("abc\r\nxyz"), vec!["abc\r\n", "xyz"]);
+
+        assert_eq!(collect_lines_term("abc\rxyz"), vec!["abc\rxyz"]);
     }
 }
