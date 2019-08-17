@@ -92,20 +92,14 @@ pub trait BufReadExt: io::BufRead {
     /// assert_eq!(lines[2], "dolor".as_bytes());
     /// # Ok(()) }; example().unwrap()
     /// ```
-    fn for_byte_line<F>(mut self, mut for_each_line: F) -> io::Result<()>
+    fn for_byte_line<F>(self, mut for_each_line: F) -> io::Result<()>
     where
         Self: Sized,
         F: FnMut(&[u8]) -> io::Result<bool>,
     {
-        let mut bytes = vec![];
-        while self.read_until(b'\n', &mut bytes)? > 0 {
-            trim_line(&mut bytes);
-            if !for_each_line(&bytes)? {
-                break;
-            }
-            bytes.clear();
-        }
-        Ok(())
+        self.for_byte_line_with_terminator(|line| {
+            for_each_line(&trim_slice(&line))
+        })
     }
 
     /// Executes the given closure on each line in the underlying reader.
@@ -154,13 +148,46 @@ pub trait BufReadExt: io::BufRead {
         F: FnMut(&[u8]) -> io::Result<bool>,
     {
         let mut bytes = vec![];
-        while self.read_until(b'\n', &mut bytes)? > 0 {
-            if !for_each_line(&bytes)? {
+        let mut res = Ok(());
+        let mut consumed = 0;
+        'outer: loop {
+            // Lend out complete line slices from our buffer
+            {
+                let mut buf = self.fill_buf()?;
+
+                while let Some(index) = buf.find_byte(b'\n') {
+                    let (line, rest) = buf.split_at(index + 1);
+                    buf = rest;
+                    consumed += line.len();
+                    match for_each_line(&line) {
+                        Ok(false) => break 'outer,
+                        Err(err) => {
+                            res = Err(err);
+                            break 'outer;
+                        }
+                        _ => (),
+                    }
+                }
+
+                // Copy the final line fragment to our local buffer.
+                // This saves read_until() from re-scanning a buffer we know
+                // contains no remaining newlines.
+                bytes.extend_from_slice(&buf);
+                consumed += buf.len();
+            }
+
+            self.consume(consumed);
+            consumed = 0;
+
+            self.read_until(b'\n', &mut bytes)?;
+            if bytes.is_empty() || !for_each_line(&bytes)? {
                 break;
             }
             bytes.clear();
         }
-        Ok(())
+        self.consume(consumed);
+
+        res
     }
 }
 
@@ -192,6 +219,16 @@ impl<B: io::BufRead> Iterator for ByteLines<B> {
                 Some(Ok(bytes))
             }
         }
+    }
+}
+
+fn trim_slice(line: &[u8]) -> &[u8] {
+    if line.ends_with(b"\r\n") {
+        &line[0..line.len() - 2]
+    } else if line.ends_with(b"\n") {
+        &line[0..line.len() - 1]
+    } else {
+        line
     }
 }
 
