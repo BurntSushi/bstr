@@ -244,6 +244,24 @@ fn sentences(c: &mut Criterion) {
     }
 }
 
+fn byte_lines(c: &mut Criterion) {
+    use bstr::io::BufReadExt;
+
+    let corpus = SUBTITLE_EN_HUGE;
+    define(c, "bstr/for_byte_line", "ascii", corpus, move |b| {
+        b.iter(|| {
+            let mut count = 0;
+            corpus
+                .for_byte_line(|line| {
+                    count += line.len();
+                    Ok(true)
+                })
+                .unwrap();
+            assert!(count > 0);
+        });
+    });
+}
+
 fn define(
     c: &mut Criterion,
     group_name: &str,
@@ -260,14 +278,15 @@ fn define(
 criterion_group!(g1, is_ascii);
 criterion_group!(g2, to_str);
 criterion_group!(g3, to_str_lossy_valid);
-criterion_group!(g4, chars);
-criterion_group!(g5, graphemes);
-criterion_group!(g6, words);
-criterion_group!(g7, sentences);
-criterion_group!(g8, trim);
-criterion_group!(g9, search::find_iter);
-criterion_group!(g10, search::rfind_iter);
-criterion_group!(g11, search::find_char);
-criterion_group!(g12, search::find_byteset);
-criterion_group!(g13, search::find_not_byteset);
-criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13);
+criterion_group!(g4, trim);
+criterion_group!(g5, chars);
+criterion_group!(g6, graphemes);
+criterion_group!(g7, words);
+criterion_group!(g8, sentences);
+criterion_group!(g9, byte_lines);
+criterion_group!(g10, search::find_iter);
+criterion_group!(g11, search::rfind_iter);
+criterion_group!(g12, search::find_char);
+criterion_group!(g13, search::find_byteset);
+criterion_group!(g14, search::find_not_byteset);
+criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14);
