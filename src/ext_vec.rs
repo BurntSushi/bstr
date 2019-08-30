@@ -104,7 +104,18 @@ impl ByteVec for Vec<u8> {
 pub trait Sealed {}
 impl Sealed for Vec<u8> {}
 
-/// A trait that extends a slice of bytes with string oriented methods.
+/// A trait that extends `Vec<u8>` with string oriented methods.
+///
+/// Note that when using the constructor methods, such as
+/// `ByteVec::from_slice`, one should actually call them using the concrete
+/// type. For example:
+///
+/// ```
+/// use bstr::{B, ByteVec};
+///
+/// let s = Vec::from_slice(b"abc"); // NOT ByteVec::from_slice("...")
+/// assert_eq!(s, B("abc"));
+/// ```
 pub trait ByteVec: Sealed {
     /// A method for accessing the raw vector bytes of this type. This is
     /// always a no-op and callers shouldn't care about it. This only exists
@@ -135,7 +146,7 @@ pub trait ByteVec: Sealed {
     /// ```
     /// use bstr::{B, ByteVec};
     ///
-    /// let s = <Vec<u8>>::from_slice(b"abc");
+    /// let s = Vec::from_slice(b"abc");
     /// assert_eq!(s, B("abc"));
     /// ```
     fn from_slice<B: AsRef<[u8]>>(bytes: B) -> Vec<u8> {

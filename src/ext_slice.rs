@@ -94,7 +94,7 @@ impl ByteSlice for [u8] {
 pub trait Sealed {}
 impl Sealed for [u8] {}
 
-/// A trait that extends a slice of bytes with string oriented methods.
+/// A trait that extends `&[u8]` with string oriented methods.
 pub trait ByteSlice: Sealed {
     /// A method for accessing the raw bytes of this type. This is always a
     /// no-op and callers shouldn't care about it. This only exists for making
