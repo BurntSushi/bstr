@@ -17,7 +17,7 @@ harness = false
 path = "src/bench.rs"
 
 [dependencies]
-criterion = "0.2.10"
+criterion = "0.3.0"
 bstr = { version = "*", path = ".." }
 
 # For comparisons.

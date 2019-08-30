@@ -24,5 +24,5 @@ fi
 
 cargo test --verbose
 if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
-  cargo bench --verbose --manifest-path bench/Cargo.toml -- --test
+  cargo test --verbose --manifest-path bench/Cargo.toml --benches
 fi

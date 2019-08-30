@@ -1,12 +1,10 @@
-#![allow(dead_code)]
-
 #[macro_use]
 extern crate criterion;
 extern crate bstr;
 extern crate unicode_segmentation;
 
 use bstr::{ByteSlice, B};
-use criterion::{Bencher, Benchmark, Criterion, Throughput};
+use criterion::{Bencher, Criterion, Throughput};
 
 use inputs::*;
 
@@ -253,9 +251,10 @@ fn define(
     corpus: &[u8],
     bench: impl FnMut(&mut Bencher) + 'static,
 ) {
-    let tput = Throughput::Bytes(corpus.len() as u32);
-    let benchmark = Benchmark::new(bench_name, bench).throughput(tput);
-    c.bench(group_name, benchmark);
+    let mut group = c.benchmark_group(group_name);
+    group.throughput(Throughput::Bytes(corpus.len() as u64));
+    group.bench_function(bench_name, bench);
+    group.finish();
 }
 
 criterion_group!(g1, is_ascii);

@@ -6,13 +6,6 @@ use criterion::Criterion;
 use define;
 use inputs::*;
 
-// All english corpora.
-const CORPORA_EN: &'static [(&'static str, &'static [u8])] = &[
-    ("en-huge-ascii", SUBTITLE_EN_HUGE),
-    ("en-small-ascii", SUBTITLE_EN_SMALL),
-    ("en-tiny-ascii", SUBTITLE_EN_TINY),
-];
-
 pub fn find_iter(c: &mut Criterion) {
     define_find_iter(
         c,
@@ -341,7 +334,8 @@ pub fn find_not_byteset(c: &mut Criterion) {
         "repeated-rare-small",
         corpus,
         move |b| {
-            // This file ends in \n, breaking our benchmark.... TODO find a better dataset...
+            // This file ends in \n, breaking our benchmark.... TODO find a
+            // better dataset...
             let corpus = &corpus.as_bytes()[..(corpus.len() - 1)];
             b.iter(|| {
                 assert_eq!(None, corpus.rfind_not_byteset(b"z"));
