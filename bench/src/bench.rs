@@ -5,7 +5,7 @@ extern crate criterion;
 extern crate bstr;
 extern crate unicode_segmentation;
 
-use bstr::{B, ByteSlice};
+use bstr::{ByteSlice, B};
 use criterion::{Bencher, Benchmark, Criterion, Throughput};
 
 use inputs::*;

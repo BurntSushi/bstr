@@ -13,6 +13,7 @@ cargo doc --verbose
 if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then
   rustup component add rustfmt
   cargo fmt -- --check
+  (cd bench && cargo fmt -- --check)
 fi
 
 # Our dev dependencies are increasing their MSRV more quickly then we want to,
