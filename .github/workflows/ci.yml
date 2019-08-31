@@ -5,7 +5,7 @@ on:
     branches:
     - master
   schedule:
-  - cron: '00 01 * * *'
+    cron: '00 01 * * *'
 jobs:
   test:
     name: test
@@ -43,29 +43,26 @@ jobs:
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: Install Rustup
-      if: matrix.os != 'windows-2019'
-      run: |
-        curl -sSf https://sh.rustup.rs | sh -s -- -y
-        echo "##[add-path]$HOME/.cargo/bin"
     - name: Install Rust
-      run: |
-        rustup default ${{ matrix.rust }}
-        which rustup
-        which rustc
-        which cargo
-        rustc --version
-        cargo --version
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
     - run: cargo build --verbose
     - run: cargo doc --verbose
+    # We run a few other builds, but only on one instance to avoid doing
+    # more work than we need to.
     - if: matrix.build == 'stable'
       run: cargo build --verbose --features serde1
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features --features serde1
+    # Our dev dependencies evolve more rapidly than we'd like, so only run
+    # tests when we aren't pinning the Rust version.
     - if: matrix.build != 'pinned'
       run: cargo test --verbose
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --features serde1
     - name: Run benchmarks as tests
       if: matrix.build == 'stable'
       working-directory: ./bench
@@ -80,15 +77,9 @@ jobs:
       with:
         fetch-depth: 1
     - name: Install Rust
-      run: |
-        curl -sSf https://sh.rustup.rs | sh -s -- -y
-        rustup default stable
-        echo "##[add-path]$HOME/.cargo/bin"
-        which rustup
-        which rustc
-        which cargo
-        rustc --version
-        cargo --version
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: stable
     - name: Install rustfmt
       run: rustup component add rustfmt
     - name: Check formatting
