@@ -1,0 +1,100 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+  schedule:
+  - cron: '00 01 * * *'
+jobs:
+  test:
+    name: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # The docs seem to suggest that we can have a matrix with just an
+        # include directive, but it result in a "matrix must define at least
+        # one vector" error in the CI system.
+        build: [pinned, stable, beta, nightly, macos, win-msvc, win-gnu]
+        include:
+        - build: pinned
+          os: ubuntu-18.04
+          rust: 1.28.0
+        - build: stable
+          os: ubuntu-18.04
+          rust: stable
+        - build: beta
+          os: ubuntu-18.04
+          rust: beta
+        - build: nightly
+          os: ubuntu-18.04
+          rust: nightly
+        - build: macos
+          os: macOS-10.14
+          rust: stable
+        - build: win-msvc
+          os: windows-2019
+          rust: stable
+        - build: win-gnu
+          os: windows-2019
+          rust: stable-x86_64-gnu
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install Rustup
+      if: matrix.os != 'windows-2019'
+      run: |
+        curl -sSf https://sh.rustup.rs | sh -s -- -y
+        echo "##[add-path]$HOME/.cargo/bin"
+    - name: Install Rust
+      run: |
+        rustup default ${{ matrix.rust }}
+        which rustup
+        which rustc
+        which cargo
+        rustc --version
+        cargo --version
+    - run: cargo build --verbose
+    - run: cargo doc --verbose
+    - if: matrix.build == 'stable'
+      run: cargo build --verbose --features serde1
+    - if: matrix.build == 'stable'
+      run: cargo build --verbose --no-default-features
+    - if: matrix.build == 'stable'
+      run: cargo build --verbose --no-default-features --features serde1
+    - if: matrix.build != 'pinned'
+      run: cargo test --verbose
+    - name: Run benchmarks as tests
+      if: matrix.build == 'stable'
+      working-directory: ./bench
+      run: cargo test --verbose --benches
+
+  rustfmt:
+    name: rustfmt
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install Rust
+      run: |
+        curl -sSf https://sh.rustup.rs | sh -s -- -y
+        rustup default stable
+        echo "##[add-path]$HOME/.cargo/bin"
+        which rustup
+        which rustc
+        which cargo
+        rustc --version
+        cargo --version
+    - name: Install rustfmt
+      run: rustup component add rustfmt
+    - name: Check formatting
+      run: |
+        cargo fmt -- --check
+    - name: Check formatting in ./bench
+      working-directory: ./bench
+      run: |
+        cargo fmt -- --check
