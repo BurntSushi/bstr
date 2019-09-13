@@ -33,7 +33,7 @@ regex-automata = { version = "0.1.5", default-features = false, optional = true 
 serde = { version = "1.0.85", default-features = false, optional = true }
 
 [dev-dependencies]
-quickcheck = { version = "0.8.1", default-features = false }
+quickcheck = { version = "0.9", default-features = false }
 ucd-parse = "0.1.3"
 unicode-segmentation = "1.2.1"
 
