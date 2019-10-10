@@ -310,15 +310,16 @@ mod bstr {
 
     use bstr::BStr;
     use ext_slice::ByteSlice;
+    use utf8::Utf8Chunk;
 
     impl fmt::Display for BStr {
         #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            if let Ok(allutf8) = self.to_str() {
-                return fmt::Display::fmt(allutf8, f);
-            }
-            for ch in self.chars() {
-                write!(f, "{}", ch)?;
+            for Utf8Chunk { valid, broken } in self.utf8_chunks() {
+                f.write_str(valid)?;
+                if !broken.is_empty() {
+                    f.write_str("\u{FFFD}")?;
+                }
             }
             Ok(())
         }
