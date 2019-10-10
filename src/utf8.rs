@@ -1,10 +1,13 @@
 use core::char;
 use core::cmp;
 use core::fmt;
+use core::str;
 #[cfg(feature = "std")]
 use std::error;
 
 use ascii;
+use bstr::BStr;
+use ext_slice::ByteSlice;
 
 // The UTF-8 decoder provided here is based on the one presented here:
 // https://bjoern.hoehrmann.de/utf-8/decoder/dfa/
@@ -217,6 +220,111 @@ impl<'a> DoubleEndedIterator for CharIndices<'a> {
         Some((self.reverse_index, self.reverse_index + size, ch))
     }
 }
+
+/// An iterator over chunks of valid UTF-8 in a byte slice.
+///
+/// See [`utf8_chunks`](trait.ByteSlice.html#method.utf8_chunks).
+#[derive(Clone, Debug)]
+pub struct Utf8Chunks<'a> {
+    pub(super) bytes: &'a [u8],
+}
+
+/// A chunk of valid UTF-8, possibly followed by invalid UTF-8 bytes.
+///
+/// This is yielded by the
+/// [`Utf8Chunks`](struct.Utf8Chunks.html)
+/// iterator, which can be created via the
+/// [`ByteSlice::utf8_chunks`](trait.ByteSlice.html#method.utf8_chunks)
+/// method.
+///
+/// The `'a` lifetime parameter corresponds to the lifetime of the bytes that
+/// are being iterated over.
+pub struct Utf8Chunk<'a> {
+    /// A valid UTF-8 piece, at the start, end, or between invalid UTF-8 bytes.
+    ///
+    /// This is empty between adjacent invalid UTF-8 byte sequences.
+    valid: &'a str,
+    /// A sequence of invalid UTF-8 bytes.
+    ///
+    /// Can only be empty in the last chunk.
+    ///
+    /// Should be replaced by a single unicode replacement character, if not
+    /// empty.
+    invalid: &'a BStr,
+}
+
+impl<'a> Utf8Chunk<'a> {
+    /// Returns the (possibly empty) valid UTF-8 bytes in this chunk.
+    ///
+    /// This may be empty if there are consecutive sequences of invalid UTF-8
+    /// bytes.
+    #[inline]
+    pub fn valid(&self) -> &'a str {
+        self.valid
+    }
+
+    /// Returns the (possibly empty) invalid UTF-8 bytes in this chunk that
+    /// immediately follow the valid UTF-8 bytes in this chunk.
+    ///
+    /// This is only empty when this chunk corresponds to the last chunk in
+    /// the original bytes.
+    ///
+    /// The maximum length of this slice is 3. That is, invalid UTF-8 byte
+    /// sequences greater than 1 always correspond to a valid _prefix_ of
+    /// a valid UTF-8 encoded codepoint. This corresponds to the "substitution
+    /// of maximal subparts" strategy that is described in more detail in the
+    /// docs for the
+    /// [`ByteSlice::to_str_lossy`](trait.ByteSlice.html#method.to_str_lossy)
+    /// method.
+    #[inline]
+    pub fn invalid(&self) -> &'a [u8] {
+        self.invalid.as_bytes()
+    }
+}
+
+impl<'a> Iterator for Utf8Chunks<'a> {
+    type Item = Utf8Chunk<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Utf8Chunk<'a>> {
+        if self.bytes.is_empty() {
+            return None;
+        }
+        match validate(self.bytes) {
+            Ok(()) => {
+                let valid = self.bytes;
+                self.bytes = &[];
+                Some(Utf8Chunk {
+                    // SAFETY: This is safe because of the guarantees provided
+                    // by utf8::validate.
+                    valid: unsafe { str::from_utf8_unchecked(valid) },
+                    invalid: [].as_bstr(),
+                })
+            }
+            Err(e) => {
+                let (valid, rest) = self.bytes.split_at(e.valid_up_to());
+                // SAFETY: This is safe because of the guarantees provided by
+                // utf8::validate.
+                let valid = unsafe { str::from_utf8_unchecked(valid) };
+                let (invalid, rest) =
+                    rest.split_at(e.error_len().unwrap_or(rest.len()));
+                self.bytes = rest;
+                Some(Utf8Chunk { valid, invalid: invalid.as_bstr() })
+            }
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.bytes.is_empty() {
+            (0, Some(0))
+        } else {
+            (1, Some(self.bytes.len()))
+        }
+    }
+}
+
+impl<'a> ::core::iter::FusedIterator for Utf8Chunks<'a> {}
 
 /// An error that occurs when UTF-8 decoding fails.
 ///
@@ -843,10 +951,7 @@ mod tests {
         assert_eq!(vec!['☃', '☃'], d("☃☃"));
         assert_eq!(vec!['α', 'β', 'γ', 'δ', 'ε'], d("αβγδε"));
         assert_eq!(vec!['☃', '⛄', '⛇'], d("☃⛄⛇"));
-        assert_eq!(
-            vec!['𝗮', '𝗯', '𝗰', '𝗱', '𝗲'],
-            d("𝗮𝗯𝗰𝗱𝗲")
-        );
+        assert_eq!(vec!['𝗮', '𝗯', '𝗰', '𝗱', '𝗲'], d("𝗮𝗯𝗰𝗱𝗲"));
     }
 
     #[test]
@@ -955,10 +1060,7 @@ mod tests {
         assert_eq!(vec!['☃', '☃'], d("☃☃"));
         assert_eq!(vec!['ε', 'δ', 'γ', 'β', 'α'], d("αβγδε"));
         assert_eq!(vec!['⛇', '⛄', '☃'], d("☃⛄⛇"));
-        assert_eq!(
-            vec!['𝗲', '𝗱', '𝗰', '𝗯', '𝗮'],
-            d("𝗮𝗯𝗰𝗱𝗲")
-        );
+        assert_eq!(vec!['𝗲', '𝗱', '𝗰', '𝗯', '𝗮'], d("𝗮𝗯𝗰𝗱𝗲"));
     }
 
     #[test]
