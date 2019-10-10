@@ -314,11 +314,11 @@ mod bstr {
     impl fmt::Display for BStr {
         #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            if let Ok(allutf8) = self.to_str() {
-                return fmt::Display::fmt(allutf8, f);
-            }
-            for ch in self.chars() {
-                write!(f, "{}", ch)?;
+            for chunk in self.utf8_chunks() {
+                f.write_str(chunk.valid())?;
+                if !chunk.invalid().is_empty() {
+                    f.write_str("\u{FFFD}")?;
+                }
             }
             Ok(())
         }
