@@ -1,6 +1,7 @@
 use core::char;
 use core::cmp;
 use core::fmt;
+use core::str;
 #[cfg(feature = "std")]
 use std::error;
 
@@ -217,6 +218,71 @@ impl<'a> DoubleEndedIterator for CharIndices<'a> {
         Some((self.reverse_index, self.reverse_index + size, ch))
     }
 }
+
+/// An iterator over chunks of valid UTF-8 in a [`ByteSlice`].
+///
+/// See [`ByteSlice::utf8_chunks`].
+pub struct Utf8Chunks<'a> {
+  pub(super) bytes: &'a [u8],
+}
+
+/// A chunk of valid UTF-8, possibly followed by a broken character encoding.
+pub struct Utf8Chunk<'a> {
+  /// A valid UTF-8 piece, at the start, end, or between broken chars.
+  ///
+  /// Empty between adjacent broken chars.
+  pub valid: &'a str,
+
+  /// A broken char.
+  ///
+  /// Can only be empty in the last chunk.
+  ///
+  /// Should be replaced by a single unicode replacement character, if not empty.
+  pub broken: &'a [u8],
+}
+
+impl<'a> Iterator for Utf8Chunks<'a> {
+  type Item = Utf8Chunk<'a>;
+
+  #[inline]
+  fn next(&mut self) -> Option<Utf8Chunk<'a>> {
+    if self.bytes.is_empty() {
+      return None;
+    }
+    match validate(self.bytes) {
+      Ok(()) => {
+        let valid = self.bytes;
+        self.bytes = &[];
+        Some(Utf8Chunk {
+          // SAFETY: This is safe because of the guarantees provided by
+          // utf8::validate.
+          valid: unsafe { str::from_utf8_unchecked(valid) },
+          broken: &[],
+        })
+      }
+      Err(e) => {
+        let (valid, rest) = self.bytes.split_at(e.valid_up_to());
+        // SAFETY: This is safe because of the guarantees provided by
+        // utf8::validate.
+        let valid = unsafe { str::from_utf8_unchecked(valid) };
+        let (broken, rest) = rest.split_at(e.error_len().unwrap_or(rest.len()));
+        self.bytes = rest;
+        Some(Utf8Chunk { valid, broken })
+      }
+    }
+  }
+
+  #[inline]
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    if self.bytes.is_empty() {
+      (0, Some(0))
+    } else {
+      (1, Some(self.bytes.len()))
+    }
+  }
+}
+
+impl<'a> std::iter::FusedIterator for Utf8Chunks<'a> {}
 
 /// An error that occurs when UTF-8 decoding fails.
 ///

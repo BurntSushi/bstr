@@ -25,7 +25,7 @@ use unicode::{
     SentenceIndices, Sentences, WordIndices, Words, WordsWithBreakIndices,
     WordsWithBreaks,
 };
-use utf8::{self, CharIndices, Chars, Utf8Error};
+use utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error};
 
 /// A short-hand constructor for building a `&[u8]`.
 ///
@@ -1702,6 +1702,16 @@ pub trait ByteSlice: Sealed {
     #[inline]
     fn char_indices(&self) -> CharIndices {
         CharIndices::new(self.as_bytes())
+    }
+
+    /// Iterate over chunks of valid UTF-8.
+    ///
+    /// The iterator iterates over the chunks of valid UTF-8 separated by any
+    /// broken characters, which could be replaced by the unicode replacement
+    /// character.
+    #[inline]
+    fn utf8_chunks(&self) -> Utf8Chunks {
+        Utf8Chunks { bytes: self.as_bytes() }
     }
 
     /// Returns an iterator over the grapheme clusters in this byte string.
