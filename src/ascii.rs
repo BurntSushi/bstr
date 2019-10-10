@@ -298,9 +298,7 @@ mod tests {
         for i in 0..517 {
             for align in 0..65 {
                 let mut s = "a".repeat(i);
-                s.push_str(
-                    "☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃",
-                );
+                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
                 let s = s.get(align..).unwrap_or("");
                 assert_eq!(
                     i.saturating_sub(align),
@@ -321,9 +319,7 @@ mod tests {
         for i in 0..517 {
             for align in 0..65 {
                 let mut s = "a".repeat(i);
-                s.push_str(
-                    "☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃",
-                );
+                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
                 let s = s.get(align..).unwrap_or("");
                 assert_eq!(
                     i.saturating_sub(align),
