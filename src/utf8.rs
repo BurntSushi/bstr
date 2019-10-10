@@ -219,9 +219,9 @@ impl<'a> DoubleEndedIterator for CharIndices<'a> {
     }
 }
 
-/// An iterator over chunks of valid UTF-8 in a [`ByteSlice`].
+/// An iterator over chunks of valid UTF-8 in a [`ByteSlice`](trait.ByteSlice.html).
 ///
-/// See [`ByteSlice::utf8_chunks`].
+/// See [`utf8_chunks`](trait.ByteSlice.html#method.utf8_chunks).
 pub struct Utf8Chunks<'a> {
   pub(super) bytes: &'a [u8],
 }
