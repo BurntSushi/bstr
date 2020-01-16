@@ -248,3 +248,7 @@ This project is licensed under either of
    http://opensource.org/licenses/MIT)
 
 at your option.
+
+The data in `src/unicode/data/` is licensed under the Unicode License Agreement
+([LICENSE-UNICODE](http://www.unicode.org/copyright.html#License)), although
+this data is only used in tests.
