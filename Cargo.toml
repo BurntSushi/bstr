@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["string", "str", "byte", "bytes", "text"]
 license = "MIT OR Apache-2.0"
 categories = ["text-processing", "encoding"]
-exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml"]
+exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml", "/src/unicode/data/*"]
 
 [badges]
 travis-ci = { repository = "BurntSushi/bstr" }
