@@ -164,7 +164,7 @@ pub struct CharIndices<'a> {
 
 impl<'a> CharIndices<'a> {
     pub(crate) fn new(bs: &'a [u8]) -> CharIndices<'a> {
-        CharIndices { bs: bs, forward_index: 0, reverse_index: bs.len() }
+        CharIndices { bs, forward_index: 0, reverse_index: bs.len() }
     }
 
     /// View the underlying data as a subslice of the original data.
