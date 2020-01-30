@@ -403,7 +403,7 @@ pub use unicode::{
 };
 pub use utf8::{
     decode as decode_utf8, decode_last as decode_last_utf8, CharIndices,
-    Chars, Utf8Chunk, Utf8Chunks, Utf8Error,
+    Chars, Utf8Chunk, Utf8Chunks, Utf8Error, CharsOrRaws, CharOrRaw,
 };
 
 mod ascii;
