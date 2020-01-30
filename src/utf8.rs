@@ -801,11 +801,15 @@ fn is_leading_utf8_byte(b: u8) -> bool {
     (b & 0b1100_0000) != 0b1000_0000
 }
 
+///a char or 1-3 bytes of invalid ut8.
+///This is yielded by the `charsOrRaws` iterator which can be created via the ByteSlice::utf8_chunks method.
+///The 'a lifetime parameter corresponds to the lifetime of the bytes that are being iterated over.
 pub enum CharOrRaw<'a> {
     Char(char),
     Raw(&'a [u8]),
 }
 
+///a iterator over a char or raw invalid utf8
 pub struct CharsOrRaws<'a> {
     bs: &'a [u8],
     forward_index: usize,
@@ -836,9 +840,7 @@ impl<'a> Iterator for CharsOrRaws<'a> {
 
         let resault = match ch {
             Some(ch) => Some(CharOrRaw::Char(ch)),
-            None => {
-                Some(CharOrRaw::Raw(&self.bs[index..index + size]))
-            },
+            None => Some(CharOrRaw::Raw(&self.bs[index..index + size])),
         };
 
         self.bs = &self.bs[size..];
@@ -858,9 +860,7 @@ impl<'a> DoubleEndedIterator for CharsOrRaws<'a> {
 
         let resault = match ch {
             Some(ch) => Some(CharOrRaw::Char(ch)),
-            None => {
-                Some(CharOrRaw::Raw(&self.bs[self.bs.len() - size..]))
-            }
+            None => Some(CharOrRaw::Raw(&self.bs[self.bs.len() - size..])),
         };
 
         self.bs = &self.bs[..self.bs.len() - size];
