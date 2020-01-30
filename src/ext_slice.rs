@@ -25,7 +25,7 @@ use unicode::{
     SentenceIndices, Sentences, WordIndices, Words, WordsWithBreakIndices,
     WordsWithBreaks,
 };
-use utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error, CharsOrRaws};
+use utf8::{self, CharIndices, Chars, CharsOrRaws, Utf8Chunks, Utf8Error};
 
 /// A short-hand constructor for building a `&[u8]`.
 ///
