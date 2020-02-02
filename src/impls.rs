@@ -326,17 +326,9 @@ mod bstr {
 
     impl fmt::Debug for BStr {
         #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, mut f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "\"")?;
-            for (s, e, ch) in self.char_indices() {
-                if ch == '\u{FFFD}' {
-                    for &b in self[s..e].as_bytes() {
-                        write!(f, r"\x{:X}", b)?;
-                    }
-                } else {
-                    write!(f, "{}", ch.escape_debug())?;
-                }
-            }
+            self.escape_debug_into(&mut f)?;
             write!(f, "\"")?;
             Ok(())
         }

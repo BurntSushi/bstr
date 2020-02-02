@@ -6,6 +6,7 @@ use std::ffi::OsStr;
 use std::path::Path;
 
 use core::cmp;
+use core::fmt;
 use core::ops;
 use core::ptr;
 use core::slice;
@@ -427,6 +428,45 @@ pub trait ByteSlice: Sealed {
                 }
             }
         }
+    }
+
+    /// Write a UTF-8 debug representation of this byte slice into the given
+    /// writer.
+    ///
+    /// This method encodes a bytes slice into a UTF-8 valid representation by
+    /// writing invalid sequences as `\xXX` escape codes.
+    ///
+    /// This method also escapes UTF-8 valid characters like `\n` and `\t`.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// let mut message = String::from("cannot load such file -- ");
+    /// let filename = b"utf8-invalid-name-\xFF";
+    /// filename.escape_debug_into(&mut message).unwrap();
+    /// assert_eq!(r"cannot load such file -- utf8-invalid-name-\xFF", message);
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// This method only returns an error when the given writer returns an
+    /// error.
+    #[inline]
+    fn escape_debug_into<W: fmt::Write>(&self, mut f: W) -> fmt::Result {
+        for (start, end, ch) in self.char_indices() {
+            if ch == '\u{FFFD}' {
+                for byte in &self.as_bytes()[start..end] {
+                    write!(f, r"\x{:X}", byte)?;
+                }
+            } else {
+                write!(f, "{}", ch.escape_debug())?;
+            }
+        }
+        Ok(())
     }
 
     /// Create an OS string slice from this byte string.
