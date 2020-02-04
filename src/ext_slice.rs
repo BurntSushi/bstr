@@ -1324,6 +1324,9 @@ pub trait ByteSlice: Sealed {
     /// let x: Vec<_> = b"abcXdef".splitn_str(1, "X").collect();
     /// assert_eq!(x, vec![B("abcXdef")]);
     ///
+    /// let x: Vec<_> = b"abcdef".splitn_str(2, "X").collect();
+    /// assert_eq!(x, vec![B("abcdef")]);
+    ///
     /// let x: Vec<_> = b"abcXdef".splitn_str(0, "X").collect();
     /// assert!(x.is_empty());
     /// ```
@@ -1366,6 +1369,9 @@ pub trait ByteSlice: Sealed {
     ///
     /// let x: Vec<_> = b"abcXdef".rsplitn_str(1, "X").collect();
     /// assert_eq!(x, vec![B("abcXdef")]);
+    ///
+    /// let x: Vec<_> = b"abcdef".rsplitn_str(2, "X").collect();
+    /// assert_eq!(x, vec![B("abcdef")]);
     ///
     /// let x: Vec<_> = b"abcXdef".rsplitn_str(0, "X").collect();
     /// assert!(x.is_empty());
@@ -3485,7 +3491,7 @@ impl<'a> Iterator for SplitN<'a> {
     #[inline]
     fn next(&mut self) -> Option<&'a [u8]> {
         self.count += 1;
-        if self.count > self.limit {
+        if self.count > self.limit || self.split.done {
             None
         } else if self.count == self.limit {
             Some(&self.split.finder.haystack[self.split.last..])
@@ -3524,7 +3530,7 @@ impl<'a> Iterator for SplitNReverse<'a> {
     #[inline]
     fn next(&mut self) -> Option<&'a [u8]> {
         self.count += 1;
-        if self.count > self.limit {
+        if self.count > self.limit || self.split.done {
             None
         } else if self.count == self.limit {
             Some(&self.split.finder.haystack()[..self.split.last])
