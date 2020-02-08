@@ -44,9 +44,11 @@ jobs:
       with:
         fetch-depth: 1
     - name: Install Rust
-      uses: hecrj/setup-rust-action@v1
+      uses: actions-rs/toolchain@v1
       with:
-        rust-version: ${{ matrix.rust }}
+        toolchain: stable
+        override: true
+        profile: minimal
     - run: cargo build --verbose
     - run: cargo doc --verbose
     # We run a few other builds, but only on one instance to avoid doing
@@ -77,11 +79,12 @@ jobs:
       with:
         fetch-depth: 1
     - name: Install Rust
-      uses: hecrj/setup-rust-action@v1
+      uses: actions-rs/toolchain@v1
       with:
-        rust-version: stable
-    - name: Install rustfmt
-      run: rustup component add rustfmt
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: rustfmt
     - name: Check formatting
       run: |
         cargo fmt -- --check
