@@ -407,6 +407,7 @@ pub use utf8::{
 };
 
 mod ascii;
+#[macro_use]
 mod bstr;
 #[cfg(feature = "std")]
 mod bstring;
@@ -452,5 +453,15 @@ mod apitests {
         assert_send::<FinderReverse>();
         assert_sync::<FinderReverse>();
         assert_unwind_safe::<FinderReverse>();
+    }
+}
+
+#[doc(hidden)]
+pub mod __private {
+    // Internal type used by the `bstr::literal!` macro. Not public.
+    #[repr(C)]
+    pub union ConstTransmuter {
+        pub bytes: &'static [u8],
+        pub bstr: &'static super::BStr,
     }
 }

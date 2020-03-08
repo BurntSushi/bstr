@@ -60,3 +60,67 @@ impl BStr {
         &self.bytes
     }
 }
+
+/// Construct a literal `BStr` usable in `static` or `const` items.
+///
+/// # Examples
+///
+/// ## Basic usage
+///
+/// Note that a byte string literal must be used, e.g. `b"foobar"` and not
+/// `"foobar"`.
+///
+/// ```
+/// # use bstr::{B, BStr};
+/// const EXAMPLE: &BStr = bstr::literal!(b"foobar");
+/// assert_eq!(EXAMPLE, B("foobar"));
+/// ```
+///
+/// ## Use in combination with `include_bytes!`
+///
+/// ```
+/// # const _: &str = stringify! {
+/// const FILE_BYTES: &BStr = bstr::literal!(include_bytes!("./file.dat"));
+/// # };
+/// ```
+///
+/// ## Populating a field in a static struct
+///
+/// ```rust
+/// # #[cfg(feature = "std")]
+/// # fn main() {
+/// # use std::borrow::Cow;
+/// # use bstr::{B, BStr};
+///
+/// struct Archive {
+///     name: Cow<'static, str>,
+///     raw: Cow<'static, BStr>,
+///     // etc...
+/// }
+///
+/// static BUNDLED: Archive = Archive {
+///     name: Cow::Borrowed("bundled"),
+///     raw: Cow::Borrowed(bstr::literal!(b"important data...")),
+///     // etc...
+/// };
+///
+/// assert_eq!(&*BUNDLED.raw, B("important data..."));
+/// # }
+/// # #[cfg(not(feature = "std"))]
+/// # fn main() {}
+/// ```
+#[macro_export]
+macro_rules! literal {
+    // Take an `expr` (and not a `literal`) as an argument so that
+    // `bstr::literal!(include_bytes!(...))` works.
+    ($bytes: expr) => {{
+        // Avoid running the argument inside an `unsafe` block. Use underscores
+        // to silence a dead code warning if the constant declared with this
+        // literal ends up unused.
+        const _BYTES: &'static [u8] = $bytes;
+        const _BSTR: &'static $crate::BStr = unsafe {
+            $crate::__private::ConstTransmuter { bytes: _BYTES }.bstr
+        };
+        _BSTR
+    }};
+}
