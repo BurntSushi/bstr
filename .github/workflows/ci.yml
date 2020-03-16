@@ -46,7 +46,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: ${{ matrix.rust }}
         override: true
         profile: minimal
     - run: cargo build --verbose
