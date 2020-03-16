@@ -43,7 +43,9 @@ const ACCEPT: usize = 12;
 const REJECT: usize = 0;
 
 #[cfg_attr(rustfmt, rustfmt::skip)]
-static CLASSES: [u8; 256] = [
+/// SAFETY: Unsafe code in the decode function rely on the correctness of
+/// this state machine.
+const CLASSES: [u8; 256] = [
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -55,7 +57,9 @@ static CLASSES: [u8; 256] = [
 ];
 
 #[cfg_attr(rustfmt, rustfmt::skip)]
-static STATES_FORWARD: &'static [u8] = &[
+/// SAFETY: Unsafe code in the decode function rely on the correctness of
+/// this state machine.
+const STATES_FORWARD: &'static [u8] = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   12, 0, 24, 36, 60, 96, 84, 0, 0, 0, 48, 72,
   0, 12, 0, 0, 0, 0, 0, 12, 0, 12, 0, 0,
@@ -435,7 +439,7 @@ impl fmt::Display for Utf8Error {
 /// Returns OK if and only if the given slice is completely valid UTF-8.
 ///
 /// If the slice isn't valid UTF-8, then an error is returned that explains
-/// the first location at which invalid UTF-89 was detected.
+/// the first location at which invalid UTF-8 was detected.
 pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
     // The fast path for validating UTF-8. It steps through a UTF-8 automaton
     // and uses a SIMD accelerated ASCII fast path on x86_64. If an error is
@@ -783,6 +787,8 @@ pub fn decode_last_lossy<B: AsRef<[u8]>>(slice: B) -> (char, usize) {
     }
 }
 
+/// SAFETY: The decode function relies on state being equal to ACCEPT only
+/// if cp is a valid Unicode scalar value.
 #[inline]
 pub fn decode_step(state: &mut usize, cp: &mut u32, b: u8) {
     let class = CLASSES[b as usize];
