@@ -125,6 +125,7 @@ pub trait ByteSlice: Sealed {
     ///
     /// println!("{:?}", b"foo\xFFbar".as_bstr());
     /// ```
+    #[inline]
     fn as_bstr(&self) -> &BStr {
         BStr::new(self.as_bytes())
     }
@@ -147,6 +148,7 @@ pub trait ByteSlice: Sealed {
     /// let mut bytes = *b"foo\xFFbar";
     /// println!("{:?}", &mut bytes.as_bstr_mut());
     /// ```
+    #[inline]
     fn as_bstr_mut(&mut self) -> &mut BStr {
         BStr::new_mut(self.as_bytes_mut())
     }
@@ -281,6 +283,7 @@ pub trait ByteSlice: Sealed {
     /// let s = unsafe { B("☃βツ").to_str_unchecked() };
     /// assert_eq!("☃βツ", s);
     /// ```
+    #[inline]
     unsafe fn to_str_unchecked(&self) -> &str {
         str::from_utf8_unchecked(self.as_bytes())
     }
