@@ -149,6 +149,7 @@ pub trait ByteVec: Sealed {
     /// let s = Vec::from_slice(b"abc");
     /// assert_eq!(s, B("abc"));
     /// ```
+    #[inline]
     fn from_slice<B: AsRef<[u8]>>(bytes: B) -> Vec<u8> {
         bytes.as_ref().to_vec()
     }
@@ -461,6 +462,7 @@ pub trait ByteVec: Sealed {
     /// let s = unsafe { Vec::from("☃βツ").into_string_unchecked() };
     /// assert_eq!("☃βツ", s);
     /// ```
+    #[inline]
     unsafe fn into_string_unchecked(self) -> String
     where
         Self: Sized,
