@@ -487,13 +487,13 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(os_str, OsStr::new("foo"));
     /// ```
     #[inline]
-    fn into_os_string(self) -> Result<OsString, Vec<u8>>
+    fn into_os_string(self) -> Result<OsString, FromUtf8Error>
     where
         Self: Sized,
     {
         #[cfg(unix)]
         #[inline]
-        fn imp(v: Vec<u8>) -> Result<OsString, Vec<u8>> {
+        fn imp(v: Vec<u8>) -> Result<OsString, FromUtf8Error> {
             use std::os::unix::ffi::OsStringExt;
 
             Ok(OsString::from_vec(v))
@@ -501,11 +501,8 @@ pub trait ByteVec: Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp(v: Vec<u8>) -> Result<OsString, Vec<u8>> {
-            match v.into_string() {
-                Ok(s) => Ok(OsString::from(s)),
-                Err(err) => Err(err.into_vec()),
-            }
+        fn imp(v: Vec<u8>) -> Result<OsString, FromUtf8Error> {
+            v.into_string().map(OsString::from)
         }
 
         imp(self.into_vec())
@@ -571,7 +568,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(path.as_os_str(), "foo");
     /// ```
     #[inline]
-    fn into_path_buf(self) -> Result<PathBuf, Vec<u8>>
+    fn into_path_buf(self) -> Result<PathBuf, FromUtf8Error>
     where
         Self: Sized,
     {
