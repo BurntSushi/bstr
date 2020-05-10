@@ -481,7 +481,7 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
         // code unit sequence. To do this, we simply locate the last leading
         // byte that occurs before rejected_at.
         let mut backup = rejected_at.saturating_sub(1);
-        while backup > 0 && !is_leading_utf8_byte(slice[backup]) {
+        while backup > 0 && !is_leading_or_invalid_utf8_byte(slice[backup]) {
             backup -= 1;
         }
         let upto = cmp::min(slice.len(), rejected_at.saturating_add(1));
@@ -715,7 +715,7 @@ pub fn decode_last<B: AsRef<[u8]>>(slice: B) -> (Option<char>, usize) {
     }
     let mut start = slice.len() - 1;
     let limit = slice.len().saturating_sub(4);
-    while start > limit && !is_leading_utf8_byte(slice[start]) {
+    while start > limit && !is_leading_or_invalid_utf8_byte(slice[start]) {
         start -= 1;
     }
     let (ch, size) = decode(&slice[start..]);
@@ -794,10 +794,29 @@ pub fn decode_step(state: &mut usize, cp: &mut u32, b: u8) {
     *state = STATES_FORWARD[*state + class as usize] as usize;
 }
 
-fn is_leading_utf8_byte(b: u8) -> bool {
+/// Returns true if and only if the given byte is either a valid leading UTF-8
+/// byte, or is otherwise an invalid byte that can never appear anywhere in a
+/// valid UTF-8 sequence.
+fn is_leading_or_invalid_utf8_byte(b: u8) -> bool {
     // In the ASCII case, the most significant bit is never set. The leading
     // byte of a 2/3/4-byte sequence always has the top two most significant
-    // bigs set.
+    // bits set. For bytes that can never appear anywhere in valid UTF-8, this
+    // also returns true, since every such byte has its two most significant
+    // bits set:
+    //
+    //     \xC0 :: 11000000
+    //     \xC1 :: 11000001
+    //     \xF5 :: 11110101
+    //     \xF6 :: 11110110
+    //     \xF7 :: 11110111
+    //     \xF8 :: 11111000
+    //     \xF9 :: 11111001
+    //     \xFA :: 11111010
+    //     \xFB :: 11111011
+    //     \xFC :: 11111100
+    //     \xFD :: 11111101
+    //     \xFE :: 11111110
+    //     \xFF :: 11111111
     (b & 0b1100_0000) != 0b1000_0000
 }
 
