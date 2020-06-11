@@ -375,12 +375,24 @@ mod bstr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "\"")?;
             for (s, e, ch) in self.char_indices() {
-                if ch == '\u{FFFD}' {
-                    for &b in self[s..e].as_bytes() {
-                        write!(f, r"\x{:X}", b)?;
+                match ch {
+                    '\0' => write!(f, "\\0")?,
+                    '\u{FFFD}' => {
+                        for &b in self[s..e].as_bytes() {
+                            write!(f, r"\x{:02X}", b)?;
+                        }
                     }
-                } else {
-                    write!(f, "{}", ch.escape_debug())?;
+                    // ASCII control characters except \0, \n, \r, \t
+                    '\x01'..='\x08'
+                    | '\x0b'
+                    | '\x0c'
+                    | '\x0e'..='\x19'
+                    | '\x7f' => {
+                        write!(f, "\\x{:02x}", ch as u32)?;
+                    }
+                    '\n' | '\r' | '\t' | _ => {
+                        write!(f, "{}", ch.escape_debug())?;
+                    }
                 }
             }
             write!(f, "\"")?;
@@ -929,4 +941,13 @@ mod bstring_arbitrary {
             Box::new(self.bytes.shrink().map(BString::from))
         }
     }
+}
+
+#[test]
+fn test_debug() {
+    use crate::ByteSlice;
+    assert_eq!(
+        r#""\0\0\0 ftypisom\0\0\x02\0isomiso2avc1mp""#,
+        format!("{:?}", b"\0\0\0 ftypisom\0\0\x02\0isomiso2avc1mp".as_bstr()),
+    );
 }
