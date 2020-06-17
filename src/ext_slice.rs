@@ -5,12 +5,7 @@ use std::ffi::OsStr;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-use core::cmp;
-use core::ops;
-use core::ptr;
-use core::slice;
-use core::str;
-
+use core::{cmp, iter, ops, ptr, slice, str};
 use memchr::{memchr, memrchr};
 
 use ascii;
@@ -3255,12 +3250,27 @@ pub struct Bytes<'a> {
     it: slice::Iter<'a, u8>,
 }
 
+impl<'a> Bytes<'a> {
+    /// Views the remaining underlying data as a subslice of the original data.
+    /// This has the same lifetime as the original slice,
+    /// and so the iterator can continue to be used while this exists.
+    #[inline]
+    pub fn as_slice(&self) -> &'a [u8] {
+        self.it.as_slice()
+    }
+}
+
 impl<'a> Iterator for Bytes<'a> {
     type Item = u8;
 
     #[inline]
     fn next(&mut self) -> Option<u8> {
         self.it.next().map(|&b| b)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.it.size_hint()
     }
 }
 
@@ -3277,6 +3287,8 @@ impl<'a> ExactSizeIterator for Bytes<'a> {
         self.it.len()
     }
 }
+
+impl<'a> iter::FusedIterator for Bytes<'a> {}
 
 /// An iterator over the fields in a byte string, separated by whitespace.
 ///
