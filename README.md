@@ -6,7 +6,7 @@ differs from the standard library's `String` and `str` types in that they are
 not required to be valid UTF-8, but may be fully or partially valid UTF-8.
 
 [![Build status](https://github.com/BurntSushi/bstr/workflows/ci/badge.svg)](https://github.com/BurntSushi/bstr/actions)
-[![](http://meritbadge.herokuapp.com/bstr)](https://crates.io/crates/bstr)
+[![](https://meritbadge.herokuapp.com/bstr)](https://crates.io/crates/bstr)
 
 
 ### Documentation
@@ -17,7 +17,7 @@ https://docs.rs/bstr
 ### When should I use byte strings?
 
 See this part of the documentation for more details:
-https://docs.rs/bstr/0.2.0/bstr/#when-should-i-use-byte-strings.
+https://docs.rs/bstr/*/bstr/#when-should-i-use-byte-strings.
 
 The short story is that byte strings are useful when it is inconvenient or
 incorrect to require valid UTF-8.
@@ -183,7 +183,7 @@ Some _probable_ future considerations for APIs include, but are not limited to:
 * A convenience layer on top of the `aho-corasick` crate.
 * Unicode normalization.
 * More sophisticated support for dealing with Unicode case, perhaps by
-  combining the use cases supported by [`caseless`](http://docs.rs/caseless)
+  combining the use cases supported by [`caseless`](https://docs.rs/caseless)
   and [`unicase`](https://docs.rs/unicase).
 * Add facilities for dealing with OS strings and file paths, probably via
   simple conversion routines.
@@ -216,7 +216,7 @@ library crates. For example:
   implemented for `&str` types. One could use `Utf8Error` above to implement
   grapheme iteration with the same semantics as what `bstr` provides (automatic
   Unicode replacement codepoint substitution).
-* The [`twoway`](https://docs.rs/twoway/0.2.0/twoway/) crate can be used for
+* The [`twoway`](https://docs.rs/twoway/0.2/twoway/) crate can be used for
   fast substring searching on `&[u8]`.
 
 So why create `bstr`? Part of the point of the `bstr` crate is to provide a
@@ -243,12 +243,12 @@ of this philosophy, currently, the only required dependency of `bstr` is
 This project is licensed under either of
 
  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
+   https://www.apache.org/licenses/LICENSE-2.0)
  * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+   https://opensource.org/licenses/MIT)
 
 at your option.
 
 The data in `src/unicode/data/` is licensed under the Unicode License Agreement
-([LICENSE-UNICODE](http://www.unicode.org/copyright.html#License)), although
+([LICENSE-UNICODE](https://www.unicode.org/copyright.html#License)), although
 this data is only used in tests.
