@@ -216,7 +216,7 @@ library crates. For example:
   implemented for `&str` types. One could use `Utf8Error` above to implement
   grapheme iteration with the same semantics as what `bstr` provides (automatic
   Unicode replacement codepoint substitution).
-* The [`twoway`](https://docs.rs/twoway/0.2/twoway/) crate can be used for
+* The [`twoway`](https://docs.rs/twoway) crate can be used for
   fast substring searching on `&[u8]`.
 
 So why create `bstr`? Part of the point of the `bstr` crate is to provide a
