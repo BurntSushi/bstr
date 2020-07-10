@@ -539,6 +539,22 @@ mod bstr {
         }
     }
 
+    #[cfg(feature = "std")]
+    impl From<Box<[u8]>> for Box<BStr> {
+        #[inline]
+        fn from(s: Box<[u8]>) -> Box<BStr> {
+            BStr::from_boxed_bytes(s)
+        }
+    }
+
+    #[cfg(feature = "std")]
+    impl From<Box<BStr>> for Box<[u8]> {
+        #[inline]
+        fn from(s: Box<BStr>) -> Box<[u8]> {
+            BStr::into_boxed_bytes(s)
+        }
+    }
+
     impl Eq for BStr {}
 
     impl PartialEq<BStr> for BStr {
