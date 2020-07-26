@@ -243,6 +243,7 @@ pub struct Utf8Chunks<'a> {
 ///
 /// The `'a` lifetime parameter corresponds to the lifetime of the bytes that
 /// are being iterated over.
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Utf8Chunk<'a> {
     /// A valid UTF-8 piece, at the start, end, or between invalid UTF-8 bytes.
     ///
@@ -255,6 +256,11 @@ pub struct Utf8Chunk<'a> {
     /// Should be replaced by a single unicode replacement character, if not
     /// empty.
     invalid: &'a BStr,
+    /// Indicates whether the invalid sequence could've been valid if there
+    /// were more bytes.
+    ///
+    /// Can only be true in the last chunk.
+    incomplete: bool,
 }
 
 impl<'a> Utf8Chunk<'a> {
@@ -284,6 +290,18 @@ impl<'a> Utf8Chunk<'a> {
     pub fn invalid(&self) -> &'a [u8] {
         self.invalid.as_bytes()
     }
+
+    /// Returns whether the invalid sequence might still become valid if more
+    /// bytes are added.
+    ///
+    /// Returns true if the end of the input was reached unexpectedly,
+    /// without encountering an unexpected byte.
+    ///
+    /// This can only be the case for the last chunk.
+    #[inline]
+    pub fn incomplete(&self) -> bool {
+        self.incomplete
+    }
 }
 
 impl<'a> Iterator for Utf8Chunks<'a> {
@@ -303,6 +321,7 @@ impl<'a> Iterator for Utf8Chunks<'a> {
                     // by utf8::validate.
                     valid: unsafe { str::from_utf8_unchecked(valid) },
                     invalid: [].as_bstr(),
+                    incomplete: false,
                 })
             }
             Err(e) => {
@@ -310,10 +329,17 @@ impl<'a> Iterator for Utf8Chunks<'a> {
                 // SAFETY: This is safe because of the guarantees provided by
                 // utf8::validate.
                 let valid = unsafe { str::from_utf8_unchecked(valid) };
-                let (invalid, rest) =
-                    rest.split_at(e.error_len().unwrap_or(rest.len()));
+                let (invalid_len, incomplete) = match e.error_len() {
+                    Some(n) => (n, false),
+                    None => (rest.len(), true),
+                };
+                let (invalid, rest) = rest.split_at(invalid_len);
                 self.bytes = rest;
-                Some(Utf8Chunk { valid, invalid: invalid.as_bstr() })
+                Some(Utf8Chunk {
+                    valid,
+                    invalid: invalid.as_bstr(),
+                    incomplete,
+                })
             }
         }
     }
@@ -1247,5 +1273,96 @@ mod tests {
                 i, input,
             );
         }
+    }
+
+    #[test]
+    fn utf8_chunks() {
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xC0" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xC0".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xFF\xFF" };
+        assert_eq!(
+            (c.next(), c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xFF".as_bstr(),
+                    incomplete: false,
+                }),
+                Some(utf8::Utf8Chunk {
+                    valid: "",
+                    invalid: b"\xFF".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xD0" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xD0".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xD0456" };
+        assert_eq!(
+            (c.next(), c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xD0".as_bstr(),
+                    incomplete: false,
+                }),
+                Some(utf8::Utf8Chunk {
+                    valid: "456",
+                    invalid: b"".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xE2\x98" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xE2\x98".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xF4\x8F\xBF" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xF4\x8F\xBF".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
     }
 }

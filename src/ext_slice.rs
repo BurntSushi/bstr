@@ -1724,8 +1724,8 @@ pub trait ByteSlice: Sealed {
     ///
     /// # Examples
     ///
-    /// This example shows how the `std::fmt::Display` implementation is
-    /// written for the `BStr` type:
+    /// This example shows how to gather all valid and invalid chunks from a
+    /// byte slice:
     ///
     /// ```
     /// use bstr::{ByteSlice, Utf8Chunk};
