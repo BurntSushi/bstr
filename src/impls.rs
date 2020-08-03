@@ -314,13 +314,59 @@ mod bstr {
     impl fmt::Display for BStr {
         #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            for chunk in self.utf8_chunks() {
-                f.write_str(chunk.valid())?;
-                if !chunk.invalid().is_empty() {
-                    f.write_str("\u{FFFD}")?;
+            /// Write the given bstr (lossily) to the given formatter.
+            fn write_bstr(
+                f: &mut fmt::Formatter,
+                bstr: &BStr,
+            ) -> Result<(), fmt::Error> {
+                for chunk in bstr.utf8_chunks() {
+                    f.write_str(chunk.valid())?;
+                    if !chunk.invalid().is_empty() {
+                        f.write_str("\u{FFFD}")?;
+                    }
                 }
+                Ok(())
             }
-            Ok(())
+
+            /// Write 'num' fill characters to the given formatter.
+            fn write_pads(f: &mut fmt::Formatter, num: usize) -> fmt::Result {
+                let fill = f.fill();
+                for _ in 0..num {
+                    f.write_fmt(format_args!("{}", fill))?;
+                }
+                Ok(())
+            }
+
+            if let Some(align) = f.align() {
+                let width = f.width().unwrap_or(0);
+                let nchars = self.chars().count();
+                let remaining_pads = width.saturating_sub(nchars);
+                match align {
+                    fmt::Alignment::Left => {
+                        write_bstr(f, self)?;
+                        write_pads(f, remaining_pads)?;
+                    }
+                    fmt::Alignment::Right => {
+                        write_pads(f, remaining_pads)?;
+                        write_bstr(f, self)?;
+                    }
+                    fmt::Alignment::Center => {
+                        let half = remaining_pads / 2;
+                        let second_half = if remaining_pads % 2 == 0 {
+                            half
+                        } else {
+                            half + 1
+                        };
+                        write_pads(f, half)?;
+                        write_bstr(f, self)?;
+                        write_pads(f, second_half)?;
+                    }
+                }
+                Ok(())
+            } else {
+                write_bstr(f, self)?;
+                Ok(())
+            }
         }
     }
 
@@ -739,6 +785,115 @@ mod bstring_serde {
             }
 
             deserializer.deserialize_byte_buf(BStringVisitor)
+        }
+    }
+}
+
+#[cfg(test)]
+mod display {
+    use crate::ByteSlice;
+    use bstring::BString;
+
+    #[test]
+    fn clean() {
+        assert_eq!(&format!("{}", &b"abc".as_bstr()), "abc");
+        assert_eq!(&format!("{}", &b"\xf0\x28\x8c\xbc".as_bstr()), "�(��");
+    }
+
+    #[test]
+    fn width_bigger_than_bstr() {
+        assert_eq!(&format!("{:<7}!", &b"abc".as_bstr()), "abc    !");
+        assert_eq!(&format!("{:>7}!", &b"abc".as_bstr()), "    abc!");
+        assert_eq!(&format!("{:^7}!", &b"abc".as_bstr()), "  abc  !");
+        assert_eq!(&format!("{:^6}!", &b"abc".as_bstr()), " abc  !");
+        assert_eq!(&format!("{:-<7}!", &b"abc".as_bstr()), "abc----!");
+        assert_eq!(&format!("{:->7}!", &b"abc".as_bstr()), "----abc!");
+        assert_eq!(&format!("{:-^7}!", &b"abc".as_bstr()), "--abc--!");
+        assert_eq!(&format!("{:-^6}!", &b"abc".as_bstr()), "-abc--!");
+
+        assert_eq!(
+            &format!("{:<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��   !"
+        );
+        assert_eq!(
+            &format!("{:>7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "   �(��!"
+        );
+        assert_eq!(
+            &format!("{:^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(��  !"
+        );
+        assert_eq!(
+            &format!("{:^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(�� !"
+        );
+
+        assert_eq!(
+            &format!("{:-<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��---!"
+        );
+        assert_eq!(
+            &format!("{:->7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "---�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��--!"
+        );
+        assert_eq!(
+            &format!("{:-^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��-!"
+        );
+    }
+
+    #[test]
+    fn width_lesser_than_bstr() {
+        assert_eq!(&format!("{:<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:>2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:^2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:->2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-^2}!", &b"abc".as_bstr()), "abc!");
+
+        assert_eq!(
+            &format!("{:<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:>3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+
+        assert_eq!(
+            &format!("{:-<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:->3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+    }
+
+    quickcheck! {
+        fn total_length(bstr: BString) -> bool {
+            let size = bstr.chars().count();
+            format!("{:<1$}", bstr.as_bstr(), size).chars().count() >= size
         }
     }
 }
