@@ -333,8 +333,9 @@ mod bstr {
 
             #[inline(always)]
             fn write_pads(f: &mut fmt::Formatter, num: usize) -> fmt::Result {
+                let fill = f.fill();
                 for _ in 0..num {
-                    f.write_fmt(format_args!("{}", f.fill()))?;
+                    f.write_fmt(format_args!("{}", fill))?;
                 }
                 Ok(())
             }
