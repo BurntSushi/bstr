@@ -314,13 +314,70 @@ mod bstr {
     impl fmt::Display for BStr {
         #[inline]
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            for chunk in self.utf8_chunks() {
-                f.write_str(chunk.valid())?;
-                if !chunk.invalid().is_empty() {
-                    f.write_str("\u{FFFD}")?;
+            #[inline(always)]
+            fn write_bstr(
+                f: &mut fmt::Formatter,
+                bstr: &BStr,
+            ) -> Result<usize, fmt::Error> {
+                let mut amount_writed = 0;
+                for chunk in bstr.utf8_chunks() {
+                    f.write_str(chunk.valid())?;
+                    amount_writed += chunk.valid().chars().count();
+                    if !chunk.invalid().is_empty() {
+                        f.write_str("\u{FFFD}")?;
+                        amount_writed += 1;
+                    }
                 }
+                Ok(amount_writed)
             }
-            Ok(())
+
+            #[inline(always)]
+            fn write_pads(f: &mut fmt::Formatter, num: usize) -> fmt::Result {
+                for _ in 0..num {
+                    f.write_fmt(format_args!("{}", f.fill()))?;
+                }
+                Ok(())
+            }
+
+            if let Some(align) = f.align() {
+                let width = f.width().unwrap_or(0);
+                let will_write = self.chars().count();
+                // let remaining_pads = width
+                //     .max(will_write)
+                //     .saturating_sub(will_write.min(width));
+                let remaining_pads = width.saturating_sub(will_write);
+
+                match align {
+                    fmt::Alignment::Left => {
+                        let writed = write_bstr(f, self)?;
+                        debug_assert_eq!(will_write, writed);
+                        write_pads(f, remaining_pads)?;
+                    }
+                    fmt::Alignment::Right => {
+                        write_pads(f, remaining_pads)?;
+                        let writed = write_bstr(f, self)?;
+                        debug_assert_eq!(will_write, writed);
+                    }
+                    fmt::Alignment::Center => {
+                        let half = remaining_pads / 2;
+                        write_pads(f, half)?;
+                        let writed = write_bstr(f, self)?;
+                        debug_assert_eq!(will_write, writed);
+                        write_pads(
+                            f,
+                            if remaining_pads % 2 == 0 {
+                                half
+                            } else {
+                                half + 1
+                            },
+                        )?;
+                    }
+                }
+                Ok(())
+            } else {
+                write_bstr(f, self)?;
+                Ok(())
+            }
         }
     }
 
@@ -739,6 +796,115 @@ mod bstring_serde {
             }
 
             deserializer.deserialize_byte_buf(BStringVisitor)
+        }
+    }
+}
+
+#[cfg(test)]
+mod display {
+    use crate::ByteSlice;
+    use bstring::BString;
+
+    #[test]
+    fn clean() {
+        assert_eq!(&format!("{}", &b"abc".as_bstr()), "abc");
+        assert_eq!(&format!("{}", &b"\xf0\x28\x8c\xbc".as_bstr()), "�(��");
+    }
+
+    #[test]
+    fn width_bigger_than_bstr() {
+        assert_eq!(&format!("{:<7}!", &b"abc".as_bstr()), "abc    !");
+        assert_eq!(&format!("{:>7}!", &b"abc".as_bstr()), "    abc!");
+        assert_eq!(&format!("{:^7}!", &b"abc".as_bstr()), "  abc  !");
+        assert_eq!(&format!("{:^6}!", &b"abc".as_bstr()), " abc  !");
+        assert_eq!(&format!("{:-<7}!", &b"abc".as_bstr()), "abc----!");
+        assert_eq!(&format!("{:->7}!", &b"abc".as_bstr()), "----abc!");
+        assert_eq!(&format!("{:-^7}!", &b"abc".as_bstr()), "--abc--!");
+        assert_eq!(&format!("{:-^6}!", &b"abc".as_bstr()), "-abc--!");
+
+        assert_eq!(
+            &format!("{:<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��   !"
+        );
+        assert_eq!(
+            &format!("{:>7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "   �(��!"
+        );
+        assert_eq!(
+            &format!("{:^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(��  !"
+        );
+        assert_eq!(
+            &format!("{:^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(�� !"
+        );
+
+        assert_eq!(
+            &format!("{:-<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��---!"
+        );
+        assert_eq!(
+            &format!("{:->7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "---�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��--!"
+        );
+        assert_eq!(
+            &format!("{:-^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��-!"
+        );
+    }
+
+    #[test]
+    fn width_lesser_than_bstr() {
+        assert_eq!(&format!("{:<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:>2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:^2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:->2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-^2}!", &b"abc".as_bstr()), "abc!");
+
+        assert_eq!(
+            &format!("{:<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:>3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+
+        assert_eq!(
+            &format!("{:-<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:->3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+    }
+
+    quickcheck! {
+        fn total_length(bstr: BString) -> bool {
+            let size = bstr.chars().count();
+            format!("{:<1$}", bstr.as_bstr(), size).chars().count() >= size
         }
     }
 }
