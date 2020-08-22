@@ -2225,7 +2225,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let s = b"123foo5bar";
+    /// let s = b"123foo5bar789";
     /// assert_eq!(s.trim_end_with(|c| c.is_numeric()), B("123foo5bar"));
     /// ```
     #[inline]
