@@ -425,15 +425,14 @@ pub trait ByteVec: Sealed {
     where
         Self: Sized,
     {
-        let v = self.as_vec();
-        if let Ok(allutf8) = v.to_str() {
-            return allutf8.to_string();
+        match self.as_vec().to_str_lossy() {
+            Cow::Borrowed(_) => {
+                // SAFETY: to_str_lossy() returning a Cow::Borrowed guarantees
+                // the entire string is valid utf8.
+                unsafe { self.into_string_unchecked() }
+            }
+            Cow::Owned(s) => s,
         }
-        let mut dst = String::with_capacity(v.len());
-        for ch in v.chars() {
-            dst.push(ch);
-        }
-        dst
     }
 
     /// Unsafely convert this byte string into a `String`, without checking for
