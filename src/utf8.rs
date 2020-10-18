@@ -225,6 +225,8 @@ impl<'a> DoubleEndedIterator for CharIndices<'a> {
     }
 }
 
+impl<'a> ::core::iter::FusedIterator for CharIndices<'a> {}
+
 /// An iterator over chunks of valid UTF-8 in a byte slice.
 ///
 /// See [`utf8_chunks`](trait.ByteSlice.html#method.utf8_chunks).
