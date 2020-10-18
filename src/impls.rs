@@ -378,8 +378,13 @@ mod bstr {
                 match ch {
                     '\0' => write!(f, "\\0")?,
                     '\u{FFFD}' => {
-                        for &b in self[s..e].as_bytes() {
-                            write!(f, r"\x{:02X}", b)?;
+                        let bytes = self[s..e].as_bytes();
+                        if bytes == b"\xEF\xBF\xBD" {
+                            write!(f, "{}", ch.escape_debug())?;
+                        } else {
+                            for &b in self[s..e].as_bytes() {
+                                write!(f, r"\x{:02X}", b)?;
+                            }
                         }
                     }
                     // ASCII control characters except \0, \n, \r, \t
@@ -945,9 +950,20 @@ mod bstring_arbitrary {
 
 #[test]
 fn test_debug() {
-    use crate::ByteSlice;
+    use crate::{ByteSlice, B};
+
     assert_eq!(
         r#""\0\0\0 ftypisom\0\0\x02\0isomiso2avc1mp""#,
         format!("{:?}", b"\0\0\0 ftypisom\0\0\x02\0isomiso2avc1mp".as_bstr()),
+    );
+
+    // Tests that if the underlying bytes contain the UTF-8 encoding of the
+    // replacement codepoint, then we emit the codepoint just like other
+    // non-printable Unicode characters.
+    assert_eq!(
+        b"\"\\xFF\xEF\xBF\xBD\\xFF\"".as_bstr(),
+        // Before fixing #72, the output here would be:
+        //   \\xFF\\xEF\\xBF\\xBD\\xFF
+        B(&format!("{:?}", b"\xFF\xEF\xBF\xBD\xFF".as_bstr())).as_bstr(),
     );
 }
