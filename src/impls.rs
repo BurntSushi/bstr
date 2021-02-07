@@ -938,7 +938,7 @@ mod bstring_arbitrary {
     use quickcheck::{Arbitrary, Gen};
 
     impl Arbitrary for BString {
-        fn arbitrary<G: Gen>(g: &mut G) -> BString {
+        fn arbitrary(g: &mut Gen) -> BString {
             BString::from(Vec::<u8>::arbitrary(g))
         }
 
