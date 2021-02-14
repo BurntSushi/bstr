@@ -79,7 +79,7 @@ pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     quickcheck::quickcheck! {
         fn qc_byteset_forward_matches_naive(

@@ -1,17 +1,23 @@
-#[cfg(feature = "std")]
-use std::borrow::Cow;
+#[cfg(feature = "alloc")]
+use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+use core::{iter, ops, ptr, slice, str};
 #[cfg(feature = "std")]
 use std::ffi::OsStr;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-use core::{iter, ops, ptr, slice, str};
 use memchr::{memchr, memmem, memrchr};
 
 use crate::ascii;
 use crate::bstr::BStr;
 use crate::byteset;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 use crate::ext_vec::ByteVec;
 #[cfg(feature = "unicode")]
 use crate::unicode::{
@@ -341,7 +347,7 @@ pub trait ByteSlice: Sealed {
     /// let bs = B(b"\x61\xF1\x80\x80\xE1\x80\xC2\x62");
     /// assert_eq!("a\u{FFFD}\u{FFFD}\u{FFFD}b", bs.to_str_lossy());
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_str_lossy(&self) -> Cow<'_, str> {
         match utf8::validate(self.as_bytes()) {
@@ -398,7 +404,7 @@ pub trait ByteSlice: Sealed {
     /// bstring.to_str_lossy_into(&mut dest);
     /// assert_eq!("☃βツ\u{FFFD}", dest);
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_str_lossy_into(&self, dest: &mut String) {
         let mut bytes = self.as_bytes();
@@ -584,7 +590,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(b"foo".repeatn(4), B("foofoofoofoo"));
     /// assert_eq!(b"foo".repeatn(0), B(""));
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn repeatn(&self, n: usize) -> Vec<u8> {
         let bs = self.as_bytes();
@@ -1416,7 +1422,7 @@ pub trait ByteSlice: Sealed {
     /// let s = b"foo".replace("", "Z");
     /// assert_eq!(s, "ZfZoZoZ".as_bytes());
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn replace<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
@@ -1462,7 +1468,7 @@ pub trait ByteSlice: Sealed {
     /// let s = b"foo".replacen("", "Z", 2);
     /// assert_eq!(s, "ZfZoo".as_bytes());
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn replacen<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
@@ -1520,7 +1526,7 @@ pub trait ByteSlice: Sealed {
     /// s.replace_into("", "Z", &mut dest);
     /// assert_eq!(dest, "ZfZoZoZ".as_bytes());
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn replace_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
@@ -1584,7 +1590,7 @@ pub trait ByteSlice: Sealed {
     /// s.replacen_into("", "Z", 2, &mut dest);
     /// assert_eq!(dest, "ZfZoo".as_bytes());
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn replacen_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
@@ -2277,7 +2283,7 @@ pub trait ByteSlice: Sealed {
     /// let s = B(b"FOO\xFFBAR\xE2\x98BAZ");
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), s.to_lowercase().as_bytes());
     /// ```
-    #[cfg(all(feature = "std", feature = "unicode"))]
+    #[cfg(all(feature = "alloc", feature = "unicode"))]
     #[inline]
     fn to_lowercase(&self) -> Vec<u8> {
         let mut buf = vec![];
@@ -2339,7 +2345,7 @@ pub trait ByteSlice: Sealed {
     /// s.to_lowercase_into(&mut buf);
     /// assert_eq!(B(b"foo\xFFbar\xE2\x98baz"), buf.as_bytes());
     /// ```
-    #[cfg(all(feature = "std", feature = "unicode"))]
+    #[cfg(all(feature = "alloc", feature = "unicode"))]
     #[inline]
     fn to_lowercase_into(&self, buf: &mut Vec<u8>) {
         // TODO: This is the best we can do given what std exposes I think.
@@ -2394,7 +2400,7 @@ pub trait ByteSlice: Sealed {
     /// let s = B(b"FOO\xFFBAR\xE2\x98BAZ");
     /// assert_eq!(s.to_ascii_lowercase(), B(b"foo\xFFbar\xE2\x98baz"));
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_ascii_lowercase(&self) -> Vec<u8> {
         self.as_bytes().to_ascii_lowercase()
@@ -2480,7 +2486,7 @@ pub trait ByteSlice: Sealed {
     /// let s = B(b"foo\xFFbar\xE2\x98baz");
     /// assert_eq!(s.to_uppercase(), B(b"FOO\xFFBAR\xE2\x98BAZ"));
     /// ```
-    #[cfg(all(feature = "std", feature = "unicode"))]
+    #[cfg(all(feature = "alloc", feature = "unicode"))]
     #[inline]
     fn to_uppercase(&self) -> Vec<u8> {
         let mut buf = vec![];
@@ -2542,7 +2548,7 @@ pub trait ByteSlice: Sealed {
     /// s.to_uppercase_into(&mut buf);
     /// assert_eq!(buf, B(b"FOO\xFFBAR\xE2\x98BAZ"));
     /// ```
-    #[cfg(all(feature = "std", feature = "unicode"))]
+    #[cfg(all(feature = "alloc", feature = "unicode"))]
     #[inline]
     fn to_uppercase_into(&self, buf: &mut Vec<u8>) {
         // TODO: This is the best we can do given what std exposes I think.
@@ -2594,7 +2600,7 @@ pub trait ByteSlice: Sealed {
     /// let s = B(b"foo\xFFbar\xE2\x98baz");
     /// assert_eq!(s.to_ascii_uppercase(), B(b"FOO\xFFBAR\xE2\x98BAZ"));
     /// ```
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     #[inline]
     fn to_ascii_uppercase(&self) -> Vec<u8> {
         self.as_bytes().to_ascii_uppercase()
@@ -3591,7 +3597,7 @@ impl<'a> Iterator for LinesWithTerminator<'a> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use crate::ext_slice::{ByteSlice, B};
     use crate::tests::LOSSY_TESTS;

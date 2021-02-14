@@ -144,7 +144,10 @@ This crates comes with a few features that control standard library, serde
 and Unicode support.
 
 * `std` - **Enabled** by default. This provides APIs that require the standard
-  library, such as `Vec<u8>`.
+  library, such as `Vec<u8>` and `PathBuf`. Enabling this feature also enables
+  the `alloc` feature.
+* `alloc` - **Enabled** by default. This provides APIs that require allocations
+  via the `alloc` crate, such as `Vec<u8>`.
 * `unicode` - **Enabled** by default. This provides APIs that require sizable
   Unicode data compiled into the binary. This includes, but is not limited to,
   grapheme/word/sentence segmenters. When this is disabled, basic support such
