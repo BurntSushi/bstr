@@ -257,7 +257,7 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use ucd_parse::GraphemeClusterBreakTest;
 

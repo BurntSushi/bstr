@@ -21,7 +21,8 @@ bench = false
 
 [features]
 default = ["std", "unicode"]
-std = ["memchr/std"]
+std = ["alloc", "memchr/std"]
+alloc = []
 unicode = ["lazy_static", "regex-automata"]
 serde1 = ["std", "serde1-nostd", "serde/std"]
 serde1-nostd = ["serde"]

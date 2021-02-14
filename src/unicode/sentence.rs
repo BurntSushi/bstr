@@ -156,7 +156,7 @@ fn decode_sentence(bs: &[u8]) -> (&str, usize) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use ucd_parse::SentenceBreakTest;
 

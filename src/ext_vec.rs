@@ -1,13 +1,17 @@
-use std::borrow::Cow;
+use alloc::borrow::Cow;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::fmt;
+use core::iter;
+use core::ops;
+use core::ptr;
+#[cfg(feature = "std")]
 use std::error;
+#[cfg(feature = "std")]
 use std::ffi::{OsStr, OsString};
-use std::fmt;
-use std::iter;
-use std::ops;
+#[cfg(feature = "std")]
 use std::path::{Path, PathBuf};
-use std::ptr;
-use std::str;
-use std::vec;
 
 use crate::ext_slice::ByteSlice;
 use crate::utf8::{self, Utf8Error};
@@ -171,6 +175,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(bs, B("foo"));
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn from_os_string(os_str: OsString) -> Result<Vec<u8>, OsString> {
         #[cfg(unix)]
         #[inline]
@@ -210,6 +215,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(bs, B("foo"));
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn from_os_str_lossy<'a>(os_str: &'a OsStr) -> Cow<'a, [u8]> {
         #[cfg(unix)]
         #[inline]
@@ -250,6 +256,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(bs, B("foo"));
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn from_path_buf(path: PathBuf) -> Result<Vec<u8>, PathBuf> {
         Vec::from_os_string(path.into_os_string()).map_err(PathBuf::from)
     }
@@ -275,6 +282,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(bs, B("foo"));
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn from_path_lossy<'a>(path: &'a Path) -> Cow<'a, [u8]> {
         Vec::from_os_str_lossy(path.as_os_str())
     }
@@ -486,6 +494,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(os_str, OsStr::new("foo"));
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn into_os_string(self) -> Result<OsString, Vec<u8>>
     where
         Self: Sized,
@@ -532,6 +541,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(os_str.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn into_os_string_lossy(self) -> OsString
     where
         Self: Sized,
@@ -570,6 +580,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(path.as_os_str(), "foo");
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn into_path_buf(self) -> Result<PathBuf, Vec<u8>>
     where
         Self: Sized,
@@ -599,6 +610,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(path.to_string_lossy(), "foo\u{FFFD}bar");
     /// ```
     #[inline]
+    #[cfg(feature = "std")]
     fn into_path_buf_lossy(self) -> PathBuf
     where
         Self: Sized,
@@ -1029,6 +1041,7 @@ impl FromUtf8Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl error::Error for FromUtf8Error {
     #[inline]
     fn description(&self) -> &str {
@@ -1043,7 +1056,7 @@ impl fmt::Display for FromUtf8Error {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use crate::ext_vec::ByteVec;
 
