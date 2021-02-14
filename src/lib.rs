@@ -52,23 +52,27 @@ Here's another example showing how to do a search and replace (and also showing
 use of the `B` function):
 
 ```
+# #[cfg(feature = "alloc")] {
 use bstr::{B, ByteSlice};
 
 let old = B("foo ☃☃☃ foo foo quux foo");
 let new = old.replace("foo", "hello");
 assert_eq!(new, B("hello ☃☃☃ hello hello quux hello"));
+# }
 ```
 
 And here's an example that shows case conversion, even in the presence of
 invalid UTF-8:
 
 ```
+# #[cfg(all(feature = "alloc", feature = "unicode"))] {
 use bstr::{ByteSlice, ByteVec};
 
 let mut lower = Vec::from("hello β");
 lower[0] = b'\xFF';
 // lowercase β is uppercased to Β
 assert_eq!(lower.to_uppercase(), b"\xFFELLO \xCE\x92");
+# }
 ```
 
 # Convenient debug representation
@@ -367,17 +371,20 @@ to write correct code for Unix, at the cost of getting a corner case wrong on
 Windows.
 */
 
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(any(feature = "std", test)), no_std)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 pub use crate::bstr::BStr;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 pub use crate::bstring::BString;
 pub use crate::ext_slice::{
     ByteSlice, Bytes, Fields, FieldsWith, Find, FindReverse, Finder,
     FinderReverse, Lines, LinesWithTerminator, Split, SplitN, SplitNReverse,
     SplitReverse, B,
 };
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 pub use crate::ext_vec::{concat, join, ByteVec, DrainBytes, FromUtf8Error};
 #[cfg(feature = "unicode")]
 pub use crate::unicode::{
@@ -391,22 +398,22 @@ pub use crate::utf8::{
 
 mod ascii;
 mod bstr;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 mod bstring;
 mod byteset;
 mod ext_slice;
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 mod ext_vec;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests;
 #[cfg(feature = "unicode")]
 mod unicode;
 mod utf8;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod apitests {
     use crate::bstr::BStr;
     use crate::bstring::BString;

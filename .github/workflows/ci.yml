@@ -56,13 +56,32 @@ jobs:
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features
     - if: matrix.build == 'stable'
-      run: cargo build --verbose --no-default-features --features serde1
+      run: cargo build --verbose --no-default-features --features serde1-nostd
+    - if: matrix.build == 'stable'
+      run: cargo build --verbose --no-default-features --features alloc
+    - if: matrix.build == 'stable'
+      run: cargo build --verbose --no-default-features --features alloc,serde1
     # Our dev dependencies evolve more rapidly than we'd like, so only run
     # tests when we aren't pinning the Rust version.
     - if: matrix.build != 'pinned'
       run: cargo test --verbose
+    # As with 'cargo build' above, run tests on a bunch of feature
+    # combinations, but just on 'stable' to avoid doing more work that we have
+    # to.
     - if: matrix.build == 'stable'
       run: cargo test --verbose --features serde1
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features serde1-nostd
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features alloc
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features alloc,serde1
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features alloc,unicode
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features alloc,unicode,serde1
     - name: Run benchmarks as tests
       if: matrix.build == 'stable'
       working-directory: ./bench

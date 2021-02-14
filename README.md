@@ -144,7 +144,10 @@ This crates comes with a few features that control standard library, serde
 and Unicode support.
 
 * `std` - **Enabled** by default. This provides APIs that require the standard
-  library, such as `Vec<u8>`.
+  library, such as `Vec<u8>` and `PathBuf`. Enabling this feature also enables
+  the `alloc` feature.
+* `alloc` - **Enabled** by default. This provides APIs that require allocations
+  via the `alloc` crate, such as `Vec<u8>`.
 * `unicode` - **Enabled** by default. This provides APIs that require sizable
   Unicode data compiled into the binary. This includes, but is not limited to,
   grapheme/word/sentence segmenters. When this is disabled, basic support such
@@ -152,8 +155,8 @@ and Unicode support.
 * `serde1` - **Disabled** by default. Enables implementations of serde traits
   for the `BStr` and `BString` types.
 * `serde1-nostd` - **Disabled** by default. Enables implementations of serde
-  traits for the `BStr` type only, intended for use without the standard
-  library. Generally, you either want `serde1` or `serde1-nostd`, not both.
+  traits for the `BStr` type only, intended for use without `std` or `alloc`.
+  Generally, you either want `serde1` or `serde1-nostd`, not both.
 
 
 ### Minimum Rust version policy
