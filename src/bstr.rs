@@ -1,3 +1,5 @@
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
 use core::mem;
 
 /// A wrapper for `&[u8]` that provides convenient string oriented trait impls.
@@ -56,13 +58,13 @@ impl BStr {
     }
 
     #[inline]
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     pub(crate) fn from_boxed_bytes(slice: Box<[u8]>) -> Box<BStr> {
         unsafe { Box::from_raw(Box::into_raw(slice) as _) }
     }
 
     #[inline]
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     pub(crate) fn into_boxed_bytes(slice: Box<BStr>) -> Box<[u8]> {
         unsafe { Box::from_raw(Box::into_raw(slice) as _) }
     }

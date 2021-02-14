@@ -316,7 +316,7 @@ fn decode_word(bs: &[u8]) -> (&str, usize) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use ucd_parse::WordBreakTest;
 

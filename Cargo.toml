@@ -21,7 +21,8 @@ bench = false
 
 [features]
 default = ["std", "unicode"]
-std = ["memchr/std"]
+std = ["alloc", "memchr/std"]
+alloc = []
 unicode = ["lazy_static", "regex-automata"]
 serde1 = ["std", "serde1-nostd", "serde/std"]
 serde1-nostd = ["serde"]
@@ -39,3 +40,19 @@ unicode-segmentation = "1.2.1"
 
 [profile.release]
 debug = true
+
+[[example]]
+name = "graphemes"
+required-features = ["std", "unicode"]
+
+[[example]]
+name = "lines"
+required-features = ["std"]
+
+[[example]]
+name = "uppercase"
+required-features = ["std", "unicode"]
+
+[[example]]
+name = "words"
+required-features = ["std", "unicode"]
