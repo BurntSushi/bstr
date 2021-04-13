@@ -1199,6 +1199,82 @@ pub trait ByteSlice: Sealed {
         Split::new(self.as_bytes(), splitter.as_ref())
     }
 
+    /// Split this byte string at the first occurance of `splitter`.
+    ///
+    /// If the `splitter` is found in the byte string, returns a tuple
+    /// containing the parts of the string before and after the first occurance
+    /// of `splitter` respectively. Otherwise, if there are no occurances of
+    /// `splitter` in the byte string, returns `None`.
+    ///
+    /// The splitter may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    ///
+    /// If you need to split on the *last* instance of a delimiter instead, see
+    /// the [`ByteSlice::rsplit_once_str`](#method.rsplit_once_str) method .
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::{B, ByteSlice};
+    ///
+    /// assert_eq!(B("foo,bar").split_once_str(","), Some((B("foo"), B("bar"))));
+    /// assert_eq!(B("foo,bar,baz").split_once_str(","), Some((B("foo"), B("bar,baz"))));
+    /// assert_eq!(B("foo").split_once_str(","), None);
+    /// assert_eq!(B("foo,").split_once_str(b","), Some((B("foo"), B(""))));
+    /// assert_eq!(B(",foo").split_once_str(b","), Some((B(""), B("foo"))));
+    /// ```
+    #[inline]
+    fn split_once_str<'a, B: ?Sized + AsRef<[u8]>>(
+        &'a self,
+        splitter: &B,
+    ) -> Option<(&'a [u8], &'a [u8])> {
+        let bytes = self.as_bytes();
+        let splitter = splitter.as_ref();
+        let start = Finder::new(splitter).find(bytes)?;
+        let end = start + splitter.len();
+        Some((&bytes[..start], &bytes[end..]))
+    }
+
+    /// Split this byte string at the last occurance of `splitter`.
+    ///
+    /// If the `splitter` is found in the byte string, returns a tuple
+    /// containing the parts of the string before and after the last occurance
+    /// of `splitter`, respectively. Otherwise, if there are no occurances of
+    /// `splitter` in the byte string, returns `None`.
+    ///
+    /// The splitter may be any type that can be cheaply converted into a
+    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    ///
+    /// If you need to split on the *first* instance of a delimiter instead, see
+    /// the [`ByteSlice::split_once_str`](#method.split_once_str) method.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::{B, ByteSlice};
+    ///
+    /// assert_eq!(B("foo,bar").rsplit_once_str(","), Some((B("foo"), B("bar"))));
+    /// assert_eq!(B("foo,bar,baz").rsplit_once_str(","), Some((B("foo,bar"), B("baz"))));
+    /// assert_eq!(B("foo").rsplit_once_str(","), None);
+    /// assert_eq!(B("foo,").rsplit_once_str(b","), Some((B("foo"), B(""))));
+    /// assert_eq!(B(",foo").rsplit_once_str(b","), Some((B(""), B("foo"))));
+    /// ```
+    #[inline]
+    fn rsplit_once_str<'a, B: ?Sized + AsRef<[u8]>>(
+        &'a self,
+        splitter: &B,
+    ) -> Option<(&'a [u8], &'a [u8])> {
+        let bytes = self.as_bytes();
+        let splitter = splitter.as_ref();
+        let start = FinderReverse::new(splitter).rfind(bytes)?;
+        let end = start + splitter.len();
+        Some((&bytes[..start], &bytes[end..]))
+    }
+
     /// Returns an iterator over substrings of this byte string, separated by
     /// the given byte string, in reverse. Each element yielded is guaranteed
     /// not to include the splitter substring.
