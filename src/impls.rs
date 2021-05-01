@@ -329,7 +329,10 @@ mod bstr {
             }
 
             /// Write 'num' fill characters to the given formatter.
-            fn write_pads(f: &mut fmt::Formatter<'_>, num: usize) -> fmt::Result {
+            fn write_pads(
+                f: &mut fmt::Formatter<'_>,
+                num: usize,
+            ) -> fmt::Result {
                 let fill = f.fill();
                 for _ in 0..num {
                     f.write_fmt(format_args!("{}", fill))?;
@@ -824,8 +827,8 @@ mod bstring_serde {
 
 #[cfg(test)]
 mod display {
-    use crate::ByteSlice;
     use crate::bstring::BString;
+    use crate::ByteSlice;
 
     #[test]
     fn clean() {
