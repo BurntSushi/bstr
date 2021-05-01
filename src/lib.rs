@@ -369,8 +369,6 @@ Windows.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code)]
 
-
-
 #[cfg(feature = "unicode")]
 #[macro_use]
 extern crate lazy_static;
@@ -381,7 +379,6 @@ extern crate quickcheck;
 
 #[cfg(feature = "serde1-nostd")]
 extern crate serde;
-
 
 pub use crate::bstr::BStr;
 #[cfg(feature = "std")]

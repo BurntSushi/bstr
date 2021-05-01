@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate criterion;
 
-
-
 use bstr::{ByteSlice, B};
 use criterion::{Bencher, Criterion, Throughput};
 
