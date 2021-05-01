@@ -18,7 +18,7 @@ harness = false
 path = "src/bench.rs"
 
 [dependencies]
-criterion = "0.3.0"
+criterion = "0.3.4"
 bstr = { version = "*", path = ".." }
 # For comparisons.
 unicode-segmentation = "1.2.1"
