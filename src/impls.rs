@@ -688,7 +688,7 @@ mod bstr_serde {
         Serializer,
     };
 
-    use bstr::BStr;
+    use crate::bstr::BStr;
 
     impl Serialize for BStr {
         #[inline]
@@ -747,7 +747,7 @@ mod bstring_serde {
         Serialize, Serializer,
     };
 
-    use bstring::BString;
+    use crate::bstring::BString;
 
     impl Serialize for BString {
         #[inline]
@@ -926,7 +926,7 @@ mod display {
         );
     }
 
-    quickcheck! {
+    quickcheck::quickcheck! {
         fn total_length(bstr: BString) -> bool {
             let size = bstr.chars().count();
             format!("{:<1$}", bstr.as_bstr(), size).chars().count() >= size
