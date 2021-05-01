@@ -5,15 +5,14 @@ use std::ffi::OsStr;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-use core::{cmp, iter, ops, ptr, slice, str};
-use memchr::{memchr, memrchr};
+use core::{iter, ops, ptr, slice, str};
+use memchr::{memchr, memmem, memrchr};
 
 use crate::ascii;
 use crate::bstr::BStr;
 use crate::byteset;
 #[cfg(feature = "std")]
 use crate::ext_vec::ByteVec;
-use crate::search::{PrefilterState, TwoWay};
 #[cfg(feature = "unicode")]
 use crate::unicode::{
     whitespace_len_fwd, whitespace_len_rev, GraphemeIndices, Graphemes,
@@ -2986,15 +2985,13 @@ pub trait ByteSlice: Sealed {
 /// version which permits building a `Finder` that is not connected to the
 /// lifetime of its needle.
 #[derive(Clone, Debug)]
-pub struct Finder<'a> {
-    searcher: TwoWay<'a>,
-}
+pub struct Finder<'a>(memmem::Finder<'a>);
 
 impl<'a> Finder<'a> {
     /// Create a new finder for the given needle.
     #[inline]
     pub fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> Finder<'a> {
-        Finder { searcher: TwoWay::forward(needle.as_ref()) }
+        Finder(memmem::Finder::new(needle.as_ref()))
     }
 
     /// Convert this finder into its owned variant, such that it no longer
@@ -3007,7 +3004,7 @@ impl<'a> Finder<'a> {
     #[cfg(feature = "std")]
     #[inline]
     pub fn into_owned(self) -> Finder<'static> {
-        Finder { searcher: self.searcher.into_owned() }
+        Finder(self.0.into_owned())
     }
 
     /// Returns the needle that this finder searches for.
@@ -3018,7 +3015,7 @@ impl<'a> Finder<'a> {
     /// needle returned must necessarily be the shorter of the two.
     #[inline]
     pub fn needle(&self) -> &[u8] {
-        self.searcher.needle()
+        self.0.needle()
     }
 
     /// Returns the index of the first occurrence of this needle in the given
@@ -3050,7 +3047,7 @@ impl<'a> Finder<'a> {
     /// ```
     #[inline]
     pub fn find<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize> {
-        self.searcher.find(haystack.as_ref())
+        self.0.find(haystack.as_ref())
     }
 }
 
@@ -3071,15 +3068,13 @@ impl<'a> Finder<'a> {
 /// version which permits building a `FinderReverse` that is not connected to
 /// the lifetime of its needle.
 #[derive(Clone, Debug)]
-pub struct FinderReverse<'a> {
-    searcher: TwoWay<'a>,
-}
+pub struct FinderReverse<'a>(memmem::FinderRev<'a>);
 
 impl<'a> FinderReverse<'a> {
     /// Create a new reverse finder for the given needle.
     #[inline]
     pub fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> FinderReverse<'a> {
-        FinderReverse { searcher: TwoWay::reverse(needle.as_ref()) }
+        FinderReverse(memmem::FinderRev::new(needle.as_ref()))
     }
 
     /// Convert this finder into its owned variant, such that it no longer
@@ -3092,7 +3087,7 @@ impl<'a> FinderReverse<'a> {
     #[cfg(feature = "std")]
     #[inline]
     pub fn into_owned(self) -> FinderReverse<'static> {
-        FinderReverse { searcher: self.searcher.into_owned() }
+        FinderReverse(self.0.into_owned())
     }
 
     /// Returns the needle that this finder searches for.
@@ -3103,7 +3098,7 @@ impl<'a> FinderReverse<'a> {
     /// the needle returned must necessarily be the shorter of the two.
     #[inline]
     pub fn needle(&self) -> &[u8] {
-        self.searcher.needle()
+        self.0.needle()
     }
 
     /// Returns the index of the last occurrence of this needle in the given
@@ -3135,7 +3130,7 @@ impl<'a> FinderReverse<'a> {
     /// ```
     #[inline]
     pub fn rfind<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize> {
-        self.searcher.rfind(haystack.as_ref())
+        self.0.rfind(haystack.as_ref())
     }
 }
 
@@ -3147,17 +3142,14 @@ impl<'a> FinderReverse<'a> {
 /// byte string being looked for.
 #[derive(Debug)]
 pub struct Find<'a> {
+    it: memmem::FindIter<'a, 'a>,
     haystack: &'a [u8],
-    prestate: PrefilterState,
-    searcher: TwoWay<'a>,
-    pos: usize,
+    needle: &'a [u8],
 }
 
 impl<'a> Find<'a> {
     fn new(haystack: &'a [u8], needle: &'a [u8]) -> Find<'a> {
-        let searcher = TwoWay::forward(needle);
-        let prestate = searcher.prefilter_state();
-        Find { haystack, prestate, searcher, pos: 0 }
+        Find { it: memmem::find_iter(haystack, needle), haystack, needle }
     }
 }
 
@@ -3166,20 +3158,7 @@ impl<'a> Iterator for Find<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<usize> {
-        if self.pos > self.haystack.len() {
-            return None;
-        }
-        let result = self
-            .searcher
-            .find_with(&mut self.prestate, &self.haystack[self.pos..]);
-        match result {
-            None => None,
-            Some(i) => {
-                let pos = self.pos + i;
-                self.pos = pos + cmp::max(1, self.searcher.needle().len());
-                Some(pos)
-            }
-        }
+        self.it.next()
     }
 }
 
@@ -3191,20 +3170,18 @@ impl<'a> Iterator for Find<'a> {
 /// byte string being looked for.
 #[derive(Debug)]
 pub struct FindReverse<'a> {
+    it: memmem::FindRevIter<'a, 'a>,
     haystack: &'a [u8],
-    prestate: PrefilterState,
-    searcher: TwoWay<'a>,
-    /// When searching with an empty needle, this gets set to `None` after
-    /// we've yielded the last element at `0`.
-    pos: Option<usize>,
+    needle: &'a [u8],
 }
 
 impl<'a> FindReverse<'a> {
     fn new(haystack: &'a [u8], needle: &'a [u8]) -> FindReverse<'a> {
-        let searcher = TwoWay::reverse(needle);
-        let prestate = searcher.prefilter_state();
-        let pos = Some(haystack.len());
-        FindReverse { haystack, prestate, searcher, pos }
+        FindReverse {
+            it: memmem::rfind_iter(haystack, needle),
+            haystack,
+            needle,
+        }
     }
 
     fn haystack(&self) -> &'a [u8] {
@@ -3212,7 +3189,7 @@ impl<'a> FindReverse<'a> {
     }
 
     fn needle(&self) -> &[u8] {
-        self.searcher.needle()
+        self.needle
     }
 }
 
@@ -3221,24 +3198,7 @@ impl<'a> Iterator for FindReverse<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<usize> {
-        let pos = match self.pos {
-            None => return None,
-            Some(pos) => pos,
-        };
-        let result = self
-            .searcher
-            .rfind_with(&mut self.prestate, &self.haystack[..pos]);
-        match result {
-            None => None,
-            Some(i) => {
-                if pos == i {
-                    self.pos = pos.checked_sub(1);
-                } else {
-                    self.pos = Some(i);
-                }
-                Some(i)
-            }
-        }
+        self.it.next()
     }
 }
 
@@ -3398,7 +3358,7 @@ impl<'a> Iterator for Split<'a> {
         match self.finder.next() {
             Some(start) => {
                 let next = &haystack[self.last..start];
-                self.last = start + self.finder.searcher.needle().len();
+                self.last = start + self.finder.needle.len();
                 Some(next)
             }
             None => {
