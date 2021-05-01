@@ -1,5 +1,3 @@
-#![allow(unused_imports)]
-
 use std::borrow::Cow;
 use std::error;
 use std::ffi::{OsStr, OsString};

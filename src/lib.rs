@@ -367,7 +367,6 @@ Windows.
 */
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![allow(dead_code)]
 
 pub use crate::bstr::BStr;
 #[cfg(feature = "std")]
