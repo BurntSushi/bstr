@@ -1045,7 +1045,6 @@ impl fmt::Display for FromUtf8Error {
 
 #[cfg(test)]
 mod tests {
-    use crate::ext_slice::B;
     use crate::ext_vec::ByteVec;
 
     #[test]

@@ -393,14 +393,12 @@ mod bstr;
 #[cfg(feature = "std")]
 mod bstring;
 mod byteset;
-mod cow;
 mod ext_slice;
 #[cfg(feature = "std")]
 mod ext_vec;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
-mod search;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "unicode")]

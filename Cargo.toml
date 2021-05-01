@@ -21,14 +21,14 @@ bench = false
 
 [features]
 default = ["std", "unicode"]
-std = ["memchr/use_std"]
+std = ["memchr/std"]
 unicode = ["lazy_static", "regex-automata"]
 serde1 = ["std", "serde1-nostd", "serde/std"]
 serde1-nostd = ["serde"]
 
 [dependencies]
-memchr = { version =  "2.1.2", default-features = false }
-lazy_static = { version = "1.2", optional = true }
+memchr = { version = "2.4.0", default-features = false }
+lazy_static = { version = "1.2.0", optional = true }
 regex-automata = { version = "0.1.5", default-features = false, optional = true }
 serde = { version = "1.0.85", default-features = false, optional = true }
 
