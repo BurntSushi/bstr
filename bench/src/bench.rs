@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate criterion;
-extern crate bstr;
-extern crate unicode_segmentation;
+
+
 
 use bstr::{ByteSlice, B};
 use criterion::{Bencher, Criterion, Throughput};
@@ -267,7 +267,7 @@ fn define(
     group_name: &str,
     bench_name: &str,
     corpus: &[u8],
-    bench: impl FnMut(&mut Bencher) + 'static,
+    bench: impl FnMut(&mut Bencher<'_>) + 'static,
 ) {
     let mut group = c.benchmark_group(group_name);
     group.throughput(Throughput::Bytes(corpus.len() as u64));

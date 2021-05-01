@@ -1,4 +1,4 @@
-extern crate bstr;
+
 
 use std::error::Error;
 use std::io;

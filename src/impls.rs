@@ -73,14 +73,14 @@ mod bstring {
 
     impl fmt::Display for BString {
         #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             fmt::Display::fmt(self.as_bstr(), f)
         }
     }
 
     impl fmt::Debug for BString {
         #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             fmt::Debug::fmt(self.as_bstr(), f)
         }
     }
@@ -313,10 +313,10 @@ mod bstr {
 
     impl fmt::Display for BStr {
         #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             /// Write the given bstr (lossily) to the given formatter.
             fn write_bstr(
-                f: &mut fmt::Formatter,
+                f: &mut fmt::Formatter<'_>,
                 bstr: &BStr,
             ) -> Result<(), fmt::Error> {
                 for chunk in bstr.utf8_chunks() {
@@ -329,7 +329,7 @@ mod bstr {
             }
 
             /// Write 'num' fill characters to the given formatter.
-            fn write_pads(f: &mut fmt::Formatter, num: usize) -> fmt::Result {
+            fn write_pads(f: &mut fmt::Formatter<'_>, num: usize) -> fmt::Result {
                 let fill = f.fill();
                 for _ in 0..num {
                     f.write_fmt(format_args!("{}", fill))?;
@@ -372,7 +372,7 @@ mod bstr {
 
     impl fmt::Debug for BStr {
         #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "\"")?;
             for (s, e, ch) in self.char_indices() {
                 match ch {
