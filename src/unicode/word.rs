@@ -1,9 +1,9 @@
 use regex_automata::DFA;
 
-use ext_slice::ByteSlice;
-use unicode::fsm::simple_word_fwd::SIMPLE_WORD_FWD;
-use unicode::fsm::word_break_fwd::WORD_BREAK_FWD;
-use utf8;
+use crate::ext_slice::ByteSlice;
+use crate::unicode::fsm::simple_word_fwd::SIMPLE_WORD_FWD;
+use crate::unicode::fsm::word_break_fwd::WORD_BREAK_FWD;
+use crate::utf8;
 
 /// An iterator over words in a byte string.
 ///
@@ -320,7 +320,7 @@ fn decode_word(bs: &[u8]) -> (&str, usize) {
 mod tests {
     use ucd_parse::WordBreakTest;
 
-    use ext_slice::ByteSlice;
+    use crate::ext_slice::ByteSlice;
 
     #[test]
     fn forward_ucd() {

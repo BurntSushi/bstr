@@ -1,8 +1,8 @@
 use core::cmp;
 
-use cow::CowBytes;
-use ext_slice::ByteSlice;
-use search::prefilter::{Freqy, PrefilterState};
+use crate::cow::CowBytes;
+use crate::ext_slice::ByteSlice;
+use crate::search::prefilter::{Freqy, PrefilterState};
 
 /// An implementation of the TwoWay substring search algorithm, with heuristics
 /// for accelerating search based on frequency analysis.
@@ -704,7 +704,7 @@ impl SuffixKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ext_slice::B;
+    use crate::ext_slice::B;
 
     /// Convenience wrapper for computing the suffix as a byte string.
     fn get_suffix_forward(needle: &[u8], kind: SuffixKind) -> (&[u8], usize) {

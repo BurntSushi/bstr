@@ -3,8 +3,8 @@ use std::str;
 use bstr::ByteSlice;
 use criterion::Criterion;
 
-use define;
-use inputs::*;
+use crate::define;
+use crate::inputs::*;
 
 pub fn find_iter(c: &mut Criterion) {
     define_find_iter(

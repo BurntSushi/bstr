@@ -9,8 +9,8 @@ More APIs may be added in the future.
 
 use std::io;
 
-use ext_slice::ByteSlice;
-use ext_vec::ByteVec;
+use crate::ext_slice::ByteSlice;
+use crate::ext_vec::ByteVec;
 
 /// An extention trait for
 /// [`std::io::BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html)
@@ -441,7 +441,7 @@ fn trim_record_slice(mut record: &[u8], terminator: u8) -> &[u8] {
 #[cfg(test)]
 mod tests {
     use super::BufReadExt;
-    use bstring::BString;
+    use crate::bstring::BString;
 
     fn collect_lines<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
         let mut lines = vec![];

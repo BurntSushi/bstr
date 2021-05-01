@@ -1,7 +1,7 @@
 use core::mem;
 
-use ext_slice::ByteSlice;
-use search::byte_frequencies::BYTE_FREQUENCIES;
+use crate::ext_slice::ByteSlice;
+use crate::search::byte_frequencies::BYTE_FREQUENCIES;
 
 /// PrefilterState tracks state associated with the effectiveness of a
 /// prefilter. It is used to track how many bytes, on average, are skipped by
@@ -342,7 +342,7 @@ impl Freqy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ext_slice::B;
+    use crate::ext_slice::B;
 
     #[test]
     fn freqy_forward() {

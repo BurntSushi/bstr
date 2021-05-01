@@ -11,10 +11,10 @@ keywords = ["string", "str", "byte", "bytes", "text"]
 license = "MIT OR Apache-2.0"
 categories = ["text-processing", "encoding"]
 exclude = ["/.github"]
+edition = "2018"
 
-[badges]
-travis-ci = { repository = "BurntSushi/bstr" }
-appveyor = { repository = "BurntSushi/bstr" }
+[workspace]
+members = ["bench"]
 
 [lib]
 bench = false

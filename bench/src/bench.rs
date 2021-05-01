@@ -6,7 +6,7 @@ extern crate unicode_segmentation;
 use bstr::{ByteSlice, B};
 use criterion::{Bencher, Criterion, Throughput};
 
-use inputs::*;
+use crate::inputs::*;
 
 mod inputs;
 mod search;

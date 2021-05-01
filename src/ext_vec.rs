@@ -11,8 +11,8 @@ use std::ptr;
 use std::str;
 use std::vec;
 
-use ext_slice::ByteSlice;
-use utf8::{self, Utf8Error};
+use crate::ext_slice::ByteSlice;
+use crate::utf8::{self, Utf8Error};
 
 /// Concatenate the elements given by the iterator together into a single
 /// `Vec<u8>`.
@@ -1047,8 +1047,8 @@ impl fmt::Display for FromUtf8Error {
 
 #[cfg(test)]
 mod tests {
-    use ext_slice::B;
-    use ext_vec::ByteVec;
+    use crate::ext_slice::B;
+    use crate::ext_vec::ByteVec;
 
     #[test]
     fn insert() {

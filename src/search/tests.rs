@@ -1,4 +1,4 @@
-use search::twoway::TwoWay;
+use crate::search::twoway::TwoWay;
 
 /// Each test is a (needle, haystack, expected_fwd, expected_rev) tuple.
 type SearchTest = (&'static str, &'static str, Option<usize>, Option<usize>);
