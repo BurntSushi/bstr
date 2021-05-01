@@ -97,7 +97,7 @@ fn run_search_tests_rev(
     }
 }
 
-quickcheck! {
+quickcheck::quickcheck! {
     fn qc_twoway_fwd_prefix_is_substring(bs: Vec<u8>) -> bool {
         prop_prefix_is_substring(false, &bs, |n, h| TwoWay::forward(n).find(h))
     }

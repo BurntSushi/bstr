@@ -81,8 +81,7 @@ pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
-
-    quickcheck! {
+    quickcheck::quickcheck! {
         fn qc_byteset_forward_matches_naive(
             haystack: Vec<u8>,
             needles: Vec<u8>

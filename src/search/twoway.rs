@@ -847,7 +847,7 @@ mod tests {
         assert_suffix_max!("aaa", "aaa", 1);
     }
 
-    quickcheck! {
+    quickcheck::quickcheck! {
         fn qc_suffix_forward_maximal(bytes: Vec<u8>) -> bool {
             if bytes.is_empty() {
                 return true;

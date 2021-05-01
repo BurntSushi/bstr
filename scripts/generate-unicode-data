@@ -101,7 +101,7 @@ whitespace() {
     ucd-generate dfa \
         --name WHITESPACE_ANCHORED_REV \
         --reverse \
-        --anchored --classes --premultiply --minimize --state-size 1 \
+        --anchored --classes --premultiply --minimize --state-size 2 \
         src/unicode/fsm/ \
         "\s+"
 }
