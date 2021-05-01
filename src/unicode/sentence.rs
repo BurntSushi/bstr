@@ -1,8 +1,8 @@
 use regex_automata::DFA;
 
-use ext_slice::ByteSlice;
-use unicode::fsm::sentence_break_fwd::SENTENCE_BREAK_FWD;
-use utf8;
+use crate::ext_slice::ByteSlice;
+use crate::unicode::fsm::sentence_break_fwd::SENTENCE_BREAK_FWD;
+use crate::utf8;
 
 /// An iterator over sentences in a byte string.
 ///
@@ -160,7 +160,7 @@ fn decode_sentence(bs: &[u8]) -> (&str, usize) {
 mod tests {
     use ucd_parse::SentenceBreakTest;
 
-    use ext_slice::ByteSlice;
+    use crate::ext_slice::ByteSlice;
 
     #[test]
     fn forward_ucd() {

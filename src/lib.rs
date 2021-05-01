@@ -386,22 +386,22 @@ extern crate serde;
 #[cfg(test)]
 extern crate ucd_parse;
 
-pub use bstr::BStr;
+pub use crate::bstr::BStr;
 #[cfg(feature = "std")]
-pub use bstring::BString;
-pub use ext_slice::{
+pub use crate::bstring::BString;
+pub use crate::ext_slice::{
     ByteSlice, Bytes, Fields, FieldsWith, Find, FindReverse, Finder,
     FinderReverse, Lines, LinesWithTerminator, Split, SplitN, SplitNReverse,
     SplitReverse, B,
 };
 #[cfg(feature = "std")]
-pub use ext_vec::{concat, join, ByteVec, DrainBytes, FromUtf8Error};
+pub use crate::ext_vec::{concat, join, ByteVec, DrainBytes, FromUtf8Error};
 #[cfg(feature = "unicode")]
-pub use unicode::{
+pub use crate::unicode::{
     GraphemeIndices, Graphemes, SentenceIndices, Sentences, WordIndices,
     Words, WordsWithBreakIndices, WordsWithBreaks,
 };
-pub use utf8::{
+pub use crate::utf8::{
     decode as decode_utf8, decode_last as decode_last_utf8, CharIndices,
     Chars, Utf8Chunk, Utf8Chunks, Utf8Error,
 };
@@ -427,9 +427,9 @@ mod utf8;
 
 #[cfg(test)]
 mod apitests {
-    use bstr::BStr;
-    use bstring::BString;
-    use ext_slice::{Finder, FinderReverse};
+    use crate::bstr::BStr;
+    use crate::bstring::BString;
+    use crate::ext_slice::{Finder, FinderReverse};
 
     #[test]
     fn oibits() {

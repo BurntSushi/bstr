@@ -1,7 +1,7 @@
 use regex_automata::DFA;
 
-use unicode::fsm::whitespace_anchored_fwd::WHITESPACE_ANCHORED_FWD;
-use unicode::fsm::whitespace_anchored_rev::WHITESPACE_ANCHORED_REV;
+use crate::unicode::fsm::whitespace_anchored_fwd::WHITESPACE_ANCHORED_FWD;
+use crate::unicode::fsm::whitespace_anchored_rev::WHITESPACE_ANCHORED_REV;
 
 /// Return the first position of a non-whitespace character.
 pub fn whitespace_len_fwd(slice: &[u8]) -> usize {

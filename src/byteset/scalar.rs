@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn test_inv_memchr() {
-        use {ByteSlice, B};
+        use crate::{ByteSlice, B};
         for (search, byte, matching) in build_tests() {
             assert_eq!(
                 inv_memchr(byte, &search),

@@ -8,19 +8,19 @@ use std::path::Path;
 use core::{cmp, iter, ops, ptr, slice, str};
 use memchr::{memchr, memrchr};
 
-use ascii;
-use bstr::BStr;
-use byteset;
+use crate::ascii;
+use crate::bstr::BStr;
+use crate::byteset;
 #[cfg(feature = "std")]
-use ext_vec::ByteVec;
-use search::{PrefilterState, TwoWay};
+use crate::ext_vec::ByteVec;
+use crate::search::{PrefilterState, TwoWay};
 #[cfg(feature = "unicode")]
-use unicode::{
+use crate::unicode::{
     whitespace_len_fwd, whitespace_len_rev, GraphemeIndices, Graphemes,
     SentenceIndices, Sentences, WordIndices, Words, WordsWithBreakIndices,
     WordsWithBreaks,
 };
-use utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error};
+use crate::utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error};
 
 /// A short-hand constructor for building a `&[u8]`.
 ///
@@ -2789,7 +2789,7 @@ pub trait ByteSlice: Sealed {
     #[cfg(feature = "unicode")]
     #[inline]
     fn reverse_graphemes(&mut self) {
-        use unicode::decode_grapheme;
+        use crate::unicode::decode_grapheme;
 
         let mut i = 0;
         loop {
@@ -3633,8 +3633,8 @@ impl<'a> Iterator for LinesWithTerminator<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ext_slice::{ByteSlice, B};
-    use tests::LOSSY_TESTS;
+    use crate::ext_slice::{ByteSlice, B};
+    use crate::tests::LOSSY_TESTS;
 
     #[test]
     fn to_str_lossy() {

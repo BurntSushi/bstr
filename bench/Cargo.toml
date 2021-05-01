@@ -7,6 +7,7 @@ description = "Criterion benchmark suite for bstr."
 homepage = "https://github.com/BurntSushi/bstr"
 repository = "https://github.com/BurntSushi/bstr"
 license = "Unlicense/MIT"
+edition = "2018"
 
 [lib]
 bench = false

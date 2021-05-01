@@ -1,10 +1,10 @@
 use regex_automata::DFA;
 
-use ext_slice::ByteSlice;
-use unicode::fsm::grapheme_break_fwd::GRAPHEME_BREAK_FWD;
-use unicode::fsm::grapheme_break_rev::GRAPHEME_BREAK_REV;
-use unicode::fsm::regional_indicator_rev::REGIONAL_INDICATOR_REV;
-use utf8;
+use crate::ext_slice::ByteSlice;
+use crate::unicode::fsm::grapheme_break_fwd::GRAPHEME_BREAK_FWD;
+use crate::unicode::fsm::grapheme_break_rev::GRAPHEME_BREAK_REV;
+use crate::unicode::fsm::regional_indicator_rev::REGIONAL_INDICATOR_REV;
+use crate::utf8;
 
 /// An iterator over grapheme clusters in a byte string.
 ///
@@ -262,8 +262,8 @@ mod tests {
     use ucd_parse::GraphemeClusterBreakTest;
 
     use super::*;
-    use ext_slice::ByteSlice;
-    use tests::LOSSY_TESTS;
+    use crate::ext_slice::ByteSlice;
+    use crate::tests::LOSSY_TESTS;
 
     #[test]
     fn forward_ucd() {

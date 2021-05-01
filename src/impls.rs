@@ -67,9 +67,9 @@ mod bstring {
     use std::iter::FromIterator;
     use std::ops;
 
-    use bstr::BStr;
-    use bstring::BString;
-    use ext_vec::ByteVec;
+    use crate::bstr::BStr;
+    use crate::bstring::BString;
+    use crate::ext_vec::ByteVec;
 
     impl fmt::Display for BString {
         #[inline]
@@ -308,8 +308,8 @@ mod bstr {
     use core::fmt;
     use core::ops;
 
-    use bstr::BStr;
-    use ext_slice::ByteSlice;
+    use crate::bstr::BStr;
+    use crate::ext_slice::ByteSlice;
 
     impl fmt::Display for BStr {
         #[inline]
@@ -825,7 +825,7 @@ mod bstring_serde {
 #[cfg(test)]
 mod display {
     use crate::ByteSlice;
-    use bstring::BString;
+    use crate::bstring::BString;
 
     #[test]
     fn clean() {
@@ -933,7 +933,7 @@ mod display {
 
 #[cfg(test)]
 mod bstring_arbitrary {
-    use bstring::BString;
+    use crate::bstring::BString;
 
     use quickcheck::{Arbitrary, Gen};
 
