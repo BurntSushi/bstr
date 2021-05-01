@@ -344,7 +344,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "std")]
     #[inline]
-    fn to_str_lossy(&self) -> Cow<str> {
+    fn to_str_lossy(&self) -> Cow<'_, str> {
         match utf8::validate(self.as_bytes()) {
             Ok(()) => {
                 // SAFETY: This is safe because of the guarantees provided by
@@ -488,10 +488,10 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "std")]
     #[inline]
-    fn to_os_str_lossy(&self) -> Cow<OsStr> {
+    fn to_os_str_lossy(&self) -> Cow<'_, OsStr> {
         #[cfg(unix)]
         #[inline]
-        fn imp(bytes: &[u8]) -> Cow<OsStr> {
+        fn imp(bytes: &[u8]) -> Cow<'_, OsStr> {
             use std::os::unix::ffi::OsStrExt;
 
             Cow::Borrowed(OsStr::from_bytes(bytes))
@@ -559,7 +559,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "std")]
     #[inline]
-    fn to_path_lossy(&self) -> Cow<Path> {
+    fn to_path_lossy(&self) -> Cow<'_, Path> {
         use std::path::PathBuf;
 
         match self.to_os_str_lossy() {
@@ -1067,7 +1067,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(0, B("  \n\t\u{2003}\n  \t").fields().count());
     /// ```
     #[inline]
-    fn fields(&self) -> Fields {
+    fn fields(&self) -> Fields<'_> {
         Fields::new(self.as_bytes())
     }
 
@@ -1099,7 +1099,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(0, b"1911354563".fields_with(|c| c.is_numeric()).count());
     /// ```
     #[inline]
-    fn fields_with<F: FnMut(char) -> bool>(&self, f: F) -> FieldsWith<F> {
+    fn fields_with<F: FnMut(char) -> bool>(&self, f: F) -> FieldsWith<'_, F> {
         FieldsWith::new(self.as_bytes(), f)
     }
 
@@ -1619,7 +1619,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(bytes, bs);
     /// ```
     #[inline]
-    fn bytes(&self) -> Bytes {
+    fn bytes(&self) -> Bytes<'_> {
         Bytes { it: self.as_bytes().iter() }
     }
 
@@ -1649,7 +1649,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(vec!['a', '\u{FFFD}', '𝞃', '\u{FFFD}', '☃'], chars);
     /// ```
     #[inline]
-    fn chars(&self) -> Chars {
+    fn chars(&self) -> Chars<'_> {
         Chars::new(self.as_bytes())
     }
 
@@ -1704,7 +1704,7 @@ pub trait ByteSlice: Sealed {
     /// ]);
     /// ```
     #[inline]
-    fn char_indices(&self) -> CharIndices {
+    fn char_indices(&self) -> CharIndices<'_> {
         CharIndices::new(self.as_bytes())
     }
 
@@ -1741,7 +1741,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(invalid_chunks, vec![b"\xFD", b"\xFE", b"\xFF"]);
     /// ```
     #[inline]
-    fn utf8_chunks(&self) -> Utf8Chunks {
+    fn utf8_chunks(&self) -> Utf8Chunks<'_> {
         Utf8Chunks { bytes: self.as_bytes() }
     }
 
@@ -1773,7 +1773,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn graphemes(&self) -> Graphemes {
+    fn graphemes(&self) -> Graphemes<'_> {
         Graphemes::new(self.as_bytes())
     }
 
@@ -1817,7 +1817,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn grapheme_indices(&self) -> GraphemeIndices {
+    fn grapheme_indices(&self) -> GraphemeIndices<'_> {
         GraphemeIndices::new(self.as_bytes())
     }
 
@@ -1853,7 +1853,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn words(&self) -> Words {
+    fn words(&self) -> Words<'_> {
         Words::new(self.as_bytes())
     }
 
@@ -1891,7 +1891,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn word_indices(&self) -> WordIndices {
+    fn word_indices(&self) -> WordIndices<'_> {
         WordIndices::new(self.as_bytes())
     }
 
@@ -1921,7 +1921,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn words_with_breaks(&self) -> WordsWithBreaks {
+    fn words_with_breaks(&self) -> WordsWithBreaks<'_> {
         WordsWithBreaks::new(self.as_bytes())
     }
 
@@ -1958,7 +1958,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn words_with_break_indices(&self) -> WordsWithBreakIndices {
+    fn words_with_break_indices(&self) -> WordsWithBreakIndices<'_> {
         WordsWithBreakIndices::new(self.as_bytes())
     }
 
@@ -1990,7 +1990,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn sentences(&self) -> Sentences {
+    fn sentences(&self) -> Sentences<'_> {
         Sentences::new(self.as_bytes())
     }
 
@@ -2024,7 +2024,7 @@ pub trait ByteSlice: Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn sentence_indices(&self) -> SentenceIndices {
+    fn sentence_indices(&self) -> SentenceIndices<'_> {
         SentenceIndices::new(self.as_bytes())
     }
 
@@ -2055,7 +2055,7 @@ pub trait ByteSlice: Sealed {
     /// ]);
     /// ```
     #[inline]
-    fn lines(&self) -> Lines {
+    fn lines(&self) -> Lines<'_> {
         Lines::new(self.as_bytes())
     }
 
@@ -2099,7 +2099,7 @@ pub trait ByteSlice: Sealed {
     /// ]);
     /// ```
     #[inline]
-    fn lines_with_terminator(&self) -> LinesWithTerminator {
+    fn lines_with_terminator(&self) -> LinesWithTerminator<'_> {
         LinesWithTerminator::new(self.as_bytes())
     }
 

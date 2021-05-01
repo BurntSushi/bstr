@@ -877,7 +877,7 @@ pub trait ByteVec: Sealed {
     /// assert_eq!(s, "foar".as_bytes());
     /// ```
     #[inline]
-    fn drain_bytes<R>(&mut self, range: R) -> DrainBytes
+    fn drain_bytes<R>(&mut self, range: R) -> DrainBytes<'_>
     where
         R: ops::RangeBounds<usize>,
     {
@@ -1040,7 +1040,7 @@ impl error::Error for FromUtf8Error {
 
 impl fmt::Display for FromUtf8Error {
     #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.err)
     }
 }

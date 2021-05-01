@@ -20,9 +20,5 @@ path = "src/bench.rs"
 [dependencies]
 criterion = "0.3.0"
 bstr = { version = "*", path = ".." }
-
 # For comparisons.
 unicode-segmentation = "1.2.1"
-
-[profile.release]
-debug = true

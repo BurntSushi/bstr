@@ -369,22 +369,19 @@ Windows.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code)]
 
-#[cfg(feature = "std")]
-extern crate core;
+
 
 #[cfg(feature = "unicode")]
 #[macro_use]
 extern crate lazy_static;
-extern crate memchr;
+
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
-#[cfg(feature = "unicode")]
-extern crate regex_automata;
+
 #[cfg(feature = "serde1-nostd")]
 extern crate serde;
-#[cfg(test)]
-extern crate ucd_parse;
+
 
 pub use crate::bstr::BStr;
 #[cfg(feature = "std")]
@@ -446,11 +443,11 @@ mod apitests {
         assert_sync::<BString>();
         assert_unwind_safe::<BString>();
 
-        assert_send::<Finder>();
-        assert_sync::<Finder>();
-        assert_unwind_safe::<Finder>();
-        assert_send::<FinderReverse>();
-        assert_sync::<FinderReverse>();
-        assert_unwind_safe::<FinderReverse>();
+        assert_send::<Finder<'_>>();
+        assert_sync::<Finder<'_>>();
+        assert_unwind_safe::<Finder<'_>>();
+        assert_send::<FinderReverse<'_>>();
+        assert_sync::<FinderReverse<'_>>();
+        assert_unwind_safe::<FinderReverse<'_>>();
     }
 }
