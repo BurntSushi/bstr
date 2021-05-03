@@ -389,6 +389,7 @@ pub use crate::utf8::{
 };
 
 mod ascii;
+#[macro_use]
 mod bstr;
 #[cfg(feature = "std")]
 mod bstring;
@@ -432,5 +433,15 @@ mod apitests {
         assert_send::<FinderReverse<'_>>();
         assert_sync::<FinderReverse<'_>>();
         assert_unwind_safe::<FinderReverse<'_>>();
+    }
+}
+
+#[doc(hidden)]
+pub mod __private {
+    // Internal type used by the `bstr::literal!` macro. Not public.
+    #[repr(C)]
+    pub union ConstTransmuter {
+        pub bytes: &'static [u8],
+        pub bstr: &'static super::BStr,
     }
 }
