@@ -18,7 +18,7 @@ macro_rules! impl_partial_eq {
     };
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 macro_rules! impl_partial_eq_cow {
     ($lhs:ty, $rhs:ty) => {
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
@@ -59,13 +59,16 @@ macro_rules! impl_partial_ord {
     };
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 mod bstring {
-    use std::borrow::{Borrow, Cow, ToOwned};
-    use std::cmp::Ordering;
-    use std::fmt;
-    use std::iter::FromIterator;
-    use std::ops;
+    use alloc::borrow::{Borrow, Cow, ToOwned};
+    use alloc::string::String;
+    use alloc::vec;
+    use alloc::vec::Vec;
+    use core::cmp::Ordering;
+    use core::fmt;
+    use core::iter::FromIterator;
+    use core::ops;
 
     use crate::bstr::BStr;
     use crate::bstring::BString;
@@ -301,8 +304,14 @@ mod bstring {
 }
 
 mod bstr {
-    #[cfg(feature = "std")]
-    use std::borrow::Cow;
+    #[cfg(feature = "alloc")]
+    use alloc::borrow::Cow;
+    #[cfg(feature = "alloc")]
+    use alloc::boxed::Box;
+    #[cfg(feature = "alloc")]
+    use alloc::string::String;
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
 
     use core::cmp::Ordering;
     use core::fmt;
@@ -597,7 +606,7 @@ mod bstr {
         }
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl<'a> From<&'a BStr> for Cow<'a, BStr> {
         #[inline]
         fn from(s: &'a BStr) -> Cow<'a, BStr> {
@@ -605,7 +614,7 @@ mod bstr {
         }
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl From<Box<[u8]>> for Box<BStr> {
         #[inline]
         fn from(s: Box<[u8]>) -> Box<BStr> {
@@ -613,7 +622,7 @@ mod bstr {
         }
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl From<Box<BStr>> for Box<[u8]> {
         #[inline]
         fn from(s: Box<BStr>) -> Box<[u8]> {
@@ -635,19 +644,19 @@ mod bstr {
     impl_partial_eq!(BStr, str);
     impl_partial_eq!(BStr, &'a str);
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq!(BStr, Vec<u8>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq!(&'a BStr, Vec<u8>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq!(BStr, String);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq!(&'a BStr, String);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq_cow!(&'a BStr, Cow<'a, BStr>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq_cow!(&'a BStr, Cow<'a, str>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_eq_cow!(&'a BStr, Cow<'a, [u8]>);
 
     impl PartialOrd for BStr {
@@ -669,13 +678,13 @@ mod bstr {
     impl_partial_ord!(BStr, str);
     impl_partial_ord!(BStr, &'a str);
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_ord!(BStr, Vec<u8>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_ord!(&'a BStr, Vec<u8>);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_ord!(BStr, String);
-    #[cfg(feature = "std")]
+    #[cfg(feature = "alloc")]
     impl_partial_ord!(&'a BStr, String);
 }
 
@@ -739,8 +748,10 @@ mod bstr_serde {
 
 #[cfg(feature = "serde1")]
 mod bstring_serde {
-    use std::cmp;
-    use std::fmt;
+    use alloc::string::String;
+    use alloc::vec::Vec;
+    use core::cmp;
+    use core::fmt;
 
     use serde::{
         de::Error, de::SeqAccess, de::Visitor, Deserialize, Deserializer,
@@ -825,7 +836,7 @@ mod bstring_serde {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod display {
     use crate::bstring::BString;
     use crate::ByteSlice;
@@ -934,7 +945,7 @@ mod display {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod bstring_arbitrary {
     use crate::bstring::BString;
 
@@ -952,6 +963,7 @@ mod bstring_arbitrary {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_debug() {
     use crate::{ByteSlice, B};
 
@@ -973,9 +985,11 @@ fn test_debug() {
 
 // See: https://github.com/BurntSushi/bstr/issues/82
 #[test]
+#[cfg(feature = "std")]
 fn test_cows_regression() {
-    use crate::ByteSlice;
     use std::borrow::Cow;
+
+    use crate::ByteSlice;
 
     let c1 = Cow::from(b"hello bstr".as_bstr());
     let c2 = b"goodbye bstr".as_bstr();

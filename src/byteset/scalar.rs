@@ -174,7 +174,7 @@ pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use super::{inv_memchr, inv_memrchr};
     // search string, search byte, inv_memchr result, inv_memrchr result.

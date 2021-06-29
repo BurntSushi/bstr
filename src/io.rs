@@ -7,6 +7,8 @@ facilities for conveniently and efficiently working with lines as byte strings.
 More APIs may be added in the future.
 */
 
+use alloc::vec;
+use alloc::vec::Vec;
 use std::io;
 
 use crate::ext_slice::ByteSlice;
@@ -438,7 +440,7 @@ fn trim_record_slice(mut record: &[u8], terminator: u8) -> &[u8] {
     record
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use super::BufReadExt;
     use crate::bstring::BString;

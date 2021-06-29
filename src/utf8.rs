@@ -854,7 +854,7 @@ fn is_leading_or_invalid_utf8_byte(b: u8) -> bool {
     (b & 0b1100_0000) != 0b1000_0000
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use std::char;
 
