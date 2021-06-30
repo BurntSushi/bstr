@@ -587,12 +587,7 @@ pub trait ByteSlice: Sealed {
     #[cfg(feature = "std")]
     #[inline]
     fn repeatn(&self, n: usize) -> Vec<u8> {
-        let bs = self.as_bytes();
-        let mut dst = vec![0; bs.len() * n];
-        for i in 0..n {
-            dst[i * bs.len()..(i + 1) * bs.len()].copy_from_slice(bs);
-        }
-        dst
+        self.as_bytes().repeat(n)
     }
 
     /// Returns true if and only if this byte string contains the given needle.
