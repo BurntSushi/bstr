@@ -590,6 +590,13 @@ mod bstr {
         }
     }
 
+    impl<'a> From<&'a BStr> for &'a [u8] {
+        #[inline]
+        fn from(s: &'a BStr) -> &'a [u8] {
+            BStr::as_bytes(s)
+        }
+    }
+
     impl<'a> From<&'a str> for &'a BStr {
         #[inline]
         fn from(s: &'a str) -> &'a BStr {
