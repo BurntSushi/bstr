@@ -3529,6 +3529,13 @@ impl<'a> Lines<'a> {
     fn new(bytes: &'a [u8]) -> Lines<'a> {
         Lines { it: LinesWithTerminator::new(bytes) }
     }
+
+    /// Views the remaining underlying data as a subslice of the original data.
+    /// This has the same lifetime as the original slice,
+    /// and so the iterator can continue to be used while this exists.
+    pub fn as_slice(&self) -> &'a [u8] {
+        self.it.as_slice()
+    }
 }
 
 impl<'a> Iterator for Lines<'a> {
@@ -3567,6 +3574,13 @@ pub struct LinesWithTerminator<'a> {
 impl<'a> LinesWithTerminator<'a> {
     fn new(bytes: &'a [u8]) -> LinesWithTerminator<'a> {
         LinesWithTerminator { bytes }
+    }
+
+    /// Views the remaining underlying data as a subslice of the original data.
+    /// This has the same lifetime as the original slice,
+    /// and so the iterator can continue to be used while this exists.
+    pub fn as_slice(&self) -> &'a [u8] {
+        self.bytes
     }
 }
 
