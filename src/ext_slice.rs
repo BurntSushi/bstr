@@ -3521,6 +3521,7 @@ impl<'a> Iterator for SplitNReverse<'a> {
 /// `\n`.
 ///
 /// `'a` is the lifetime of the byte string being iterated over.
+#[derive(Clone, Debug)]
 pub struct Lines<'a> {
     it: LinesWithTerminator<'a>,
 }
@@ -3560,6 +3561,7 @@ impl<'a> Iterator for Lines<'a> {
 /// the original byte string.
 ///
 /// `'a` is the lifetime of the byte string being iterated over.
+#[derive(Clone, Debug)]
 pub struct LinesWithTerminator<'a> {
     bytes: &'a [u8],
 }
