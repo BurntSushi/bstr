@@ -3559,16 +3559,18 @@ impl<'a> Iterator for Lines<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<&'a [u8]> {
-        let mut line = self.it.next()?;
-        if line.last_byte() == Some(b'\n') {
-            line = &line[..line.len() - 1];
-            if line.last_byte() == Some(b'\r') {
-                line = &line[..line.len() - 1];
-            }
-        }
-        Some(line)
+        Some(trim_last_terminator(self.it.next()?))
     }
 }
+
+impl<'a> DoubleEndedIterator for Lines<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        Some(trim_last_terminator(self.it.next_back()?))
+    }
+}
+
+impl<'a> iter::FusedIterator for Lines<'a> {}
 
 /// An iterator over all lines in a byte string, including their terminators.
 ///
@@ -3637,9 +3639,40 @@ impl<'a> Iterator for LinesWithTerminator<'a> {
     }
 }
 
+impl<'a> DoubleEndedIterator for LinesWithTerminator<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        let end = self.bytes.len().checked_sub(1)?;
+        match self.bytes[..end].rfind_byte(b'\n') {
+            None => {
+                let line = self.bytes;
+                self.bytes = b"";
+                Some(line)
+            }
+            Some(end) => {
+                let line = &self.bytes[end + 1..];
+                self.bytes = &self.bytes[..end + 1];
+                Some(line)
+            }
+        }
+    }
+}
+
+impl<'a> iter::FusedIterator for LinesWithTerminator<'a> {}
+
+fn trim_last_terminator(mut s: &[u8]) -> &[u8] {
+    if s.last_byte() == Some(b'\n') {
+        s = &s[..s.len() - 1];
+        if s.last_byte() == Some(b'\r') {
+            s = &s[..s.len() - 1];
+        }
+    }
+    s
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::ext_slice::{ByteSlice, B};
+    use crate::ext_slice::{ByteSlice, Lines, LinesWithTerminator, B};
     use crate::tests::LOSSY_TESTS;
 
     #[test]
@@ -3697,5 +3730,58 @@ mod tests {
         let mut buf = *b"foobar";
         let s = &mut buf;
         s.copy_within_str(0..1, 6);
+    }
+
+    #[test]
+    fn lines_iteration() {
+        macro_rules! t {
+            ($it:expr, $forward:expr) => {
+                let mut res: Vec<&[u8]> = Vec::from($forward);
+                assert_eq!($it.collect::<Vec<_>>(), res);
+                res.reverse();
+                assert_eq!($it.rev().collect::<Vec<_>>(), res);
+            };
+        }
+
+        t!(Lines::new(b""), []);
+        t!(LinesWithTerminator::new(b""), []);
+
+        t!(Lines::new(b"\n"), [B("")]);
+        t!(Lines::new(b"\r\n"), [B("")]);
+        t!(LinesWithTerminator::new(b"\n"), [B("\n")]);
+
+        t!(Lines::new(b"a"), [B("a")]);
+        t!(LinesWithTerminator::new(b"a"), [B("a")]);
+
+        t!(Lines::new(b"abc"), [B("abc")]);
+        t!(LinesWithTerminator::new(b"abc"), [B("abc")]);
+
+        t!(Lines::new(b"abc\n"), [B("abc")]);
+        t!(Lines::new(b"abc\r\n"), [B("abc")]);
+        t!(LinesWithTerminator::new(b"abc\n"), [B("abc\n")]);
+
+        t!(Lines::new(b"abc\n\n"), [B("abc"), B("")]);
+        t!(LinesWithTerminator::new(b"abc\n\n"), [B("abc\n"), B("\n")]);
+
+        t!(Lines::new(b"abc\n\ndef"), [B("abc"), B(""), B("def")]);
+        t!(
+            LinesWithTerminator::new(b"abc\n\ndef"),
+            [B("abc\n"), B("\n"), B("def")]
+        );
+
+        t!(Lines::new(b"abc\n\ndef\n"), [B("abc"), B(""), B("def")]);
+        t!(
+            LinesWithTerminator::new(b"abc\n\ndef\n"),
+            [B("abc\n"), B("\n"), B("def\n")]
+        );
+
+        t!(Lines::new(b"\na\nb\n"), [B(""), B("a"), B("b")]);
+        t!(
+            LinesWithTerminator::new(b"\na\nb\n"),
+            [B("\n"), B("a\n"), B("b\n")]
+        );
+
+        t!(Lines::new(b"\n\n\n"), [B(""), B(""), B("")]);
+        t!(LinesWithTerminator::new(b"\n\n\n"), [B("\n"), B("\n"), B("\n")]);
     }
 }
