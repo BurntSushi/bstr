@@ -301,7 +301,7 @@ pub trait ByteSlice: Sealed {
     /// [W3C's Encoding standard](https://www.w3.org/TR/encoding/).
     /// For a more precise description of the maximal subpart strategy, see
     /// the Unicode Standard, Chapter 3, Section 9. See also
-    /// [Public Review Issue #121](http://www.unicode.org/review/pr-121.html).
+    /// [Public Review Issue #121](https://www.unicode.org/review/pr-121.html).
     ///
     /// N.B. Rust's standard library also appears to use the same strategy,
     /// but it does not appear to be an API guarantee.
