@@ -6,7 +6,7 @@ differs from the standard library's `String` and `str` types in that they are
 not required to be valid UTF-8, but may be fully or partially valid UTF-8.
 
 [![Build status](https://github.com/BurntSushi/bstr/workflows/ci/badge.svg)](https://github.com/BurntSushi/bstr/actions)
-[![](https://meritbadge.herokuapp.com/bstr)](https://crates.io/crates/bstr)
+[![Crates.io](https://img.shields.io/crates/v/bstr.svg)](https://crates.io/crates/bstr)
 
 
 ### Documentation

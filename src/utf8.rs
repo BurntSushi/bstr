@@ -75,7 +75,7 @@ const STATES_FORWARD: &'static [u8] = &[
 ///
 /// When invalid UTF-8 byte sequences are found, they are substituted with the
 /// Unicode replacement codepoint (`U+FFFD`) using the
-/// ["maximal subpart" strategy](http://www.unicode.org/review/pr-121.html).
+/// ["maximal subpart" strategy](https://www.unicode.org/review/pr-121.html).
 ///
 /// This iterator is created by the
 /// [`chars`](trait.ByteSlice.html#method.chars) method provided by the
@@ -146,7 +146,7 @@ impl<'a> DoubleEndedIterator for Chars<'a> {
 ///
 /// When invalid UTF-8 byte sequences are found, they are substituted with the
 /// Unicode replacement codepoint (`U+FFFD`) using the
-/// ["maximal subpart" strategy](http://www.unicode.org/review/pr-121.html).
+/// ["maximal subpart" strategy](https://www.unicode.org/review/pr-121.html).
 ///
 /// Note that this is slightly different from the `CharIndices` iterator
 /// provided by the standard library. Aside from working on possibly invalid
