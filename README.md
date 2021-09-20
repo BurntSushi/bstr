@@ -171,12 +171,12 @@ My hope is to move to `1.0` within the next year and commit to its API so that
 `bstr` can be used as a public dependency.
 
 A large part of the API surface area was taken from the standard library, so
-from an API design perspective, a good portion of this crate should be mature.
-The main differences from the standard library are in how the various substring
-search routines work. The standard library provides generic infrastructure for
-supporting different types of searches with a single method, where as this
-library prefers to define new methods for each type of search and drop the
-generic infrastructure.
+from an API design perspective, a good portion of this crate should be on solid
+ground already. The main differences from the standard library are in how the
+various substring search routines work. The standard library provides generic
+infrastructure for supporting different types of searches with a single method,
+where as this library prefers to define new methods for each type of search and
+drop the generic infrastructure.
 
 Some _probable_ future considerations for APIs include, but are not limited to:
 
@@ -195,10 +195,10 @@ Here are some examples that are _probably_ out of scope for this crate:
 
 The exact scope isn't quite clear, but I expect we can iterate on it.
 
-In general, as stated below, this crate is an experiment in bringing lots of
-related APIs together into a single crate while simultaneously attempting to
-keep the total number of dependencies low. Indeed, every dependency of `bstr`,
-except for `memchr`, is optional.
+In general, as stated below, this crate brings lots of related APIs together
+into a single crate while simultaneously attempting to keep the total number of
+dependencies low. Indeed, every dependency of `bstr`, except for `memchr`, is
+optional.
 
 
 ### High level motivation
@@ -229,13 +229,10 @@ Consider, for example, trimming and splitting, along with their different
 variants.
 
 In other words, `bstr` is partially a way of pushing back against the
-micro-crate ecosystem that appears to be evolving. It's not clear to me whether
-this experiment will be successful or not, but it is definitely a goal of
+micro-crate ecosystem that appears to be evolving. Namely, it is a goal of
 `bstr` to keep its dependency list lightweight. For example, `serde` is an
-optional dependency because there is no feasible alternative, but `twoway` is
-not, where we instead prefer to implement our own substring search. In service
-of this philosophy, currently, the only required dependency of `bstr` is
-`memchr`.
+optional dependency because there is no feasible alternative. In service of
+this philosophy, currently, the only required dependency of `bstr` is `memchr`.
 
 
 ### License

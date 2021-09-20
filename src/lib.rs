@@ -1,5 +1,5 @@
 /*!
-An experimental byte string library.
+A byte string library.
 
 Byte strings are just like standard Unicode strings with one very important
 difference: byte strings are only *conventionally* UTF-8 while Rust's standard
@@ -98,10 +98,10 @@ method converts any `&[u8]` to a `&BStr`.
 
 # When should I use byte strings?
 
-This library is somewhat of an experiment that reflects my hypothesis that
-UTF-8 by convention is a better trade off in some circumstances than guaranteed
-UTF-8. It's possible, perhaps even likely, that this is a niche concern for
-folks working closely with core text primitives.
+This library reflects my hypothesis that UTF-8 by convention is a better trade
+off in some circumstances than guaranteed UTF-8. It's possible, perhaps even
+likely, that this is a niche concern for folks working closely with core text
+primitives.
 
 The first time this idea hit me was in the implementation of Rust's regex
 engine. In particular, very little of the internal implementation cares at all
@@ -134,15 +134,16 @@ incremental way by only parsing chunks at a time, but this is often complex to
 do or impractical. For example, many regex engines only accept one contiguous
 sequence of bytes at a time with no way to perform incremental matching.
 
-In summary, the conventional UTF-8 byte strings provided by this library is an
-experiment. They are definitely useful in some limited circumstances, but how
-useful they are more broadly isn't clear yet.
+In summary, conventional UTF-8 byte strings provided by this library are
+definitely useful in some limited circumstances, but how useful they are more
+broadly isn't clear yet.
 
 # `bstr` in public APIs
 
-Since this library is still experimental, you should not use it in the public
-API of your crates until it hits `1.0` (unless you're OK with with tracking
-breaking releases of `bstr`).
+Since this library is not yet `1.0`, you should not use it in the public API of
+your crates until it hits `1.0` (unless you're OK with with tracking breaking
+releases of `bstr`). It is expected that `bstr 1.0` will be released before
+2022.
 
 In general, it should be possible to avoid putting anything in this crate into
 your public APIs. Namely, you should never need to use the `ByteSlice` or
