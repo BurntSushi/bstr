@@ -3529,6 +3529,27 @@ impl<'a> Lines<'a> {
     fn new(bytes: &'a [u8]) -> Lines<'a> {
         Lines { it: LinesWithTerminator::new(bytes) }
     }
+
+    /// Return a copy of the rest of the buffer without affecting the iterator itself.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::{B, ByteSlice};
+    ///
+    /// let s = b"\
+    /// foo
+    /// bar\r
+    /// baz";
+    /// let mut lines = s.lines();
+    /// assert_eq!(lines.next(), Some(B("foo")));
+    /// assert_eq!(lines.to_bytes(), B("bar\r\nbaz"));
+    /// ```
+    pub fn to_bytes(&self) -> &'a [u8] {
+        self.it.bytes
+    }
 }
 
 impl<'a> Iterator for Lines<'a> {
@@ -3567,6 +3588,27 @@ pub struct LinesWithTerminator<'a> {
 impl<'a> LinesWithTerminator<'a> {
     fn new(bytes: &'a [u8]) -> LinesWithTerminator<'a> {
         LinesWithTerminator { bytes }
+    }
+
+    /// Return a copy of the rest of the buffer without affecting the iterator itself.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::{B, ByteSlice};
+    ///
+    /// let s = b"\
+    /// foo
+    /// bar\r
+    /// baz";
+    /// let mut lines = s.lines_with_terminator();
+    /// assert_eq!(lines.next(), Some(B("foo\n")));
+    /// assert_eq!(lines.to_bytes(), B("bar\r\nbaz"));
+    /// ```
+    pub fn to_bytes(&self) -> &'a [u8] {
+        self.bytes
     }
 }
 
