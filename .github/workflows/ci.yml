@@ -30,7 +30,7 @@ jobs:
           os: ubuntu-18.04
           rust: nightly
         - build: macos
-          os: macOS-10.14
+          os: macos-latest
           rust: stable
         - build: win-msvc
           os: windows-2019
@@ -40,14 +40,12 @@ jobs:
           rust: stable-x86_64-gnu
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+      uses: actions/checkout@v3
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: ${{ matrix.rust }}
         override: true
+        toolchain: ${{ matrix.rust }}
         profile: minimal
     - run: cargo build --verbose
     - run: cargo doc --verbose
@@ -75,14 +73,12 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+      uses: actions/checkout@v3
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
         override: true
+        toolchain: stable
         profile: minimal
         components: rustfmt
     - name: Check formatting
