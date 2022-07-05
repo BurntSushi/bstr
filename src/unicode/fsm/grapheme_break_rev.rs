@@ -2,7 +2,7 @@
 //
 //   ucd-generate dfa --name GRAPHEME_BREAK_REV --reverse --longest --sparse --minimize --anchored --state-size 2 src/unicode/fsm/ [snip (arg too long)]
 //
-// ucd-generate 0.2.9 is available on crates.io.
+// ucd-generate 0.2.12 is available on crates.io.
 
 #[cfg(target_endian = "big")]
 lazy_static::lazy_static! {
