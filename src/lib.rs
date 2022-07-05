@@ -379,10 +379,11 @@ extern crate alloc;
 pub use crate::bstr::BStr;
 #[cfg(feature = "alloc")]
 pub use crate::bstring::BString;
+#[cfg(feature = "unicode")]
+pub use crate::ext_slice::Fields;
 pub use crate::ext_slice::{
-    ByteSlice, Bytes, Fields, FieldsWith, Find, FindReverse, Finder,
-    FinderReverse, Lines, LinesWithTerminator, Split, SplitN, SplitNReverse,
-    SplitReverse, B,
+    ByteSlice, Bytes, FieldsWith, Find, FindReverse, Finder, FinderReverse,
+    Lines, LinesWithTerminator, Split, SplitN, SplitNReverse, SplitReverse, B,
 };
 #[cfg(feature = "alloc")]
 pub use crate::ext_vec::{concat, join, ByteVec, DrainBytes, FromUtf8Error};
