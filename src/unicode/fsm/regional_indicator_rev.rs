@@ -2,7 +2,7 @@
 //
 //   ucd-generate dfa --name REGIONAL_INDICATOR_REV --reverse --classes --minimize --anchored --premultiply --state-size 1 src/unicode/fsm/ \p{gcb=Regional_Indicator}
 //
-// ucd-generate 0.2.9 is available on crates.io.
+// ucd-generate 0.2.12 is available on crates.io.
 
 #[cfg(target_endian = "big")]
 lazy_static::lazy_static! {

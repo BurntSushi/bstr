@@ -2,7 +2,7 @@
 //
 //   ucd-generate dfa --name SIMPLE_WORD_FWD --sparse --minimize --state-size 2 src/unicode/fsm/ \w
 //
-// ucd-generate 0.2.9 is available on crates.io.
+// ucd-generate 0.2.12 is available on crates.io.
 
 #[cfg(target_endian = "big")]
 lazy_static::lazy_static! {

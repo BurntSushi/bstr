@@ -379,6 +379,13 @@ mod tests {
         assert_eq!(vec!["1XY"], words(b"1XY"));
 
         assert_eq!(vec!["\u{FEFF}", "Ты"], words("\u{FEFF}Ты".as_bytes()));
+
+        // Tests that Vithkuqi works, which was introduced in Unicode 14.
+        // This test fails prior to Unicode 14.
+        assert_eq!(
+            vec!["\u{10570}\u{10597}"],
+            words("\u{10570}\u{10597}".as_bytes())
+        );
     }
 
     fn words(bytes: &[u8]) -> Vec<&str> {
