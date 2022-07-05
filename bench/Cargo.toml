@@ -6,7 +6,7 @@ authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = "Criterion benchmark suite for bstr."
 homepage = "https://github.com/BurntSushi/bstr"
 repository = "https://github.com/BurntSushi/bstr"
-license = "Unlicense/MIT"
+license = "Unlicense OR MIT"
 edition = "2018"
 
 [lib]
