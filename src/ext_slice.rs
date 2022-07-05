@@ -762,10 +762,10 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(matches, vec![0]);
     /// ```
     #[inline]
-    fn find_iter<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
-        needle: &'a B,
-    ) -> Find<'a> {
+    fn find_iter<'h, 'n, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
+        needle: &'n B,
+    ) -> Find<'h, 'n> {
         Find::new(self.as_bytes(), needle.as_ref())
     }
 
@@ -807,10 +807,10 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(matches, vec![0]);
     /// ```
     #[inline]
-    fn rfind_iter<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
-        needle: &'a B,
-    ) -> FindReverse<'a> {
+    fn rfind_iter<'h, 'n, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
+        needle: &'n B,
+    ) -> FindReverse<'h, 'n> {
         FindReverse::new(self.as_bytes(), needle.as_ref())
     }
 
@@ -1201,10 +1201,10 @@ pub trait ByteSlice: Sealed {
     /// It does *not* give you `["a", "b", "c"]`. For that behavior, use
     /// [`fields`](#method.fields) instead.
     #[inline]
-    fn split_str<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
-        splitter: &'a B,
-    ) -> Split<'a> {
+    fn split_str<'h, 's, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
+        splitter: &'s B,
+    ) -> Split<'h, 's> {
         Split::new(self.as_bytes(), splitter.as_ref())
     }
 
@@ -1383,10 +1383,10 @@ pub trait ByteSlice: Sealed {
     ///
     /// It does *not* give you `["a", "b", "c"]`.
     #[inline]
-    fn rsplit_str<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
-        splitter: &'a B,
-    ) -> SplitReverse<'a> {
+    fn rsplit_str<'h, 's, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
+        splitter: &'s B,
+    ) -> SplitReverse<'h, 's> {
         SplitReverse::new(self.as_bytes(), splitter.as_ref())
     }
 
@@ -1426,11 +1426,11 @@ pub trait ByteSlice: Sealed {
     /// assert!(x.is_empty());
     /// ```
     #[inline]
-    fn splitn_str<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
+    fn splitn_str<'h, 's, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
         limit: usize,
-        splitter: &'a B,
-    ) -> SplitN<'a> {
+        splitter: &'s B,
+    ) -> SplitN<'h, 's> {
         SplitN::new(self.as_bytes(), splitter.as_ref(), limit)
     }
 
@@ -1472,11 +1472,11 @@ pub trait ByteSlice: Sealed {
     /// assert!(x.is_empty());
     /// ```
     #[inline]
-    fn rsplitn_str<'a, B: ?Sized + AsRef<[u8]>>(
-        &'a self,
+    fn rsplitn_str<'h, 's, B: ?Sized + AsRef<[u8]>>(
+        &'h self,
         limit: usize,
-        splitter: &'a B,
-    ) -> SplitNReverse<'a> {
+        splitter: &'s B,
+    ) -> SplitNReverse<'h, 's> {
         SplitNReverse::new(self.as_bytes(), splitter.as_ref(), limit)
     }
 
@@ -3242,22 +3242,22 @@ impl<'a> FinderReverse<'a> {
 ///
 /// Matches are reported by the byte offset at which they begin.
 ///
-/// `'a` is the shorter of two lifetimes: the byte string being searched or the
-/// byte string being looked for.
+/// `'h` is the lifetime of the haystack while `'n` is the lifetime of the
+/// needle.
 #[derive(Debug)]
-pub struct Find<'a> {
-    it: memmem::FindIter<'a, 'a>,
-    haystack: &'a [u8],
-    needle: &'a [u8],
+pub struct Find<'h, 'n> {
+    it: memmem::FindIter<'h, 'n>,
+    haystack: &'h [u8],
+    needle: &'n [u8],
 }
 
-impl<'a> Find<'a> {
-    fn new(haystack: &'a [u8], needle: &'a [u8]) -> Find<'a> {
+impl<'h, 'n> Find<'h, 'n> {
+    fn new(haystack: &'h [u8], needle: &'n [u8]) -> Find<'h, 'n> {
         Find { it: memmem::find_iter(haystack, needle), haystack, needle }
     }
 }
 
-impl<'a> Iterator for Find<'a> {
+impl<'h, 'n> Iterator for Find<'h, 'n> {
     type Item = usize;
 
     #[inline]
@@ -3270,17 +3270,17 @@ impl<'a> Iterator for Find<'a> {
 ///
 /// Matches are reported by the byte offset at which they begin.
 ///
-/// `'a` is the shorter of two lifetimes: the byte string being searched or the
-/// byte string being looked for.
+/// `'h` is the lifetime of the haystack while `'n` is the lifetime of the
+/// needle.
 #[derive(Debug)]
-pub struct FindReverse<'a> {
-    it: memmem::FindRevIter<'a, 'a>,
-    haystack: &'a [u8],
-    needle: &'a [u8],
+pub struct FindReverse<'h, 'n> {
+    it: memmem::FindRevIter<'h, 'n>,
+    haystack: &'h [u8],
+    needle: &'n [u8],
 }
 
-impl<'a> FindReverse<'a> {
-    fn new(haystack: &'a [u8], needle: &'a [u8]) -> FindReverse<'a> {
+impl<'h, 'n> FindReverse<'h, 'n> {
+    fn new(haystack: &'h [u8], needle: &'n [u8]) -> FindReverse<'h, 'n> {
         FindReverse {
             it: memmem::rfind_iter(haystack, needle),
             haystack,
@@ -3288,16 +3288,16 @@ impl<'a> FindReverse<'a> {
         }
     }
 
-    fn haystack(&self) -> &'a [u8] {
+    fn haystack(&self) -> &'h [u8] {
         self.haystack
     }
 
-    fn needle(&self) -> &[u8] {
+    fn needle(&self) -> &'n [u8] {
         self.needle
     }
 }
 
-impl<'a> Iterator for FindReverse<'a> {
+impl<'h, 'n> Iterator for FindReverse<'h, 'n> {
     type Item = usize;
 
     #[inline]
@@ -3432,10 +3432,11 @@ impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
 
 /// An iterator over substrings in a byte string, split by a separator.
 ///
-/// `'a` is the lifetime of the byte string being split.
+/// `'h` is the lifetime of the byte string being split (the haystack), while
+/// `'s` is the lifetime of the byte string doing the splitting.
 #[derive(Debug)]
-pub struct Split<'a> {
-    finder: Find<'a>,
+pub struct Split<'h, 's> {
+    finder: Find<'h, 's>,
     /// The end position of the previous match of our splitter. The element
     /// we yield corresponds to the substring starting at `last` up to the
     /// beginning of the next match of the splitter.
@@ -3446,18 +3447,18 @@ pub struct Split<'a> {
     done: bool,
 }
 
-impl<'a> Split<'a> {
-    fn new(haystack: &'a [u8], splitter: &'a [u8]) -> Split<'a> {
+impl<'h, 's> Split<'h, 's> {
+    fn new(haystack: &'h [u8], splitter: &'s [u8]) -> Split<'h, 's> {
         let finder = haystack.find_iter(splitter);
         Split { finder, last: 0, done: false }
     }
 }
 
-impl<'a> Iterator for Split<'a> {
-    type Item = &'a [u8];
+impl<'h, 's> Iterator for Split<'h, 's> {
+    type Item = &'h [u8];
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'h [u8]> {
         let haystack = self.finder.haystack;
         match self.finder.next() {
             Some(start) => {
@@ -3487,11 +3488,11 @@ impl<'a> Iterator for Split<'a> {
 /// An iterator over substrings in a byte string, split by a separator, in
 /// reverse.
 ///
-/// `'a` is the lifetime of the byte string being split, while `F` is the type
-/// of the predicate, i.e., `FnMut(char) -> bool`.
+/// `'h` is the lifetime of the byte string being split (the haystack), while
+/// `'s` is the lifetime of the byte string doing the splitting.
 #[derive(Debug)]
-pub struct SplitReverse<'a> {
-    finder: FindReverse<'a>,
+pub struct SplitReverse<'h, 's> {
+    finder: FindReverse<'h, 's>,
     /// The end position of the previous match of our splitter. The element
     /// we yield corresponds to the substring starting at `last` up to the
     /// beginning of the next match of the splitter.
@@ -3502,18 +3503,18 @@ pub struct SplitReverse<'a> {
     done: bool,
 }
 
-impl<'a> SplitReverse<'a> {
-    fn new(haystack: &'a [u8], splitter: &'a [u8]) -> SplitReverse<'a> {
+impl<'h, 's> SplitReverse<'h, 's> {
+    fn new(haystack: &'h [u8], splitter: &'s [u8]) -> SplitReverse<'h, 's> {
         let finder = haystack.rfind_iter(splitter);
         SplitReverse { finder, last: haystack.len(), done: false }
     }
 }
 
-impl<'a> Iterator for SplitReverse<'a> {
-    type Item = &'a [u8];
+impl<'h, 's> Iterator for SplitReverse<'h, 's> {
+    type Item = &'h [u8];
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'h [u8]> {
         let haystack = self.finder.haystack();
         match self.finder.next() {
             Some(start) => {
@@ -3544,31 +3545,31 @@ impl<'a> Iterator for SplitReverse<'a> {
 /// An iterator over at most `n` substrings in a byte string, split by a
 /// separator.
 ///
-/// `'a` is the lifetime of the byte string being split, while `F` is the type
-/// of the predicate, i.e., `FnMut(char) -> bool`.
+/// `'h` is the lifetime of the byte string being split (the haystack), while
+/// `'s` is the lifetime of the byte string doing the splitting.
 #[derive(Debug)]
-pub struct SplitN<'a> {
-    split: Split<'a>,
+pub struct SplitN<'h, 's> {
+    split: Split<'h, 's>,
     limit: usize,
     count: usize,
 }
 
-impl<'a> SplitN<'a> {
+impl<'h, 's> SplitN<'h, 's> {
     fn new(
-        haystack: &'a [u8],
-        splitter: &'a [u8],
+        haystack: &'h [u8],
+        splitter: &'s [u8],
         limit: usize,
-    ) -> SplitN<'a> {
+    ) -> SplitN<'h, 's> {
         let split = haystack.split_str(splitter);
         SplitN { split, limit, count: 0 }
     }
 }
 
-impl<'a> Iterator for SplitN<'a> {
-    type Item = &'a [u8];
+impl<'h, 's> Iterator for SplitN<'h, 's> {
+    type Item = &'h [u8];
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'h [u8]> {
         self.count += 1;
         if self.count > self.limit || self.split.done {
             None
@@ -3583,31 +3584,31 @@ impl<'a> Iterator for SplitN<'a> {
 /// An iterator over at most `n` substrings in a byte string, split by a
 /// separator, in reverse.
 ///
-/// `'a` is the lifetime of the byte string being split, while `F` is the type
-/// of the predicate, i.e., `FnMut(char) -> bool`.
+/// `'h` is the lifetime of the byte string being split (the haystack), while
+/// `'s` is the lifetime of the byte string doing the splitting.
 #[derive(Debug)]
-pub struct SplitNReverse<'a> {
-    split: SplitReverse<'a>,
+pub struct SplitNReverse<'h, 's> {
+    split: SplitReverse<'h, 's>,
     limit: usize,
     count: usize,
 }
 
-impl<'a> SplitNReverse<'a> {
+impl<'h, 's> SplitNReverse<'h, 's> {
     fn new(
-        haystack: &'a [u8],
-        splitter: &'a [u8],
+        haystack: &'h [u8],
+        splitter: &'s [u8],
         limit: usize,
-    ) -> SplitNReverse<'a> {
+    ) -> SplitNReverse<'h, 's> {
         let split = haystack.rsplit_str(splitter);
         SplitNReverse { split, limit, count: 0 }
     }
 }
 
-impl<'a> Iterator for SplitNReverse<'a> {
-    type Item = &'a [u8];
+impl<'h, 's> Iterator for SplitNReverse<'h, 's> {
+    type Item = &'h [u8];
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'h [u8]> {
         self.count += 1;
         if self.count > self.limit || self.split.done {
             None
