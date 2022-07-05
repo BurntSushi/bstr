@@ -3215,7 +3215,7 @@ impl<'a> Bytes<'a> {
     /// This has the same lifetime as the original slice,
     /// and so the iterator can continue to be used while this exists.
     #[inline]
-    pub fn as_slice(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a [u8] {
         self.it.as_slice()
     }
 }
