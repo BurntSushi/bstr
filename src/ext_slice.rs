@@ -1053,8 +1053,9 @@ pub trait ByteSlice: Sealed {
         byteset::rfind_not(self.as_bytes(), byteset.as_ref())
     }
 
-    /// Returns an iterator over the fields in a byte string, separated by
-    /// contiguous whitespace.
+    /// Returns an iterator over the fields in a byte string, separated
+    /// by contiguous whitespace (according to the Unicode property
+    /// `White_Space`).
     ///
     /// # Example
     ///
@@ -1075,6 +1076,7 @@ pub trait ByteSlice: Sealed {
     ///
     /// assert_eq!(0, B("  \n\t\u{2003}\n  \t").fields().count());
     /// ```
+    #[cfg(feature = "unicode")]
     #[inline]
     fn fields(&self) -> Fields<'_> {
         Fields::new(self.as_bytes())
@@ -3356,21 +3358,27 @@ impl<'a> iter::FusedIterator for Bytes<'a> {}
 
 /// An iterator over the fields in a byte string, separated by whitespace.
 ///
+/// Whitespace for this iterator is defined by the Unicode property
+/// `White_Space`.
+///
 /// This iterator splits on contiguous runs of whitespace, such that the fields
 /// in `foo\t\t\n  \nbar` are `foo` and `bar`.
 ///
 /// `'a` is the lifetime of the byte string being split.
+#[cfg(feature = "unicode")]
 #[derive(Debug)]
 pub struct Fields<'a> {
     it: FieldsWith<'a, fn(char) -> bool>,
 }
 
+#[cfg(feature = "unicode")]
 impl<'a> Fields<'a> {
     fn new(bytes: &'a [u8]) -> Fields<'a> {
         Fields { it: bytes.fields_with(|ch| ch.is_whitespace()) }
     }
 }
 
+#[cfg(feature = "unicode")]
 impl<'a> Iterator for Fields<'a> {
     type Item = &'a [u8];
 
