@@ -1,9 +1,8 @@
 // This is adapted from `fallback.rs` from rust-memchr. It's modified to return
-// the 'inverse' query of memchr, e.g. finding the first byte not in the provided
-// set. This is simple for the 1-byte case.
+// the 'inverse' query of memchr, e.g. finding the first byte not in the
+// provided set. This is simple for the 1-byte case.
 
-use core::cmp;
-use core::usize;
+use core::{cmp, usize};
 
 #[cfg(target_pointer_width = "32")]
 const USIZE_BYTES: usize = 4;
@@ -177,6 +176,7 @@ pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::{inv_memchr, inv_memrchr};
+
     // search string, search byte, inv_memchr result, inv_memrchr result.
     // these are expanded into a much larger set of tests in build_tests
     const TESTS: &[(&[u8], u8, usize, usize)] = &[
@@ -239,6 +239,7 @@ mod tests {
     #[test]
     fn test_inv_memchr() {
         use crate::{ByteSlice, B};
+
         for (search, byte, matching) in build_tests() {
             assert_eq!(
                 inv_memchr(byte, &search),
@@ -256,13 +257,14 @@ mod tests {
                 // better printing
                 B(&search).as_bstr(),
             );
-            // Test a rather large number off offsets for potential alignment issues
+            // Test a rather large number off offsets for potential alignment
+            // issues.
             for offset in 1..130 {
                 if offset >= search.len() {
                     break;
                 }
-                // If this would cause us to shift the results off the end, skip
-                // it so that we don't have to recompute them.
+                // If this would cause us to shift the results off the end,
+                // skip it so that we don't have to recompute them.
                 if let Some((f, r)) = matching {
                     if offset > f || offset > r {
                         break;

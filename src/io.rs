@@ -7,12 +7,11 @@ facilities for conveniently and efficiently working with lines as byte strings.
 More APIs may be added in the future.
 */
 
-use alloc::vec;
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
+
 use std::io;
 
-use crate::ext_slice::ByteSlice;
-use crate::ext_vec::ByteVec;
+use crate::{ext_slice::ByteSlice, ext_vec::ByteVec};
 
 /// An extention trait for
 /// [`std::io::BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html)
@@ -271,8 +270,7 @@ pub trait BufReadExt: io::BufRead {
     /// ```
     /// use std::io;
     ///
-    /// use bstr::B;
-    /// use bstr::io::BufReadExt;
+    /// use bstr::{io::BufReadExt, B};
     ///
     /// # fn example() -> Result<(), io::Error> {
     /// let cursor = io::Cursor::new(b"lorem\x00ipsum\x00dolor");
@@ -442,8 +440,9 @@ fn trim_record_slice(mut record: &[u8], terminator: u8) -> &[u8] {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use super::BufReadExt;
     use crate::bstring::BString;
+
+    use super::BufReadExt;
 
     fn collect_lines<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
         let mut lines = vec![];

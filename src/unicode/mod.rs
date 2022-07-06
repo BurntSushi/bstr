@@ -1,8 +1,8 @@
-pub use self::grapheme::{decode_grapheme, GraphemeIndices, Graphemes};
-pub use self::sentence::{SentenceIndices, Sentences};
-pub use self::whitespace::{whitespace_len_fwd, whitespace_len_rev};
-pub use self::word::{
-    WordIndices, Words, WordsWithBreakIndices, WordsWithBreaks,
+pub use self::{
+    grapheme::{decode_grapheme, GraphemeIndices, Graphemes},
+    sentence::{SentenceIndices, Sentences},
+    whitespace::{whitespace_len_fwd, whitespace_len_rev},
+    word::{WordIndices, Words, WordsWithBreakIndices, WordsWithBreaks},
 };
 
 mod fsm;

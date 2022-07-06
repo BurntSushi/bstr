@@ -1,9 +1,12 @@
 use regex_automata::DFA;
 
-use crate::ext_slice::ByteSlice;
-use crate::unicode::fsm::simple_word_fwd::SIMPLE_WORD_FWD;
-use crate::unicode::fsm::word_break_fwd::WORD_BREAK_FWD;
-use crate::utf8;
+use crate::{
+    ext_slice::ByteSlice,
+    unicode::fsm::{
+        simple_word_fwd::SIMPLE_WORD_FWD, word_break_fwd::WORD_BREAK_FWD,
+    },
+    utf8,
+};
 
 /// An iterator over words in a byte string.
 ///
@@ -254,7 +257,7 @@ pub struct WordsWithBreakIndices<'a> {
 
 impl<'a> WordsWithBreakIndices<'a> {
     pub(crate) fn new(bs: &'a [u8]) -> WordsWithBreakIndices<'a> {
-        WordsWithBreakIndices { bs: bs, forward_index: 0 }
+        WordsWithBreakIndices { bs, forward_index: 0 }
     }
 
     /// View the underlying data as a subslice of the original data.

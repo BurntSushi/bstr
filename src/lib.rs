@@ -416,9 +416,11 @@ mod utf8;
 
 #[cfg(all(test, feature = "std"))]
 mod apitests {
-    use crate::bstr::BStr;
-    use crate::bstring::BString;
-    use crate::ext_slice::{Finder, FinderReverse};
+    use crate::{
+        bstr::BStr,
+        bstring::BString,
+        ext_slice::{Finder, FinderReverse},
+    };
 
     #[test]
     fn oibits() {
