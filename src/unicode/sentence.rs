@@ -1,8 +1,9 @@
 use regex_automata::DFA;
 
-use crate::ext_slice::ByteSlice;
-use crate::unicode::fsm::sentence_break_fwd::SENTENCE_BREAK_FWD;
-use crate::utf8;
+use crate::{
+    ext_slice::ByteSlice,
+    unicode::fsm::sentence_break_fwd::SENTENCE_BREAK_FWD, utf8,
+};
 
 /// An iterator over sentences in a byte string.
 ///
@@ -97,7 +98,7 @@ pub struct SentenceIndices<'a> {
 
 impl<'a> SentenceIndices<'a> {
     pub(crate) fn new(bs: &'a [u8]) -> SentenceIndices<'a> {
-        SentenceIndices { bs: bs, forward_index: 0 }
+        SentenceIndices { bs, forward_index: 0 }
     }
 
     /// View the underlying data as a subslice of the original data.

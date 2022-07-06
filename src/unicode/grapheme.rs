@@ -1,10 +1,14 @@
 use regex_automata::DFA;
 
-use crate::ext_slice::ByteSlice;
-use crate::unicode::fsm::grapheme_break_fwd::GRAPHEME_BREAK_FWD;
-use crate::unicode::fsm::grapheme_break_rev::GRAPHEME_BREAK_REV;
-use crate::unicode::fsm::regional_indicator_rev::REGIONAL_INDICATOR_REV;
-use crate::utf8;
+use crate::{
+    ext_slice::ByteSlice,
+    unicode::fsm::{
+        grapheme_break_fwd::GRAPHEME_BREAK_FWD,
+        grapheme_break_rev::GRAPHEME_BREAK_REV,
+        regional_indicator_rev::REGIONAL_INDICATOR_REV,
+    },
+    utf8,
+};
 
 /// An iterator over grapheme clusters in a byte string.
 ///
@@ -125,7 +129,7 @@ pub struct GraphemeIndices<'a> {
 
 impl<'a> GraphemeIndices<'a> {
     pub(crate) fn new(bs: &'a [u8]) -> GraphemeIndices<'a> {
-        GraphemeIndices { bs: bs, forward_index: 0, reverse_index: bs.len() }
+        GraphemeIndices { bs, forward_index: 0, reverse_index: bs.len() }
     }
 
     /// View the underlying data as a subslice of the original data.
@@ -261,9 +265,9 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
 mod tests {
     use ucd_parse::GraphemeClusterBreakTest;
 
+    use crate::{ext_slice::ByteSlice, tests::LOSSY_TESTS};
+
     use super::*;
-    use crate::ext_slice::ByteSlice;
-    use crate::tests::LOSSY_TESTS;
 
     #[test]
     fn forward_ucd() {

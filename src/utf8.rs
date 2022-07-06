@@ -1,13 +1,9 @@
-use core::char;
-use core::cmp;
-use core::fmt;
-use core::str;
+use core::{char, cmp, fmt, str};
+
 #[cfg(feature = "std")]
 use std::error;
 
-use crate::ascii;
-use crate::bstr::BStr;
-use crate::ext_slice::ByteSlice;
+use crate::{ascii, bstr::BStr, ext_slice::ByteSlice};
 
 // The UTF-8 decoder provided here is based on the one presented here:
 // https://bjoern.hoehrmann.de/utf-8/decoder/dfa/
@@ -168,7 +164,7 @@ pub struct CharIndices<'a> {
 
 impl<'a> CharIndices<'a> {
     pub(crate) fn new(bs: &'a [u8]) -> CharIndices<'a> {
-        CharIndices { bs: bs, forward_index: 0, reverse_index: bs.len() }
+        CharIndices { bs, forward_index: 0, reverse_index: bs.len() }
     }
 
     /// View the underlying data as a subslice of the original data.
@@ -858,9 +854,11 @@ fn is_leading_or_invalid_utf8_byte(b: u8) -> bool {
 mod tests {
     use std::char;
 
-    use crate::ext_slice::{ByteSlice, B};
-    use crate::tests::LOSSY_TESTS;
-    use crate::utf8::{self, Utf8Error};
+    use crate::{
+        ext_slice::{ByteSlice, B},
+        tests::LOSSY_TESTS,
+        utf8::{self, Utf8Error},
+    };
 
     fn utf8e(valid_up_to: usize) -> Utf8Error {
         Utf8Error { valid_up_to, error_len: None }

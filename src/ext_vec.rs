@@ -1,20 +1,21 @@
-use alloc::borrow::Cow;
-use alloc::string::String;
-use alloc::vec;
-use alloc::vec::Vec;
 use core::fmt;
 use core::iter;
 use core::ops;
 use core::ptr;
-#[cfg(feature = "std")]
-use std::error;
-#[cfg(feature = "std")]
-use std::ffi::{OsStr, OsString};
-#[cfg(feature = "std")]
-use std::path::{Path, PathBuf};
 
-use crate::ext_slice::ByteSlice;
-use crate::utf8::{self, Utf8Error};
+use alloc::{borrow::Cow, string::String, vec, vec::Vec};
+
+#[cfg(feature = "std")]
+use std::{
+    error,
+    ffi::{OsStr, OsString},
+    path::{Path, PathBuf},
+};
+
+use crate::{
+    ext_slice::ByteSlice,
+    utf8::{self, Utf8Error},
+};
 
 /// Concatenate the elements given by the iterator together into a single
 /// `Vec<u8>`.

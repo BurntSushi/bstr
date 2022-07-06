@@ -1,22 +1,15 @@
-#[cfg(feature = "alloc")]
-use alloc::borrow::Cow;
-#[cfg(feature = "alloc")]
-use alloc::string::String;
+use core::{iter, ops, ptr, slice, str};
+
 #[cfg(all(feature = "alloc", feature = "unicode"))]
 use alloc::vec;
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
-use core::{iter, ops, ptr, slice, str};
+use alloc::{borrow::Cow, string::String, vec::Vec};
+
 #[cfg(feature = "std")]
-use std::ffi::OsStr;
-#[cfg(feature = "std")]
-use std::path::Path;
+use std::{ffi::OsStr, path::Path};
 
 use memchr::{memchr, memmem, memrchr};
 
-use crate::ascii;
-use crate::bstr::BStr;
-use crate::byteset;
 #[cfg(feature = "alloc")]
 use crate::ext_vec::ByteVec;
 #[cfg(feature = "unicode")]
@@ -25,7 +18,12 @@ use crate::unicode::{
     SentenceIndices, Sentences, WordIndices, Words, WordsWithBreakIndices,
     WordsWithBreaks,
 };
-use crate::utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error};
+use crate::{
+    ascii,
+    bstr::BStr,
+    byteset,
+    utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error},
+};
 
 /// A short-hand constructor for building a `&[u8]`.
 ///
@@ -3785,8 +3783,10 @@ fn trim_last_terminator(mut s: &[u8]) -> &[u8] {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use crate::ext_slice::{ByteSlice, Lines, LinesWithTerminator, B};
-    use crate::tests::LOSSY_TESTS;
+    use crate::{
+        ext_slice::{ByteSlice, Lines, LinesWithTerminator, B},
+        tests::LOSSY_TESTS,
+    };
 
     #[test]
     fn to_str_lossy() {

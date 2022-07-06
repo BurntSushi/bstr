@@ -61,18 +61,16 @@ macro_rules! impl_partial_ord {
 
 #[cfg(feature = "alloc")]
 mod bstring {
-    use alloc::borrow::{Borrow, Cow, ToOwned};
-    use alloc::string::String;
-    use alloc::vec;
-    use alloc::vec::Vec;
-    use core::cmp::Ordering;
-    use core::fmt;
-    use core::iter::FromIterator;
-    use core::ops;
+    use core::{cmp::Ordering, fmt, iter::FromIterator, ops};
 
-    use crate::bstr::BStr;
-    use crate::bstring::BString;
-    use crate::ext_vec::ByteVec;
+    use alloc::{
+        borrow::{Borrow, Cow, ToOwned},
+        string::String,
+        vec,
+        vec::Vec,
+    };
+
+    use crate::{bstr::BStr, bstring::BString, ext_vec::ByteVec};
 
     impl fmt::Display for BString {
         #[inline]
@@ -304,21 +302,12 @@ mod bstring {
 }
 
 mod bstr {
-    #[cfg(feature = "alloc")]
-    use alloc::borrow::Cow;
-    #[cfg(feature = "alloc")]
-    use alloc::boxed::Box;
-    #[cfg(feature = "alloc")]
-    use alloc::string::String;
-    #[cfg(feature = "alloc")]
-    use alloc::vec::Vec;
+    use core::{cmp::Ordering, fmt, ops};
 
-    use core::cmp::Ordering;
-    use core::fmt;
-    use core::ops;
+    #[cfg(feature = "alloc")]
+    use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
 
-    use crate::bstr::BStr;
-    use crate::ext_slice::ByteSlice;
+    use crate::{bstr::BStr, ext_slice::ByteSlice};
 
     impl fmt::Display for BStr {
         #[inline]
@@ -755,10 +744,9 @@ mod bstr_serde {
 
 #[cfg(feature = "serde1")]
 mod bstring_serde {
-    use alloc::string::String;
-    use alloc::vec::Vec;
-    use core::cmp;
-    use core::fmt;
+    use core::{cmp, fmt};
+
+    use alloc::{string::String, vec::Vec};
 
     use serde::{
         de::Error, de::SeqAccess, de::Visitor, Deserialize, Deserializer,
@@ -845,8 +833,7 @@ mod bstring_serde {
 
 #[cfg(all(test, feature = "std"))]
 mod display {
-    use crate::bstring::BString;
-    use crate::ByteSlice;
+    use crate::{bstring::BString, ByteSlice};
 
     #[test]
     fn clean() {

@@ -1,6 +1,7 @@
+use core::mem;
+
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
-use core::mem;
 
 /// A wrapper for `&[u8]` that provides convenient string oriented trait impls.
 ///
