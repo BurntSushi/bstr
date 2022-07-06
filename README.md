@@ -17,7 +17,7 @@ https://docs.rs/bstr
 ### When should I use byte strings?
 
 See this part of the documentation for more details:
-https://docs.rs/bstr/0.2.*/bstr/#when-should-i-use-byte-strings.
+<https://docs.rs/bstr/1.*/bstr/#when-should-i-use-byte-strings>.
 
 The short story is that byte strings are useful when it is inconvenient or
 incorrect to require valid UTF-8.
@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bstr = "0.2"
+bstr = "1.0"
 ```
 
 
@@ -42,9 +42,7 @@ This first example simply shows how to efficiently iterate over lines in
 stdin, and print out lines containing a particular substring:
 
 ```rust
-use std::error::Error;
-use std::io::{self, Write};
-
+use std::{error::Error, io::{self, Write}};
 use bstr::{ByteSlice, io::BufReadExt};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -65,9 +63,7 @@ This example shows how to count all of the words (Unicode-aware) in stdin,
 line-by-line:
 
 ```rust
-use std::error::Error;
-use std::io;
-
+use std::{error::Error, io};
 use bstr::{ByteSlice, io::BufReadExt};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -88,9 +84,7 @@ text, this is quite a bit faster than what you can (easily) do with standard
 library APIs. (N.B. Any invalid UTF-8 bytes are passed through unchanged.)
 
 ```rust
-use std::error::Error;
-use std::io::{self, Write};
-
+use std::{error::Error, io::{self, Write}};
 use bstr::{ByteSlice, io::BufReadExt};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -113,9 +107,7 @@ clusters) from each line, where invalid UTF-8 sequences are generally treated
 as a single character and are passed through correctly:
 
 ```rust
-use std::error::Error;
-use std::io::{self, Write};
-
+use std::{error::Error, io::{self, Write}};
 use bstr::{ByteSlice, io::BufReadExt};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -169,13 +161,16 @@ supported version of Rust. MSRV may be bumped in minor version releases.
 
 ### Future work
 
-Since this is meant to be a core crate, getting a `1.0` release is a priority.
-My hope is to move to `1.0` within the next year and commit to its API so that
-`bstr` can be used as a public dependency.
+Since it is plausible that some of the types in this crate might end up in
+your public API (e.g., `BStr` and `BString`), we will commit to being very
+conservative with respect to new major version releases. It's difficult to say
+precisely how conservative, but unless there is a major issue with the `1.0`
+release, I wouldn't expect a `2.0` release to come out any sooner than some
+period of years.
 
 A large part of the API surface area was taken from the standard library, so
-from an API design perspective, a good portion of this crate should be on solid
-ground already. The main differences from the standard library are in how the
+from an API design perspective, a good portion of this crate should be on
+solid ground. The main differences from the standard library are in how the
 various substring search routines work. The standard library provides generic
 infrastructure for supporting different types of searches with a single method,
 where as this library prefers to define new methods for each type of search and
@@ -183,13 +178,10 @@ drop the generic infrastructure.
 
 Some _probable_ future considerations for APIs include, but are not limited to:
 
-* A convenience layer on top of the `aho-corasick` crate.
 * Unicode normalization.
 * More sophisticated support for dealing with Unicode case, perhaps by
   combining the use cases supported by [`caseless`](https://docs.rs/caseless)
   and [`unicase`](https://docs.rs/unicase).
-* Add facilities for dealing with OS strings and file paths, probably via
-  simple conversion routines.
 
 Here are some examples that are _probably_ out of scope for this crate:
 

@@ -102,10 +102,8 @@ method converts any `&[u8]` to a `&BStr`.
 
 # When should I use byte strings?
 
-This library reflects my hypothesis that UTF-8 by convention is a better trade
-off in some circumstances than guaranteed UTF-8. It's possible, perhaps even
-likely, that this is a niche concern for folks working closely with core text
-primitives.
+This library reflects my belief that UTF-8 by convention is a better trade
+off in some circumstances than guaranteed UTF-8.
 
 The first time this idea hit me was in the implementation of Rust's regex
 engine. In particular, very little of the internal implementation cares at all
@@ -138,24 +136,26 @@ incremental way by only parsing chunks at a time, but this is often complex to
 do or impractical. For example, many regex engines only accept one contiguous
 sequence of bytes at a time with no way to perform incremental matching.
 
-In summary, conventional UTF-8 byte strings provided by this library are
-definitely useful in some limited circumstances, but how useful they are more
-broadly isn't clear yet.
-
 # `bstr` in public APIs
 
-Since this library is not yet `1.0`, you should not use it in the public API of
-your crates until it hits `1.0` (unless you're OK with with tracking breaking
-releases of `bstr`). It is expected that `bstr 1.0` will be released before
-2022.
+This library is past version `1` and is expected to remain at version `1` for
+the foreseeable future. Therefore, it is encouraged to put types from `bstr`
+(like `BStr` and `BString`) in your public API if that makes sense for your
+crate.
 
-In general, it should be possible to avoid putting anything in this crate into
-your public APIs. Namely, you should never need to use the `ByteSlice` or
-`ByteVec` traits as bounds on public APIs, since their only purpose is to
-extend the methods on the concrete types `[u8]` and `Vec<u8>`, respectively.
-Similarly, it should not be necessary to put either the `BStr` or `BString`
-types into public APIs. If you want to use them internally, then they can
-be converted to/from `[u8]`/`Vec<u8>` as needed.
+With that said, in general, it should be possible to avoid putting anything
+in this crate into your public APIs. Namely, you should never need to use the
+`ByteSlice` or `ByteVec` traits as bounds on public APIs, since their only
+purpose is to extend the methods on the concrete types `[u8]` and `Vec<u8>`,
+respectively. Similarly, it should not be necessary to put either the `BStr` or
+`BString` types into public APIs. If you want to use them internally, then they
+can be converted to/from `[u8]`/`Vec<u8>` as needed. The conversions are free.
+
+So while it shouldn't ever be 100% necessary to make `bstr` a public
+dependency, there may be cases where it is convenient to do so. This is an
+explicitly supported use case of `bstr`, and as such, major version releases
+should be exceptionally rare.
+
 
 # Differences with standard strings
 
