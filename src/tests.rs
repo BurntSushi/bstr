@@ -6,7 +6,7 @@
 ///
 /// The first element in each tuple is the expected result of lossy decoding,
 /// while the second element is the input given.
-pub const LOSSY_TESTS: &[(&str, &[u8])] = &[
+pub(crate) const LOSSY_TESTS: &[(&str, &[u8])] = &[
     ("a", b"a"),
     ("\u{FFFD}", b"\xFF"),
     ("\u{FFFD}\u{FFFD}", b"\xFF\xFF"),
