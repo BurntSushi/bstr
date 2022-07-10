@@ -402,7 +402,7 @@ impl<'a> ::core::iter::FusedIterator for Utf8Chunks<'a> {}
 /// assert_eq!(err.valid_up_to(), 6);
 /// assert_eq!(err.error_len(), Some(1));
 /// ```
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Eq, PartialEq, Clone, Debug)]
 pub struct Utf8Error {
     valid_up_to: usize,
     error_len: Option<usize>,
