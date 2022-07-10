@@ -61,7 +61,9 @@ macro_rules! impl_partial_ord {
 
 #[cfg(feature = "alloc")]
 mod bstring {
-    use core::{cmp::Ordering, fmt, iter::FromIterator, ops};
+    use core::{
+        cmp::Ordering, convert::TryFrom, fmt, iter::FromIterator, ops,
+    };
 
     use alloc::{
         borrow::{Borrow, Cow, ToOwned},
@@ -70,7 +72,9 @@ mod bstring {
         vec::Vec,
     };
 
-    use crate::{bstr::BStr, bstring::BString, ext_vec::ByteVec};
+    use crate::{
+        bstr::BStr, bstring::BString, ext_slice::ByteSlice, ext_vec::ByteVec,
+    };
 
     impl fmt::Display for BString {
         #[inline]
@@ -201,6 +205,24 @@ mod bstring {
         }
     }
 
+    impl TryFrom<BString> for String {
+        type Error = crate::FromUtf8Error;
+
+        #[inline]
+        fn try_from(s: BString) -> Result<String, crate::FromUtf8Error> {
+            s.into_vec().into_string()
+        }
+    }
+
+    impl<'a> TryFrom<&'a BString> for &'a str {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BString) -> Result<&'a str, crate::Utf8Error> {
+            s.as_bytes().to_str()
+        }
+    }
+
     impl FromIterator<char> for BString {
         #[inline]
         fn from_iter<T: IntoIterator<Item = char>>(iter: T) -> BString {
@@ -302,7 +324,7 @@ mod bstring {
 }
 
 mod bstr {
-    use core::{cmp::Ordering, fmt, ops};
+    use core::{cmp::Ordering, convert::TryFrom, fmt, ops};
 
     #[cfg(feature = "alloc")]
     use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
@@ -623,6 +645,25 @@ mod bstr {
         #[inline]
         fn from(s: Box<BStr>) -> Box<[u8]> {
             BStr::into_boxed_bytes(s)
+        }
+    }
+
+    impl<'a> TryFrom<&'a BStr> for &'a str {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BStr) -> Result<&'a str, crate::Utf8Error> {
+            s.as_bytes().to_str()
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    impl<'a> TryFrom<&'a BStr> for String {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BStr) -> Result<String, crate::Utf8Error> {
+            Ok(s.as_bytes().to_str()?.into())
         }
     }
 
