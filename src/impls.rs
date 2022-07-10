@@ -742,7 +742,7 @@ mod bstr_serde {
     }
 }
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde1-alloc")]
 mod bstring_serde {
     use core::{cmp, fmt};
 
@@ -939,7 +939,7 @@ mod display {
     }
 }
 
-#[cfg(all(test, feature = "std"))]
+#[cfg(all(test, feature = "alloc"))]
 mod bstring_arbitrary {
     use crate::bstring::BString;
 

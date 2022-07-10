@@ -58,6 +58,8 @@ jobs:
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features --features serde1-nostd
     - if: matrix.build == 'stable'
+      run: cargo build --verbose --no-default-features --features serde1-alloc
+    - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features --features alloc
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features --features alloc,serde1
@@ -74,6 +76,8 @@ jobs:
       run: cargo test --verbose --no-default-features
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features --features serde1-nostd
+    - if: matrix.build == 'stable'
+      run: cargo test --verbose --no-default-features --features serde1-alloc
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features --features alloc
     - if: matrix.build == 'stable'
