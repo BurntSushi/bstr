@@ -70,7 +70,9 @@ mod bstring {
         vec::Vec,
     };
 
-    use crate::{bstr::BStr, bstring::BString, ext_vec::ByteVec};
+    use crate::{
+        bstr::BStr, bstring::BString, ext_slice::ByteSlice, ext_vec::ByteVec,
+    };
 
     impl fmt::Display for BString {
         #[inline]
@@ -184,6 +186,24 @@ mod bstring {
         #[inline]
         fn from(s: String) -> BString {
             BString::from(s.into_bytes())
+        }
+    }
+
+    impl core::convert::TryFrom<BString> for String {
+        type Error = crate::FromUtf8Error;
+
+        #[inline]
+        fn try_from(s: BString) -> Result<String, crate::FromUtf8Error> {
+            s.bytes.into_string()
+        }
+    }
+
+    impl<'a> core::convert::TryFrom<&'a BString> for &'a str {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BString) -> Result<&'a str, crate::Utf8Error> {
+            s.bytes.to_str()
         }
     }
 
@@ -305,7 +325,9 @@ mod bstr {
     use core::{cmp::Ordering, fmt, ops};
 
     #[cfg(feature = "alloc")]
-    use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
+    use alloc::{
+        borrow::Cow, borrow::ToOwned, boxed::Box, string::String, vec::Vec,
+    };
 
     use crate::{bstr::BStr, ext_slice::ByteSlice};
 
@@ -599,6 +621,25 @@ mod bstr {
         #[inline]
         fn from(s: &'a str) -> &'a BStr {
             BStr::from_bytes(s.as_bytes())
+        }
+    }
+
+    impl<'a> core::convert::TryFrom<&'a BStr> for &'a str {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BStr) -> Result<&'a str, crate::Utf8Error> {
+            s.bytes.to_str()
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    impl<'a> core::convert::TryFrom<&'a BStr> for String {
+        type Error = crate::Utf8Error;
+
+        #[inline]
+        fn try_from(s: &'a BStr) -> Result<String, crate::Utf8Error> {
+            s.bytes.to_str().map(ToOwned::to_owned)
         }
     }
 
