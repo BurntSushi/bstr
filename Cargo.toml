@@ -24,8 +24,9 @@ default = ["std", "unicode"]
 std = ["alloc", "memchr/std"]
 alloc = []
 unicode = ["lazy_static", "regex-automata"]
-serde1 = ["std", "serde1-nostd", "serde/std"]
-serde1-nostd = ["serde"]
+serde1-std = ["std", "serde1-alloc", "serde/std"]
+serde1-alloc = ["alloc", "serde1-core", "serde/alloc"]
+serde1-core = ["serde"]
 
 [dependencies]
 memchr = { version = "2.4.0", default-features = false }
