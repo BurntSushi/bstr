@@ -36,8 +36,31 @@ pub struct BStr {
 }
 
 impl BStr {
+    /// Directly creates a `BStr` slice from anything that can be converted
+    /// to a byte slice.
+    ///
+    /// This is very similar to the [`B`](crate::B) function, except this
+    /// returns a `&BStr` instead of a `&[u8]`.
+    ///
+    /// This is a cost-free conversion.
+    ///
+    /// # Example
+    ///
+    /// You can create `BStr`'s from byte arrays, byte slices or even string
+    /// slices:
+    ///
+    /// ```
+    /// use bstr::BStr;
+    ///
+    /// let a = BStr::new(b"abc");
+    /// let b = BStr::new(&b"abc"[..]);
+    /// let c = BStr::new("abc");
+    ///
+    /// assert_eq!(a, b);
+    /// assert_eq!(a, c);
+    /// ```
     #[inline]
-    pub(crate) fn new<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &BStr {
+    pub fn new<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a BStr {
         BStr::from_bytes(bytes.as_ref())
     }
 
