@@ -91,21 +91,21 @@ mod bstring {
 
         #[inline]
         fn deref(&self) -> &Vec<u8> {
-            &self.bytes
+            self.as_vec()
         }
     }
 
     impl ops::DerefMut for BString {
         #[inline]
         fn deref_mut(&mut self) -> &mut Vec<u8> {
-            &mut self.bytes
+            self.as_vec_mut()
         }
     }
 
     impl AsRef<[u8]> for BString {
         #[inline]
         fn as_ref(&self) -> &[u8] {
-            &self.bytes
+            self.as_bytes()
         }
     }
 
@@ -119,7 +119,7 @@ mod bstring {
     impl AsMut<[u8]> for BString {
         #[inline]
         fn as_mut(&mut self) -> &mut [u8] {
-            &mut self.bytes
+            self.as_bytes_mut()
         }
     }
 
@@ -162,14 +162,14 @@ mod bstring {
     impl From<Vec<u8>> for BString {
         #[inline]
         fn from(s: Vec<u8>) -> BString {
-            BString { bytes: s }
+            BString::new(s)
         }
     }
 
     impl From<BString> for Vec<u8> {
         #[inline]
         fn from(s: BString) -> Vec<u8> {
-            s.bytes
+            s.into_vec()
         }
     }
 
@@ -280,7 +280,7 @@ mod bstring {
     impl PartialOrd for BString {
         #[inline]
         fn partial_cmp(&self, other: &BString) -> Option<Ordering> {
-            PartialOrd::partial_cmp(&self.bytes, &other.bytes)
+            PartialOrd::partial_cmp(self.as_bytes(), other.as_bytes())
         }
     }
 
@@ -951,7 +951,7 @@ mod bstring_arbitrary {
         }
 
         fn shrink(&self) -> Box<dyn Iterator<Item = BString>> {
-            Box::new(self.bytes.shrink().map(BString::from))
+            Box::new(self.as_vec().shrink().map(BString::from))
         }
     }
 }
