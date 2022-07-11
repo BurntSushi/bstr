@@ -244,7 +244,7 @@ fn sentences(c: &mut Criterion) {
 fn byte_lines(c: &mut Criterion) {
     use bstr::io::BufReadExt;
 
-    let corpus = SUBTITLE_EN_HUGE;
+    let mut corpus = SUBTITLE_EN_HUGE;
     define(c, "bstr/for_byte_line", "ascii", corpus, move |b| {
         b.iter(|| {
             let mut count = 0;
