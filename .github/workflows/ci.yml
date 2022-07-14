@@ -42,11 +42,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@v1
       with:
-        override: true
         toolchain: ${{ matrix.rust }}
-        profile: minimal
     - run: cargo build --verbose
     - run: cargo doc --verbose
     # We run a few other builds, but only on one instance to avoid doing
@@ -94,11 +92,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@v1
       with:
-        override: true
         toolchain: stable
-        profile: minimal
         components: rustfmt
     - name: Check formatting
       run: |
