@@ -398,7 +398,9 @@ pub use crate::utf8::{
     Chars, Utf8Chunk, Utf8Chunks, Utf8Error,
 };
 
-pub use crate::from_bstr_radix::{FromBStrRadix, IntErrorKind, ParseIntError};
+pub use crate::from_bytes_radix::{
+    FromBytesRadix, IntErrorKind, ParseIntError,
+};
 
 mod ascii;
 mod bstr;
@@ -408,7 +410,7 @@ mod byteset;
 mod ext_slice;
 #[cfg(feature = "alloc")]
 mod ext_vec;
-mod from_bstr_radix;
+mod from_bytes_radix;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
