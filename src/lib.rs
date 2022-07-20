@@ -398,7 +398,7 @@ pub use crate::utf8::{
     Chars, Utf8Chunk, Utf8Chunks, Utf8Error,
 };
 
-pub use crate::from_bstr_radix::FromBStrRadix;
+pub use crate::from_bstr_radix::{FromBStrRadix, IntErrorKind, ParseIntError};
 
 mod ascii;
 mod bstr;

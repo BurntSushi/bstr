@@ -4,35 +4,50 @@ This acts like `from_str_radix`, including panicking if `radix` is not in [2, 32
 However, there are a few minor differences to `from_str_radix`:
 `src` is a `&BStr` and `radix` is the output type rather than always `u32`.
 The result type is slightly different too.
- ```
- use bstr::BStr;
- use bstr::FromBStrRadix;
- use core::num::IntErrorKind;
+```
+use bstr::{BStr, FromBStrRadix, IntErrorKind};
 
 for radix in 2..=36 {
     let e = BStr::new(b"");
     let empty = u8::from_bstr_radix(e, 10);
-    assert_eq!(empty, Err(IntErrorKind::Empty));
+    assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
     let a = BStr::new(b"11");
     let eleven = u8::from_bstr_radix(a, radix);
     assert_eq!(eleven, Ok(radix + 1));
 
-    let bbb = BStr::new("111111111");
-    let pos_overflow = u8::from_bstr_radix(bbb, radix);
-    assert_eq!(pos_overflow, Err(IntErrorKind::PosOverflow));
+    let b = BStr::new("111111111");
+    let pos_overflow = u8::from_bstr_radix(b, radix);
+    assert_eq!(pos_overflow.unwrap_err().kind(), &IntErrorKind::PosOverflow);
 
-    let ccc = BStr::new("-111");
-    let neg_overflow = u8::from_bstr_radix(ccc, radix);
-    assert_eq!(neg_overflow, Err(IntErrorKind::InvalidDigit));
+    let c = BStr::new("-111");
+    let negatory = u8::from_bstr_radix(c, radix);
+    assert_eq!(negatory.unwrap_err().kind(), &IntErrorKind::InvalidDigit);
 
     let radix = radix as i32;
-    let totally_fine = i32::from_bstr_radix(ccc, radix);
+    let totally_fine = i32::from_bstr_radix(c, radix);
     assert_eq!(totally_fine, Ok(-(radix*radix + radix + 1)));
 }
 ```
-*/
 
+The `NonZero` versions of integers are not currently supported for parsing.
+Instead, please parse the equivalent possibly-zero integer, then convert:
+```
+use core::num::NonZeroU8;
+use bstr::{BStr, FromBStrRadix};
+
+let a = BStr::new(b"11");
+let eleven = u8::from_bstr_radix(a, 10).ok().and_then(NonZeroU8::new);
+assert_eq!(eleven, NonZeroU8::new(11));
+
+let zero = BStr::new(b"0");
+let nada = u8::from_bstr_radix(zero, 10).ok().and_then(NonZeroU8::new);
+assert_eq!(nada, None);
+```
+
+
+
+*/
 pub trait FromBStrRadix<T>
 where
     T: PartialOrd
@@ -41,29 +56,98 @@ where
         + core::ops::Sub<Output = T>
         + core::ops::Mul<Output = T>,
 {
-    type Output;
+    /// Whatever integer type is being parsed.
+    type Integer;
 
     fn from_bstr_radix(
         src: &crate::BStr,
-        radix: Self::Output,
-    ) -> Result<Self::Output, core::num::IntErrorKind>;
+        radix: Self::Integer,
+    ) -> Result<Self::Integer, ParseIntError>;
 }
+
+// ParseIntError and impl is almost entirely copy-pasted from the standard library
+
+/// Represents an error in parsing.
+///
+/// See [`IntErrorKind`] for a list of possible causes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseIntError {
+    pub(super) kind: IntErrorKind,
+}
+
+impl ParseIntError {
+    pub fn kind(&self) -> &IntErrorKind {
+        &self.kind
+    }
+    #[doc(hidden)]
+    pub fn __description(&self) -> &str {
+        match self.kind {
+            IntErrorKind::Empty => "cannot parse integer from empty string",
+            IntErrorKind::InvalidDigit => "invalid digit found in string",
+            IntErrorKind::PosOverflow => {
+                "number too large to fit in target type"
+            }
+            IntErrorKind::NegOverflow => {
+                "number too small to fit in target type"
+            }
+            IntErrorKind::Zero => "number would be zero for non-zero type",
+        }
+    }
+}
+
+impl std::fmt::Display for ParseIntError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.__description().fmt(f)
+    }
+}
+
+/// Enum to store the various types of errors that can cause parsing an integer to fail.
+///
+/// Polyfill for post-1.55 [`core::num::IntErrorKind`]; that can just be re-used post-MSRV bump.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum IntErrorKind {
+    /// Value being parsed is empty.
+    ///
+    /// This variant will be constructed when parsing an empty string.
+    Empty,
+    /// Contains an invalid digit in its context.
+    ///
+    /// Among other causes, this variant will be constructed when parsing a string that
+    /// contains a non-ASCII char.
+    ///
+    /// This variant is also constructed when a `+` or `-` is misplaced within a string
+    /// either on its own or in the middle of a number.
+    InvalidDigit,
+    /// Integer is too large to store in target integer type.
+    PosOverflow,
+    /// Integer is too small to store in target integer type.
+    NegOverflow,
+    /// Value was Zero
+    ///
+    /// This variant will be emitted when the parsing string has a value of zero, which
+    /// would be illegal for non-zero types.
+    Zero,
+}
+
+// TODO: once crate MSRV >= 1.55, just re-export this.
+// pub use core::num::IntErrorKind;
 
 macro_rules! make_from_bstr_radix {
     ($t:ident) => {
         impl FromBStrRadix<$t> for $t {
-            type Output = $t;
+            type Integer = $t;
 
             fn from_bstr_radix(
                 src: &crate::BStr,
                 radix: $t,
-            ) -> Result<$t, core::num::IntErrorKind> {
+            ) -> Result<$t, crate::ParseIntError> {
                 // This more-or-less follows the stdlib implementation, but it's... simpler.
 
                 assert!((2..=36).contains(&radix), "from_str_radix_int: must lie in the range `[2, 36]` - found {}", radix);
 
                 if src.is_empty() {
-                    return Err(core::num::IntErrorKind::Empty);
+                    return Err(crate::ParseIntError{kind: crate::IntErrorKind::Empty});
                 }
 
                 // The stdlib implementation is that runs of `+` or `-` are invalid.
@@ -72,12 +156,12 @@ macro_rules! make_from_bstr_radix {
 
                 // Leading negative on an unsigned type
                 if is_neg && $t::MIN == 0 {
-                    return Err(core::num::IntErrorKind::InvalidDigit);
+                    return Err(crate::ParseIntError{kind: crate::IntErrorKind::InvalidDigit});
                 }
 
                 // Input string was a single plus or minus
                 if start == 1 && src.len() == 1 {
-                    return Err(core::num::IntErrorKind::InvalidDigit);
+                    return Err(crate::ParseIntError{kind: crate::IntErrorKind::InvalidDigit});
                 }
 
                 // Items for manual determination of digit
@@ -103,23 +187,24 @@ macro_rules! make_from_bstr_radix {
                         // 97: `a` in ASCII
                         (k - 97)
                     } else {
-                        return Err(core::num::IntErrorKind::InvalidDigit);
+                        return Err(crate::ParseIntError{kind: crate::IntErrorKind::InvalidDigit});
                     };
 
                     if is_neg {
                         if let Some(x) = mul.and_then(|m| m.checked_sub(s as $t)){
                             acc = x;
                         } else {
-                            return Err(core::num::IntErrorKind::NegOverflow);
+                            return Err(crate::ParseIntError{kind: crate::IntErrorKind::NegOverflow});
                         }
                     } else {
                         if let Some(x) = mul.and_then(|m| m.checked_add(s as $t)) {
                             acc = x;
                         } else {
-                            return Err(core::num::IntErrorKind::PosOverflow);
+                            return Err(crate::ParseIntError{kind: crate::IntErrorKind::PosOverflow});
                         }
                     }
                 }
+
                 Ok(acc)
             }
         }
@@ -132,12 +217,15 @@ make_from_bstr_radix!(u32);
 make_from_bstr_radix!(u64);
 make_from_bstr_radix!(u128);
 make_from_bstr_radix!(usize);
+
 make_from_bstr_radix!(i8);
 make_from_bstr_radix!(i16);
 make_from_bstr_radix!(i32);
 make_from_bstr_radix!(i64);
 make_from_bstr_radix!(i128);
 make_from_bstr_radix!(isize);
+
+// NOTE: once MSRV exceeds 1.64 it should be possible to implement everything for the NonZero types too.
 
 #[cfg(test)]
 mod tests {
@@ -161,10 +249,10 @@ mod tests {
     use super::*;
     use crate::BStr;
     use crate::BString;
-    use core::num::IntErrorKind;
+    use crate::IntErrorKind;
 
     #[test]
-    fn all_radices_u8() {
+    fn test_parse_u8() {
         for radix in 2..=36 {
             let z = BStr::new(b"0");
             assert_eq!(u8::from_bstr_radix(z, radix), Ok(0));
@@ -175,33 +263,42 @@ mod tests {
 
             let b = BStr::new(b"111111111");
             let pos_overflow = u8::from_bstr_radix(b, radix);
-            assert_eq!(pos_overflow, Err(IntErrorKind::PosOverflow));
+            assert_eq!(
+                pos_overflow.unwrap_err().kind(),
+                &IntErrorKind::PosOverflow
+            );
 
             let c = BStr::new(b"-11");
             let negatory = u8::from_bstr_radix(c, radix);
-            assert_eq!(negatory, Err(IntErrorKind::InvalidDigit));
+            assert_eq!(
+                negatory.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
 
             let d = BStr::new(b"--11");
             let two_wrongs = u8::from_bstr_radix(d, radix);
-            assert_eq!(two_wrongs, Err(IntErrorKind::InvalidDigit));
+            assert_eq!(
+                two_wrongs.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
 
             let e = BStr::new(b"");
             let empty = u8::from_bstr_radix(e, radix);
-            assert_eq!(empty, Err(IntErrorKind::Empty));
+            assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
             let f = BStr::new(b"+11");
             assert_eq!(u8::from_bstr_radix(f, radix), Ok(radix + 1));
 
             let g = BStr::new(b"++11");
             assert_eq!(
-                u8::from_bstr_radix(g, radix),
-                Err(IntErrorKind::InvalidDigit)
+                u8::from_bstr_radix(g, radix).unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
             );
 
             let i = BStr::new("+");
             assert_eq!(
-                u8::from_bstr_radix(i, radix),
-                Err(IntErrorKind::InvalidDigit)
+                u8::from_bstr_radix(i, radix).unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
             );
         }
         // this only stringifies in base 10
@@ -212,55 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn all_radices_u64() {
-        for radix in 2..=36 {
-            let z = BStr::new(b"0");
-            assert_eq!(u64::from_bstr_radix(z, radix), Ok(0));
-
-            let a = BStr::new(b"11");
-            let eleven = u64::from_bstr_radix(a, radix);
-            assert_eq!(eleven, Ok(radix + 1));
-
-            let b = BStr::new(b"11111111111111111111111111111111111111111111111111111111111111111");
-            let pos_overflow = u64::from_bstr_radix(b, radix);
-            assert_eq!(pos_overflow, Err(IntErrorKind::PosOverflow));
-
-            let c = BStr::new(b"-11");
-            let negatory = u64::from_bstr_radix(c, radix);
-            assert_eq!(negatory, Err(IntErrorKind::InvalidDigit));
-
-            let d = BStr::new(b"--11");
-            let two_wrongs = u64::from_bstr_radix(d, radix);
-            assert_eq!(two_wrongs, Err(IntErrorKind::InvalidDigit));
-
-            let e = BStr::new(b"");
-            let empty = u64::from_bstr_radix(e, radix);
-            assert_eq!(empty, Err(IntErrorKind::Empty));
-
-            let f = BStr::new(b"+11");
-            assert_eq!(u64::from_bstr_radix(f, radix), Ok(radix + 1));
-
-            let g = BStr::new(b"++11");
-            assert_eq!(
-                u64::from_bstr_radix(g, radix),
-                Err(IntErrorKind::InvalidDigit)
-            );
-
-            let i = BStr::new("+");
-            assert_eq!(
-                u64::from_bstr_radix(i, radix),
-                Err(IntErrorKind::InvalidDigit)
-            );
-        }
-        // this only stringifies in base 10
-        let min = BString::from(u64::MIN.to_string());
-        assert_eq!(u64::from_bstr_radix(min.as_bstr(), 10).unwrap(), u64::MIN);
-        let max = BString::from(u64::MAX.to_string());
-        assert_eq!(u64::from_bstr_radix(max.as_bstr(), 10).unwrap(), u64::MAX);
-    }
-
-    #[test]
-    fn all_radices_i8() {
+    fn test_parse_i8() {
         for radix in 2..=36 {
             let z = BStr::new(b"0");
             assert_eq!(i8::from_bstr_radix(z, radix), Ok(0));
@@ -271,7 +320,10 @@ mod tests {
 
             let b = BStr::new(b"111111111");
             let pos_overflow = i8::from_bstr_radix(b, radix);
-            assert_eq!(pos_overflow, Err(IntErrorKind::PosOverflow));
+            assert_eq!(
+                pos_overflow.unwrap_err().kind(),
+                &IntErrorKind::PosOverflow
+            );
 
             let c = BStr::new(b"-11");
             let totally_fine = i8::from_bstr_radix(c, radix);
@@ -279,25 +331,28 @@ mod tests {
 
             let d = BStr::new(b"--11");
             let two_wrongs = i8::from_bstr_radix(d, radix);
-            assert_eq!(two_wrongs, Err(IntErrorKind::InvalidDigit));
+            assert_eq!(
+                two_wrongs.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
 
             let e = BStr::new(b"");
             let empty = i8::from_bstr_radix(e, radix);
-            assert_eq!(empty, Err(IntErrorKind::Empty));
+            assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
             let f = BStr::new(b"+11");
             assert_eq!(i8::from_bstr_radix(f, radix), Ok(radix + 1));
 
             let g = BStr::new(b"++11");
             assert_eq!(
-                i8::from_bstr_radix(g, radix),
-                Err(IntErrorKind::InvalidDigit)
+                i8::from_bstr_radix(g, radix).unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
             );
 
             let h = BStr::new(b"-111111111");
             assert_eq!(
-                i8::from_bstr_radix(h, radix).unwrap_err(),
-                IntErrorKind::NegOverflow
+                i8::from_bstr_radix(h, radix).unwrap_err().kind(),
+                &IntErrorKind::NegOverflow
             );
         }
         // this only stringifies in base 10
@@ -305,66 +360,5 @@ mod tests {
         assert_eq!(i8::from_bstr_radix(min.as_bstr(), 10).unwrap(), i8::MIN);
         let max = BString::from(i8::MAX.to_string());
         assert_eq!(i8::from_bstr_radix(max.as_bstr(), 10).unwrap(), i8::MAX);
-    }
-
-    #[test]
-    fn all_radices_i64() {
-        for radix in 2..=36 {
-            let z = BStr::new(b"0");
-            assert_eq!(i64::from_bstr_radix(z, radix), Ok(0));
-
-            let a = BStr::new(b"11");
-            let eleven = i64::from_bstr_radix(a, radix);
-            assert_eq!(eleven, Ok(radix + 1));
-
-            let b = BStr::new(b"11111111111111111111111111111111111111111111111111111111111111111");
-            let pos_overflow = i64::from_bstr_radix(b, radix);
-            assert_eq!(pos_overflow, Err(IntErrorKind::PosOverflow));
-
-            let c = BStr::new(b"-11");
-            let totally_fine = i64::from_bstr_radix(c, radix);
-            assert_eq!(totally_fine, Ok(-(radix + 1)));
-
-            let d = BStr::new(b"--11");
-            let two_wrongs = i64::from_bstr_radix(d, radix);
-            assert_eq!(two_wrongs, Err(IntErrorKind::InvalidDigit));
-
-            let e = BStr::new(b"");
-            let empty = i64::from_bstr_radix(e, radix);
-            assert_eq!(empty, Err(IntErrorKind::Empty));
-
-            let f = BStr::new(b"+11");
-            assert_eq!(i64::from_bstr_radix(f, radix), Ok(radix + 1));
-
-            let g = BStr::new(b"++11");
-            assert_eq!(
-                i64::from_bstr_radix(g, radix),
-                Err(IntErrorKind::InvalidDigit)
-            );
-
-            let h = BStr::new(b"-11111111111111111111111111111111111111111111111111111111111111111");
-            assert_eq!(
-                i64::from_bstr_radix(h, radix).unwrap_err(),
-                IntErrorKind::NegOverflow
-            );
-
-            let i = BStr::new("+");
-            assert_eq!(
-                i64::from_bstr_radix(i, radix),
-                Err(IntErrorKind::InvalidDigit)
-            );
-
-            let j = BStr::new("-");
-            assert_eq!(
-                i64::from_bstr_radix(j, radix),
-                Err(IntErrorKind::InvalidDigit)
-            );
-        }
-
-        // this only stringifies in base 10
-        let min = BString::from(i64::MIN.to_string());
-        assert_eq!(i64::from_bstr_radix(min.as_bstr(), 10).unwrap(), i64::MIN);
-        let max = BString::from(i64::MAX.to_string());
-        assert_eq!(i64::from_bstr_radix(max.as_bstr(), 10).unwrap(), i64::MAX);
     }
 }
