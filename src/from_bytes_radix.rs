@@ -1,20 +1,21 @@
 /** A trait which provides `from_bytes_radix()` for integer types.
 
 This acts like `from_str_radix`, including panicking if `radix` is not in [2, 32].
-However, there are a few minor differences to `from_str_radix`:
-`src` is a `&BStr` and `radix` is the output type rather than always `u32`.
-The result type is slightly different too.
+However, there are a few minor differences to `from_str_radix` in the input and result types.
 ```
 use bstr::{BStr, FromBytesRadix, IntErrorKind};
 
 for radix in 2..=36 {
+
+    let r = radix as u8;
+
     let e = BStr::new(b"");
     let empty = u8::from_bytes_radix(&e, 10);
     assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
     let a = BStr::new(b"11");
     let eleven = u8::from_bytes_radix(&a, radix);
-    assert_eq!(eleven, Ok(radix + 1));
+    assert_eq!(eleven, Ok(r + 1));
 
     let b = BStr::new("111111111");
     let pos_overflow = u8::from_bytes_radix(&b, radix);
@@ -24,9 +25,11 @@ for radix in 2..=36 {
     let negatory = u8::from_bytes_radix(&c, radix);
     assert_eq!(negatory.unwrap_err().kind(), &IntErrorKind::InvalidDigit);
 
-    let radix = radix as i32;
+
+    let r = radix as i32;
+
     let totally_fine = i32::from_bytes_radix(&c, radix);
-    assert_eq!(totally_fine, Ok(-(radix*radix + radix + 1)));
+    assert_eq!(totally_fine, Ok(-(r*r + r + 1)));
 }
 ```
 
@@ -61,7 +64,7 @@ where
 
     fn from_bytes_radix(
         src: &dyn AsRef<[u8]>,
-        radix: Self::Integer,
+        radix: u32,
     ) -> Result<Self::Integer, ParseIntError>;
 }
 
@@ -140,7 +143,7 @@ macro_rules! make_from_bytes_radix {
 
             fn from_bytes_radix(
                 src: &dyn AsRef<[u8]>,
-                radix: $t,
+                radix: u32,
             ) -> Result<$t, crate::ParseIntError>
             {
                 // This more-or-less follows the stdlib implementation.
@@ -175,7 +178,7 @@ macro_rules! make_from_bytes_radix {
                     for i in start..src.len() {
                         let k = src[i];
 
-                        let mul = acc.checked_mul(radix);
+                        let mul = acc.checked_mul(radix as $t);
 
                         let s : u8 = if k >= 48 && k < (48 + num_max) {
                             // 48: `0` in ASCII
@@ -258,12 +261,14 @@ mod tests {
     #[test]
     fn test_parse_u8() {
         for radix in 2..=36 {
+            let r = radix as u8;
+
             let z = BStr::new(b"0");
             assert_eq!(u8::from_bytes_radix(&z, radix), Ok(0));
 
             let a = BStr::new(b"11");
             let eleven = u8::from_bytes_radix(&a, radix);
-            assert_eq!(eleven, Ok(radix + 1));
+            assert_eq!(eleven, Ok(r + 1));
 
             let b = BStr::new(b"111111111");
             let pos_overflow = u8::from_bytes_radix(&b, radix);
@@ -291,7 +296,7 @@ mod tests {
             assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
             let f = BStr::new(b"+11");
-            assert_eq!(u8::from_bytes_radix(&f, radix), Ok(radix + 1));
+            assert_eq!(u8::from_bytes_radix(&f, radix), Ok(r + 1));
 
             let g = BStr::new(b"++11");
             assert_eq!(
@@ -315,12 +320,14 @@ mod tests {
     #[test]
     fn test_parse_i8() {
         for radix in 2..=36 {
+            let r = radix as i8;
+
             let z = BStr::new(b"0");
             assert_eq!(i8::from_bytes_radix(&z, radix), Ok(0));
 
             let a = BStr::new(b"11");
             let eleven = i8::from_bytes_radix(&a, radix);
-            assert_eq!(eleven, Ok(radix + 1));
+            assert_eq!(eleven, Ok(r + 1));
 
             let b = BStr::new(b"111111111");
             let pos_overflow = i8::from_bytes_radix(&b, radix);
@@ -331,7 +338,7 @@ mod tests {
 
             let c = BStr::new(b"-11");
             let totally_fine = i8::from_bytes_radix(&c, radix);
-            assert_eq!(totally_fine, Ok(-(radix + 1)));
+            assert_eq!(totally_fine, Ok(-(r + 1)));
 
             let d = BStr::new(b"--11");
             let two_wrongs = i8::from_bytes_radix(&d, radix);
@@ -345,7 +352,7 @@ mod tests {
             assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
             let f = BStr::new(b"+11");
-            assert_eq!(i8::from_bytes_radix(&f, radix), Ok(radix + 1));
+            assert_eq!(i8::from_bytes_radix(&f, radix), Ok(r + 1));
 
             let g = BStr::new(b"++11");
             assert_eq!(
