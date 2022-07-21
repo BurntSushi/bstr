@@ -1,28 +1,28 @@
 /** A trait which provides `from_bytes_radix()` for integer types.
 
-This acts like `from_str_radix`, including panicking if `radix` is not in [2, 32].
-`0-9`, `A-Z` and `a-z` are supported as possible digits (case-insensitive.)
-However, there are a few minor differences to `from_str_radix` in the input and result types.
+This acts like `from_str_radix`, including panicking if `radix` is not in
+[2, 32] and supporting `[0-9A-Za-z]` as possible digits, depending on the
+value of `radix`.
 ```
-use bstr::{BStr, FromBytesRadix, IntErrorKind};
+use bstr::{FromBytesRadix, IntErrorKind, B};
 
 for radix in 2..=36 {
 
     let r = radix as u8;
 
-    let e = BStr::new(b"");
+    let e = B("");
     let empty = u8::from_bytes_radix(&e, 10);
     assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
-    let a = BStr::new(b"11");
+    let a = B("11");
     let eleven = u8::from_bytes_radix(&a, radix);
     assert_eq!(eleven, Ok(r + 1));
 
-    let b = BStr::new("111111111");
+    let b = B("111111111");
     let pos_overflow = u8::from_bytes_radix(&b, radix);
     assert_eq!(pos_overflow.unwrap_err().kind(), &IntErrorKind::PosOverflow);
 
-    let c = BStr::new("-111");
+    let c = B("-111");
     let negatory = u8::from_bytes_radix(&c, radix);
     assert_eq!(negatory.unwrap_err().kind(), &IntErrorKind::InvalidDigit);
 
@@ -38,35 +38,26 @@ The `NonZero` versions of integers are not currently supported for parsing.
 Instead, please parse the equivalent possibly-zero integer, then convert:
 ```
 use core::num::NonZeroU8;
-use bstr::{BStr, FromBytesRadix};
+use bstr::{FromBytesRadix, B};
 
-let a = BStr::new(b"11");
+let a = B("11");
 let eleven = u8::from_bytes_radix(&a, 10).ok().and_then(NonZeroU8::new);
 assert_eq!(eleven, NonZeroU8::new(11));
 
-let zero = BStr::new(b"0");
+let zero = B("0");
 let nada = u8::from_bytes_radix(&zero, 10).ok().and_then(NonZeroU8::new);
 assert_eq!(nada, None);
 ```
 
-
-
 */
-pub trait FromBytesRadix<T>
-where
-    T: PartialOrd
-        + Copy
-        + core::ops::Add<Output = T>
-        + core::ops::Sub<Output = T>
-        + core::ops::Mul<Output = T>,
-{
-    /// Whatever integer type is being parsed.
-    type Integer;
 
+pub trait FromBytesRadix {
     fn from_bytes_radix(
         src: &dyn AsRef<[u8]>,
         radix: u32,
-    ) -> Result<Self::Integer, ParseIntError>;
+    ) -> Result<Self, ParseIntError>
+    where
+        Self: Sized;
 }
 
 // ParseIntError and impl is almost entirely copy-pasted from the standard library
@@ -139,17 +130,30 @@ pub enum IntErrorKind {
 
 macro_rules! make_from_bytes_radix {
     ($t:ident) => {
-        impl FromBytesRadix<$t> for $t {
-            type Integer = $t;
-
+        impl FromBytesRadix for $t {
             fn from_bytes_radix(
                 src: &dyn AsRef<[u8]>,
                 radix: u32,
             ) -> Result<$t, crate::ParseIntError>
             {
-                // This more-or-less follows the stdlib implementation.
+                //! Convert a `u8` slice in a given base (`radix`)
+                //! to an integer.
+                //!
+                //! This acts like [`from_str_radix`](https://doc.rust-lang.org/std/primitive.i8.html#method.from_str_radix):
+                //!
+                //! * Digits are a subset of `[0-9A-Za-z]`, depending on `radix`
+                //! * A `radix` outside [2, 32] will cause a __panic__
+                //! * A single `+` may optionally precede the digits
+                //! * For signed types a single `-` may optionally precede the digits
+                //! * Any other characters (including whitespace and `_`) are invalid
+                //!
 
+                // Provide a nice formatted error message if we can.
+                #[cfg(feature = "alloc")]
                 assert!((2..=36).contains(&radix), "from_bytes_radix_int: must lie in the range `[2, 36]` - found {}", radix);
+
+                #[cfg(not(feature = "alloc"))]
+                assert!((2..=36).contains(&radix));
 
                 let src = src.as_ref();
 
@@ -246,68 +250,71 @@ mod tests {
      * Leading negative (should be OK for signed types, `InvalidDigit` for unsigned)
      * Empty string (should be `Empty`)
      * Leading double negative (should always be `InvalidDigit`)
-     * Leading positive (should always parse OK)
+     * Leading positive (should always parse as `Ok(radix + 1)`)
      * Leading double positive (should always be `InvalidDigit`)
-     * Signed empty string (should be `InvalidDigit`)
+     * Standalone `+` or `-` (should be `InvalidDigit`)
      *
      * MIN and MAX round-trip (done in base 10 only, because `to_string` assumes that)
+     * MIN-1 (if signed) and MAX+1 for negative and positive overflows (ditto base 10)
+     *
+     * Over-large radix (matching stdlib panic)
+     *
+     * Error on whitespace or underscore (matching stdlib)
      *
      */
 
     use super::*;
-    use crate::BStr;
-    use crate::BString;
-    use crate::IntErrorKind;
+    use crate::{BString, IntErrorKind, B};
 
     #[test]
-    fn test_parse_u8() {
+    fn parse_u8() {
         for radix in 2..=36 {
             let r = radix as u8;
 
-            let z = BStr::new(b"0");
-            assert_eq!(u8::from_bytes_radix(&z, radix), Ok(0));
+            assert_eq!(u8::from_bytes_radix(&B("0"), radix), Ok(0));
 
-            let a = BStr::new(b"11");
-            let eleven = u8::from_bytes_radix(&a, radix);
+            let eleven = u8::from_bytes_radix(&B("11"), radix);
             assert_eq!(eleven, Ok(r + 1));
 
-            let b = BStr::new(b"111111111");
-            let pos_overflow = u8::from_bytes_radix(&b, radix);
+            // Nine 1s in a row is larger than a u8 even in base 2
+            let pos_overflow = u8::from_bytes_radix(&B("111111111"), radix);
             assert_eq!(
                 pos_overflow.unwrap_err().kind(),
                 &IntErrorKind::PosOverflow
             );
 
-            let c = BStr::new(b"-11");
-            let negatory = u8::from_bytes_radix(&c, radix);
+            let negatory = u8::from_bytes_radix(&B("-11"), radix);
             assert_eq!(
                 negatory.unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
 
-            let d = BStr::new(b"--11");
-            let two_wrongs = u8::from_bytes_radix(&d, radix);
+            let two_wrongs = u8::from_bytes_radix(&B("--11"), radix);
             assert_eq!(
                 two_wrongs.unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
 
-            let e = BStr::new(b"");
-            let empty = u8::from_bytes_radix(&e, radix);
+            let empty = u8::from_bytes_radix(&B(""), radix);
             assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
-            let f = BStr::new(b"+11");
-            assert_eq!(u8::from_bytes_radix(&f, radix), Ok(r + 1));
+            let leading_plus = u8::from_bytes_radix(&B("+11"), radix);
+            assert_eq!(leading_plus, Ok(r + 1));
 
-            let g = BStr::new(b"++11");
+            let ungood = u8::from_bytes_radix(&B("++11"), radix);
             assert_eq!(
-                u8::from_bytes_radix(&g, radix).unwrap_err().kind(),
+                ungood.unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
 
-            let i = BStr::new("+");
+            let plus_only = u8::from_bytes_radix(&B("+"), radix);
             assert_eq!(
-                u8::from_bytes_radix(&i, radix).unwrap_err().kind(),
+                plus_only.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
+
+            assert_eq!(
+                u8::from_bytes_radix(&B("-"), radix).unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
         }
@@ -316,54 +323,66 @@ mod tests {
         assert_eq!(u8::from_bytes_radix(&min.as_bstr(), 10), Ok(u8::MIN));
         let max = BString::from(u8::MAX.to_string());
         assert_eq!(u8::from_bytes_radix(&max.as_bstr(), 10), Ok(u8::MAX));
+
+        let maxmax = BString::from((u8::MAX as i16 + 1_i16).to_string());
+        assert_eq!(
+            u8::from_bytes_radix(&maxmax.as_bstr(), 10).unwrap_err().kind(),
+            &IntErrorKind::PosOverflow
+        );
     }
 
     #[test]
-    fn test_parse_i8() {
+    fn parse_i8() {
         for radix in 2..=36 {
             let r = radix as i8;
 
-            let z = BStr::new(b"0");
-            assert_eq!(i8::from_bytes_radix(&z, radix), Ok(0));
+            assert_eq!(i8::from_bytes_radix(&B("0"), radix), Ok(0));
 
-            let a = BStr::new(b"11");
-            let eleven = i8::from_bytes_radix(&a, radix);
+            let eleven = i8::from_bytes_radix(&B("11"), radix);
             assert_eq!(eleven, Ok(r + 1));
 
-            let b = BStr::new(b"111111111");
-            let pos_overflow = i8::from_bytes_radix(&b, radix);
+            // Eight ones in a row is sufficient to overflow an i8
+            let pos_overflow = i8::from_bytes_radix(&B("11111111"), radix);
             assert_eq!(
                 pos_overflow.unwrap_err().kind(),
                 &IntErrorKind::PosOverflow
             );
 
-            let c = BStr::new(b"-11");
-            let totally_fine = i8::from_bytes_radix(&c, radix);
-            assert_eq!(totally_fine, Ok(-(r + 1)));
+            let leading_minus = i8::from_bytes_radix(&B("-11"), radix);
+            assert_eq!(leading_minus, Ok(-(r + 1)));
 
-            let d = BStr::new(b"--11");
-            let two_wrongs = i8::from_bytes_radix(&d, radix);
+            let two_wrongs = i8::from_bytes_radix(&B("--11"), radix);
             assert_eq!(
                 two_wrongs.unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
 
-            let e = BStr::new(b"");
-            let empty = i8::from_bytes_radix(&e, radix);
+            let empty = i8::from_bytes_radix(&B(""), radix);
             assert_eq!(empty.unwrap_err().kind(), &IntErrorKind::Empty);
 
-            let f = BStr::new(b"+11");
-            assert_eq!(i8::from_bytes_radix(&f, radix), Ok(r + 1));
+            let leading_plus = i8::from_bytes_radix(&B("+11"), radix);
+            assert_eq!(leading_plus, Ok(r + 1));
 
-            let g = BStr::new(b"++11");
+            let ungood = i8::from_bytes_radix(&B("++11"), radix);
             assert_eq!(
-                i8::from_bytes_radix(&g, radix).unwrap_err().kind(),
+                ungood.unwrap_err().kind(),
                 &IntErrorKind::InvalidDigit
             );
 
-            let h = BStr::new(b"-111111111");
+            let plus_only = i8::from_bytes_radix(&B("+"), radix);
             assert_eq!(
-                i8::from_bytes_radix(&h, radix).unwrap_err().kind(),
+                plus_only.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
+            let minus_only = i8::from_bytes_radix(&B("-"), radix);
+            assert_eq!(
+                minus_only.unwrap_err().kind(),
+                &IntErrorKind::InvalidDigit
+            );
+
+            let neg_overflow = i8::from_bytes_radix(&B("-11111111"), radix);
+            assert_eq!(
+                neg_overflow.unwrap_err().kind(),
                 &IntErrorKind::NegOverflow
             );
         }
@@ -372,5 +391,35 @@ mod tests {
         assert_eq!(i8::from_bytes_radix(&min.as_bstr(), 10).unwrap(), i8::MIN);
         let max = BString::from(i8::MAX.to_string());
         assert_eq!(i8::from_bytes_radix(&max.as_bstr(), 10).unwrap(), i8::MAX);
+
+        let minmin = BString::from((i8::MIN as i16 - 1_i16).to_string());
+        assert_eq!(
+            i8::from_bytes_radix(&minmin.as_bstr(), 10).unwrap_err().kind(),
+            &IntErrorKind::NegOverflow
+        );
+
+        let maxmax = BString::from((i8::MAX as i16 + 1_i16).to_string());
+        assert_eq!(
+            i8::from_bytes_radix(&maxmax.as_bstr(), 10).unwrap_err().kind(),
+            &IntErrorKind::PosOverflow
+        );
+    }
+
+    /// Test a radix that's greater than allowed
+    #[test]
+    #[should_panic]
+    fn radix_too_large() {
+        let b = B("11");
+        let _ = u8::from_bytes_radix(&b, 1000);
+    }
+
+    /// Ensure we behave like the stdlib here
+    #[test]
+    fn underscore_whitespace() {
+        let _ = i32::from_str_radix("1_000_000", 10).unwrap_err();
+        let _ = i32::from_bytes_radix(&B("1_000_000"), 10).unwrap_err();
+
+        let _ = i32::from_str_radix("1 000 000", 10).unwrap_err();
+        let _ = i32::from_bytes_radix(&B("1 000 000"), 10).unwrap_err();
     }
 }
