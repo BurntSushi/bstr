@@ -26,6 +26,8 @@ with convenient `std::fmt::Debug` implementations:
 
 Additionally, the free function [`B`](fn.B.html) serves as a convenient short
 hand for writing byte string literals.
+And the trait [`FromBytesRadix`](trait.FromBytesRadix.html) provides integer
+parsing with `from_bytes_radix`, like the standard library's `from_str_radix`.
 
 # Quick examples
 

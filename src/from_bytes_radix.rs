@@ -1,6 +1,7 @@
 /** A trait which provides `from_bytes_radix()` for integer types.
 
 This acts like `from_str_radix`, including panicking if `radix` is not in [2, 32].
+`0-9`, `A-Z` and `a-z` are supported as possible digits (case-insensitive.)
 However, there are a few minor differences to `from_str_radix` in the input and result types.
 ```
 use bstr::{BStr, FromBytesRadix, IntErrorKind};
@@ -148,7 +149,7 @@ macro_rules! make_from_bytes_radix {
             {
                 // This more-or-less follows the stdlib implementation.
 
-                assert!((2..=36).contains(&radix), "from_str_radix_int: must lie in the range `[2, 36]` - found {}", radix);
+                assert!((2..=36).contains(&radix), "from_bytes_radix_int: must lie in the range `[2, 36]` - found {}", radix);
 
                 let src = src.as_ref();
 
