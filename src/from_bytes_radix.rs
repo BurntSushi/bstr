@@ -134,6 +134,8 @@ pub enum IntErrorKind {
 
 macro_rules! make_from_bytes_radix {
     ($t:ident) => {
+        impl private::Sealed for $t {}
+
         impl FromBytesRadix for $t {
             fn from_bytes_radix(
                 src: &dyn AsRef<[u8]>,
