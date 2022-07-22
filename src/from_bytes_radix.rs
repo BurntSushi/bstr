@@ -51,7 +51,11 @@ assert_eq!(nada, None);
 
 */
 
-pub trait FromBytesRadix {
+mod private {
+    pub trait Sealed {}
+}
+
+pub trait FromBytesRadix: Sized + private::Sealed {
     fn from_bytes_radix(
         src: &dyn AsRef<[u8]>,
         radix: u32,
