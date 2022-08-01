@@ -3063,11 +3063,8 @@ pub trait ByteSlice: Sealed {
         // Finally, we are only dealing with u8 data, which is Copy, which
         // means we can copy without worrying about ownership/destructors.
         unsafe {
-            ptr::copy(
-                self.as_bytes().get_unchecked(src_start),
-                self.as_bytes_mut().get_unchecked_mut(dest),
-                count,
-            );
+            let ptr = self.as_bytes_mut().as_mut_ptr();
+            ptr::copy(ptr.add(src_start), ptr.add(dest), count);
         }
     }
 }
