@@ -153,11 +153,12 @@ pub trait ByteSlice: Sealed {
 
     /// Create an immutable byte string from an OS string slice.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns `None` if the given OS string is not valid UTF-8. (For
-    /// example, on Windows, file paths are allowed to be a sequence of
-    /// arbitrary 16-bit integers. Not all such sequences can be transcoded to
-    /// valid UTF-8.)
+    /// When the underlying bytes of OS strings are accessible, then this
+    /// always succeeds and is zero cost. Otherwise, this returns `None` if the
+    /// given OS string is not valid UTF-8. (For example, when the underlying
+    /// bytes are inaccessible on Windows, file paths are allowed to be a
+    /// sequence of arbitrary 16-bit integers. Not all such sequences can be
+    /// transcoded to valid UTF-8.)
     ///
     /// # Examples
     ///
@@ -194,10 +195,12 @@ pub trait ByteSlice: Sealed {
 
     /// Create an immutable byte string from a file path.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns `None` if the given path is not valid UTF-8. (For example,
-    /// on Windows, file paths are allowed to be a sequence of arbitrary 16-bit
-    /// integers. Not all such sequences can be transcoded to valid UTF-8.)
+    /// When the underlying bytes of paths are accessible, then this always
+    /// succeeds and is zero cost. Otherwise, this returns `None` if the given
+    /// path is not valid UTF-8. (For example, when the underlying bytes are
+    /// inaccessible on Windows, file paths are allowed to be a sequence of
+    /// arbitrary 16-bit integers. Not all such sequences can be transcoded to
+    /// valid UTF-8.)
     ///
     /// # Examples
     ///
@@ -434,12 +437,15 @@ pub trait ByteSlice: Sealed {
 
     /// Create an OS string slice from this byte string.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns a UTF-8 decoding error if this byte string is not valid
-    /// UTF-8. (For example, on Windows, file paths are allowed to be a
-    /// sequence of arbitrary 16-bit integers. There is no obvious mapping from
-    /// an arbitrary sequence of 8-bit integers to an arbitrary sequence of
-    /// 16-bit integers.)
+    /// When OS strings can be constructed from arbitrary byte sequences, this
+    /// always succeeds and is zero cost. Otherwise, this returns a UTF-8
+    /// decoding error if this byte string is not valid UTF-8. (For example,
+    /// assuming the representation of `OsStr` is opaque on Windows, file paths
+    /// are allowed to be a sequence of arbitrary 16-bit integers. There is
+    /// no obvious mapping from an arbitrary sequence of 8-bit integers to an
+    /// arbitrary sequence of 16-bit integers. If the representation of `OsStr`
+    /// is even opened up, then this will convert any sequence of bytes to an
+    /// `OsStr` without cost.)
     ///
     /// # Examples
     ///
@@ -473,13 +479,13 @@ pub trait ByteSlice: Sealed {
 
     /// Lossily create an OS string slice from this byte string.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this will perform a UTF-8 check and lossily convert this byte string
-    /// into valid UTF-8 using the Unicode replacement codepoint.
+    /// When OS strings can be constructed from arbitrary byte sequences, this
+    /// is zero cost and always returns a slice. Otherwise, this will perform a
+    /// UTF-8 check and lossily convert this byte string into valid UTF-8 using
+    /// the Unicode replacement codepoint.
     ///
-    /// Note that this can prevent the correct roundtripping of file paths on
-    /// non-Unix systems such as Windows, where file paths are an arbitrary
-    /// sequence of 16-bit integers.
+    /// Note that this can prevent the correct roundtripping of file paths when
+    /// the representation of `OsStr` is opaque.
     ///
     /// # Examples
     ///
@@ -518,12 +524,15 @@ pub trait ByteSlice: Sealed {
 
     /// Create a path slice from this byte string.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns a UTF-8 decoding error if this byte string is not valid
-    /// UTF-8. (For example, on Windows, file paths are allowed to be a
-    /// sequence of arbitrary 16-bit integers. There is no obvious mapping from
-    /// an arbitrary sequence of 8-bit integers to an arbitrary sequence of
-    /// 16-bit integers.)
+    /// When paths can be constructed from arbitrary byte sequences, this
+    /// always succeeds and is zero cost. Otherwise, this returns a UTF-8
+    /// decoding error if this byte string is not valid UTF-8. (For example,
+    /// assuming the representation of `Path` is opaque on Windows, file paths
+    /// are allowed to be a sequence of arbitrary 16-bit integers. There is
+    /// no obvious mapping from an arbitrary sequence of 8-bit integers to an
+    /// arbitrary sequence of 16-bit integers. If the representation of `Path`
+    /// is even opened up, then this will convert any sequence of bytes to an
+    /// `Path` without cost.)
     ///
     /// # Examples
     ///
@@ -543,13 +552,13 @@ pub trait ByteSlice: Sealed {
 
     /// Lossily create a path slice from this byte string.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this will perform a UTF-8 check and lossily convert this byte string
-    /// into valid UTF-8 using the Unicode replacement codepoint.
+    /// When paths can be constructed from arbitrary byte sequences, this is
+    /// zero cost and always returns a slice. Otherwise, this will perform a
+    /// UTF-8 check and lossily convert this byte string into valid UTF-8 using
+    /// the Unicode replacement codepoint.
     ///
-    /// Note that this can prevent the correct roundtripping of file paths on
-    /// non-Unix systems such as Windows, where file paths are an arbitrary
-    /// sequence of 16-bit integers.
+    /// Note that this can prevent the correct roundtripping of file paths when
+    /// the representation of `Path` is opaque.
     ///
     /// # Examples
     ///
