@@ -158,7 +158,7 @@ and Unicode support.
 
 ### Minimum Rust version policy
 
-This crate's minimum supported `rustc` version (MSRV) is `1.48.0`.
+This crate's minimum supported `rustc` version (MSRV) is `1.60.0`.
 
 In general, this crate will be conservative with respect to the minimum
 supported version of Rust. MSRV may be bumped in minor version releases.
