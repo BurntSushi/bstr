@@ -28,10 +28,11 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
-    let mut ptr = start_ptr;
 
     unsafe {
+        let end_ptr = haystack.as_ptr().add(haystack.len());
+        let mut ptr = start_ptr;
+
         if haystack.len() < USIZE_BYTES {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -67,10 +68,11 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
-    let mut ptr = end_ptr;
 
     unsafe {
+        let end_ptr = haystack.as_ptr().add(haystack.len());
+        let mut ptr = end_ptr;
+
         if haystack.len() < USIZE_BYTES {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
