@@ -322,7 +322,8 @@ they can do:
    by accessing their underlying 16-bit integer representation. Unfortunately,
    this isn't zero cost (it introduces a second WTF-8 decoding step) and it's
    not clear this is a good thing to do, since WTF-8 should ideally remain an
-   internal implementation detail.
+   internal implementation detail. This is roughly the approach taken by the
+   [`os_str_bytes`](https://crates.io/crates/os_str_bytes) crate.
 2. One could instead declare that they will not handle paths on Windows that
    are not valid UTF-16, and return an error when one is encountered.
 3. Like (2), but instead of returning an error, lossily decode the file path
