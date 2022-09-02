@@ -101,3 +101,15 @@ jobs:
       working-directory: ./bench
       run: |
         cargo fmt -- --check
+
+  miri:
+    name: miri
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@miri
+    - run: cargo miri test --lib --verbose
+      env:
+        MIRIFLAGS: -Zmiri-strict-provenance
