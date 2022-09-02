@@ -11,7 +11,8 @@ keywords = ["string", "str", "byte", "bytes", "text"]
 license = "MIT OR Apache-2.0"
 categories = ["text-processing", "encoding"]
 exclude = ["/.github"]
-edition = "2018"
+edition = "2021"
+resolver = "2"
 
 [workspace]
 members = ["bench"]
