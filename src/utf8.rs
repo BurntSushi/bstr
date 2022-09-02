@@ -869,6 +869,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn validate_all_codepoints() {
         for i in 0..(0x10FFFF + 1) {
             let cp = match char::from_u32(i) {

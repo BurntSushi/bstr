@@ -874,7 +874,9 @@ mod bstring_serde {
 
 #[cfg(all(test, feature = "std"))]
 mod display {
-    use crate::{bstring::BString, ByteSlice};
+    #[cfg(not(miri))]
+    use crate::bstring::BString;
+    use crate::ByteSlice;
 
     #[test]
     fn clean() {
@@ -972,6 +974,7 @@ mod display {
         );
     }
 
+    #[cfg(not(miri))]
     quickcheck::quickcheck! {
         fn total_length(bstr: BString) -> bool {
             let size = bstr.chars().count();

@@ -159,11 +159,13 @@ fn decode_sentence(bs: &[u8]) -> (&str, usize) {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    #[cfg(not(miri))]
     use ucd_parse::SentenceBreakTest;
 
     use crate::ext_slice::ByteSlice;
 
     #[test]
+    #[cfg(not(miri))]
     fn forward_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.sentences.concat();
@@ -199,11 +201,13 @@ mod tests {
         bytes.sentences().collect()
     }
 
+    #[cfg(not(miri))]
     fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&[u8]> {
         strs.iter().map(|s| s.as_ref().as_bytes()).collect()
     }
 
     /// Return all of the UCD for sentence breaks.
+    #[cfg(not(miri))]
     fn ucdtests() -> Vec<SentenceBreakTest> {
         const TESTDATA: &'static str =
             include_str!("data/SentenceBreakTest.txt");
