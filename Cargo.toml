@@ -22,12 +22,10 @@ bench = false
 
 [features]
 default = ["std", "unicode"]
-std = ["alloc", "memchr/std"]
-alloc = []
-unicode = ["lazy_static", "regex-automata"]
-serde1-std = ["std", "serde1-alloc", "serde/std"]
-serde1-alloc = ["alloc", "serde1-core", "serde/alloc"]
-serde1-core = ["serde"]
+std = ["alloc", "memchr/std", "serde?/std"]
+alloc = ["serde?/alloc"]
+unicode = ["dep:lazy_static", "dep:regex-automata"]
+serde = ["dep:serde"]
 
 [dependencies]
 memchr = { version = "2.4.0", default-features = false }

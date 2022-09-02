@@ -50,13 +50,13 @@ jobs:
     # We run a few other builds, but only on one instance to avoid doing
     # more work than we need to.
     - if: matrix.build == 'stable'
-      run: cargo build --verbose --features serde1-std
+      run: cargo build --verbose --features serde
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features
     - if: matrix.build == 'stable'
-      run: cargo build --verbose --no-default-features --features serde1-alloc
+      run: cargo build --verbose --no-default-features --features serde,alloc
     - if: matrix.build == 'stable'
-      run: cargo build --verbose --no-default-features --features serde1-core
+      run: cargo build --verbose --no-default-features --features serde
     - if: matrix.build == 'stable'
       run: cargo build --verbose --no-default-features --features alloc
     # Our dev dependencies evolve more rapidly than we'd like, so only run
@@ -67,19 +67,17 @@ jobs:
     # combinations, but just on 'stable' to avoid doing more work that we have
     # to.
     - if: matrix.build == 'stable'
-      run: cargo test --verbose --features serde1-std
+      run: cargo test --verbose --features serde
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features
     - if: matrix.build == 'stable'
-      run: cargo test --verbose --no-default-features --features serde1-alloc
+      run: cargo test --verbose --no-default-features --features serde,alloc
     - if: matrix.build == 'stable'
-      run: cargo test --verbose --no-default-features --features serde1-core
+      run: cargo test --verbose --no-default-features --features serde
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features --features alloc
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features --features alloc,unicode
-    - if: matrix.build == 'stable'
-      run: cargo test --verbose --no-default-features --features unicode,serde1-alloc
     - name: Run benchmarks as tests
       if: matrix.build == 'stable'
       working-directory: ./bench
