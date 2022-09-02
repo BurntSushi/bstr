@@ -370,6 +370,23 @@ UTF-8, and thus contain latent bugs on Unix where paths with invalid UTF-8 are
 not terribly uncommon. If you instead use byte strings, then you're guaranteed
 to write correct code for Unix, at the cost of getting a corner case wrong on
 Windows.
+
+# Cargo features
+
+This crates comes with a few features that control standard library, serde
+and Unicode support.
+
+* `std` - **Enabled** by default. This provides APIs that require the standard
+  library, such as `Vec<u8>` and `PathBuf`. Enabling this feature also enables
+  the `alloc` feature and any other relevant `std` features for dependencies.
+* `alloc` - **Enabled** by default. This provides APIs that require allocations
+  via the `alloc` crate, such as `Vec<u8>`.
+* `unicode` - **Enabled** by default. This provides APIs that require sizable
+  Unicode data compiled into the binary. This includes, but is not limited to,
+  grapheme/word/sentence segmenters. When this is disabled, basic support such
+  as UTF-8 decoding is still included.
+* `serde` - Enables implementations of serde traits for `BStr`, and also
+  `BString` when `alloc` is enabled.
 */
 
 #![cfg_attr(not(any(feature = "std", test)), no_std)]

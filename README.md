@@ -144,16 +144,8 @@ and Unicode support.
   Unicode data compiled into the binary. This includes, but is not limited to,
   grapheme/word/sentence segmenters. When this is disabled, basic support such
   as UTF-8 decoding is still included.
-* `serde1-std` - **Disabled** by default. Enables implementations of serde
-  traits for the `BStr` and `BString` types. This also enables the `std` and
-  `serde/std` features.
-* `serde1-alloc` - **Disabled** by default. Enables implementations of serde
-  traits for the `BStr` and `BString` types, but without enabling `serde/std`.
-  Instead, `serde/alloc` is enabled. This also enables the `alloc` feature.
-* `serde1-core` - **Disabled** by default. Enables implementations of serde
-  traits for the `BStr` type only, intended for use without `std` or `alloc`.
-  Generally, you want at most one of `serde1-std`, `serde1-alloc` or
-  `serde1-core`, but not more than one.
+* `serde` - Enables implementations of serde traits for `BStr`, and also
+  `BString` when `alloc` is enabled.
 
 
 ### Minimum Rust version policy
