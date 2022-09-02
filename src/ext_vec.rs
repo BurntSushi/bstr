@@ -159,8 +159,9 @@ pub trait ByteVec: Sealed {
 
     /// Create a new byte string from an owned OS string.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns the original OS string if it is not valid UTF-8.
+    /// When the underlying bytes of OS strings are accessible, then this
+    /// always succeeds and is zero cost. Otherwise, this returns the given
+    /// `OsString` if it is not valid UTF-8.
     ///
     /// # Examples
     ///
@@ -197,10 +198,11 @@ pub trait ByteVec: Sealed {
 
     /// Lossily create a new byte string from an OS string slice.
     ///
-    /// On Unix, this always succeeds, is zero cost and always returns a slice.
-    /// On non-Unix systems, this does a UTF-8 check. If the given OS string
-    /// slice is not valid UTF-8, then it is lossily decoded into valid UTF-8
-    /// (with invalid bytes replaced by the Unicode replacement codepoint).
+    /// When the underlying bytes of OS strings are accessible, then this is
+    /// zero cost and always returns a slice. Otherwise, a UTF-8 check is
+    /// performed and if the given OS string is not valid UTF-8, then it is
+    /// lossily decoded into valid UTF-8 (with invalid bytes replaced by the
+    /// Unicode replacement codepoint).
     ///
     /// # Examples
     ///
@@ -240,8 +242,9 @@ pub trait ByteVec: Sealed {
 
     /// Create a new byte string from an owned file path.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns the original path if it is not valid UTF-8.
+    /// When the underlying bytes of paths are accessible, then this always
+    /// succeeds and is zero cost. Otherwise, this returns the given `PathBuf`
+    /// if it is not valid UTF-8.
     ///
     /// # Examples
     ///
@@ -264,10 +267,11 @@ pub trait ByteVec: Sealed {
 
     /// Lossily create a new byte string from a file path.
     ///
-    /// On Unix, this always succeeds, is zero cost and always returns a slice.
-    /// On non-Unix systems, this does a UTF-8 check. If the given path is not
-    /// valid UTF-8, then it is lossily decoded into valid UTF-8 (with invalid
-    /// bytes replaced by the Unicode replacement codepoint).
+    /// When the underlying bytes of paths are accessible, then this is
+    /// zero cost and always returns a slice. Otherwise, a UTF-8 check is
+    /// performed and if the given path is not valid UTF-8, then it is lossily
+    /// decoded into valid UTF-8 (with invalid bytes replaced by the Unicode
+    /// replacement codepoint).
     ///
     /// # Examples
     ///
@@ -476,8 +480,9 @@ pub trait ByteVec: Sealed {
 
     /// Converts this byte string into an OS string, in place.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns the original byte string if it is not valid UTF-8.
+    /// When OS strings can be constructed from arbitrary byte sequences, this
+    /// always succeeds and is zero cost. Otherwise, if this byte string is not
+    /// valid UTF-8, then an error (with the original byte string) is returned.
     ///
     /// # Examples
     ///
@@ -517,13 +522,13 @@ pub trait ByteVec: Sealed {
 
     /// Lossily converts this byte string into an OS string, in place.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this will perform a UTF-8 check and lossily convert this byte string
-    /// into valid UTF-8 using the Unicode replacement codepoint.
+    /// When OS strings can be constructed from arbitrary byte sequences, this
+    /// is zero cost and always returns a slice. Otherwise, this will perform a
+    /// UTF-8 check and lossily convert this byte string into valid UTF-8 using
+    /// the Unicode replacement codepoint.
     ///
-    /// Note that this can prevent the correct roundtripping of file paths on
-    /// non-Unix systems such as Windows, where file paths are an arbitrary
-    /// sequence of 16-bit integers.
+    /// Note that this can prevent the correct roundtripping of file paths when
+    /// the representation of `OsString` is opaque.
     ///
     /// # Examples
     ///
@@ -561,8 +566,9 @@ pub trait ByteVec: Sealed {
 
     /// Converts this byte string into an owned file path, in place.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this returns the original byte string if it is not valid UTF-8.
+    /// When paths can be constructed from arbitrary byte sequences, this
+    /// always succeeds and is zero cost. Otherwise, if this byte string is not
+    /// valid UTF-8, then an error (with the original byte string) is returned.
     ///
     /// # Examples
     ///
@@ -586,13 +592,13 @@ pub trait ByteVec: Sealed {
 
     /// Lossily converts this byte string into an owned file path, in place.
     ///
-    /// On Unix, this always succeeds and is zero cost. On non-Unix systems,
-    /// this will perform a UTF-8 check and lossily convert this byte string
-    /// into valid UTF-8 using the Unicode replacement codepoint.
+    /// When paths can be constructed from arbitrary byte sequences, this is
+    /// zero cost and always returns a slice. Otherwise, this will perform a
+    /// UTF-8 check and lossily convert this byte string into valid UTF-8 using
+    /// the Unicode replacement codepoint.
     ///
-    /// Note that this can prevent the correct roundtripping of file paths on
-    /// non-Unix systems such as Windows, where file paths are an arbitrary
-    /// sequence of 16-bit integers.
+    /// Note that this can prevent the correct roundtripping of file paths when
+    /// the representation of `PathBuf` is opaque.
     ///
     /// # Examples
     ///
