@@ -82,7 +82,7 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
 
-        ptr = (end_ptr as usize & !align) as *const u8;
+        ptr = ptr.sub(end_ptr as usize & align);
         debug_assert!(start_ptr <= ptr && ptr <= end_ptr);
         while loop_size == LOOP_SIZE && ptr >= start_ptr.add(loop_size) {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
