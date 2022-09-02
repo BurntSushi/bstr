@@ -192,10 +192,15 @@ mod tests {
     type TestCase = (Vec<u8>, u8, Option<(usize, usize)>);
 
     fn build_tests() -> Vec<TestCase> {
+        #[cfg(not(miri))]
+        const MAX_PER: usize = 515;
+        #[cfg(miri)]
+        const MAX_PER: usize = 10;
+
         let mut result = vec![];
         for &(search, byte, fwd_pos, rev_pos) in TESTS {
             result.push((search.to_vec(), byte, Some((fwd_pos, rev_pos))));
-            for i in 1..515 {
+            for i in 1..MAX_PER {
                 // add a bunch of copies of the search byte to the end.
                 let mut suffixed: Vec<u8> = search.into();
                 suffixed.extend(std::iter::repeat(byte).take(i));
@@ -225,7 +230,7 @@ mod tests {
         }
 
         // build non-matching tests for several sizes
-        for i in 0..515 {
+        for i in 0..MAX_PER {
             result.push((
                 std::iter::repeat(b'\0').take(i).collect(),
                 b'\0',
@@ -239,6 +244,11 @@ mod tests {
     #[test]
     fn test_inv_memchr() {
         use crate::{ByteSlice, B};
+
+        #[cfg(not(miri))]
+        const MAX_OFFSET: usize = 130;
+        #[cfg(miri)]
+        const MAX_OFFSET: usize = 13;
 
         for (search, byte, matching) in build_tests() {
             assert_eq!(
@@ -259,7 +269,7 @@ mod tests {
             );
             // Test a rather large number off offsets for potential alignment
             // issues.
-            for offset in 1..130 {
+            for offset in 1..MAX_OFFSET {
                 if offset >= search.len() {
                     break;
                 }

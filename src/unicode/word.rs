@@ -321,11 +321,13 @@ fn decode_word(bs: &[u8]) -> (&str, usize) {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    #[cfg(not(miri))]
     use ucd_parse::WordBreakTest;
 
     use crate::ext_slice::ByteSlice;
 
     #[test]
+    #[cfg(not(miri))]
     fn forward_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.words.concat();
@@ -395,11 +397,13 @@ mod tests {
         bytes.words_with_breaks().collect()
     }
 
+    #[cfg(not(miri))]
     fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&[u8]> {
         strs.iter().map(|s| s.as_ref().as_bytes()).collect()
     }
 
     /// Return all of the UCD for word breaks.
+    #[cfg(not(miri))]
     fn ucdtests() -> Vec<WordBreakTest> {
         const TESTDATA: &'static str = include_str!("data/WordBreakTest.txt");
 

@@ -263,6 +263,7 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    #[cfg(not(miri))]
     use ucd_parse::GraphemeClusterBreakTest;
 
     use crate::{ext_slice::ByteSlice, tests::LOSSY_TESTS};
@@ -270,6 +271,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(not(miri))]
     fn forward_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.grapheme_clusters.concat();
@@ -292,6 +294,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn reverse_ucd() {
         for (i, test) in ucdtests().into_iter().enumerate() {
             let given = test.grapheme_clusters.concat();
@@ -333,15 +336,18 @@ mod tests {
         }
     }
 
+    #[cfg(not(miri))]
     fn uniescape(s: &str) -> String {
         s.chars().flat_map(|c| c.escape_unicode()).collect::<String>()
     }
 
+    #[cfg(not(miri))]
     fn uniescape_vec(strs: &[String]) -> Vec<String> {
         strs.iter().map(|s| uniescape(s)).collect()
     }
 
     /// Return all of the UCD for grapheme breaks.
+    #[cfg(not(miri))]
     fn ucdtests() -> Vec<GraphemeClusterBreakTest> {
         const TESTDATA: &'static str =
             include_str!("data/GraphemeBreakTest.txt");
