@@ -5,8 +5,9 @@
 // ucd-generate 0.2.12 is available on crates.io.
 
 #[cfg(target_endian = "big")]
-lazy_static::lazy_static! {
-  pub static ref WHITESPACE_ANCHORED_FWD: ::regex_automata::DenseDFA<&'static [u8], u8> = {
+pub static WHITESPACE_ANCHORED_FWD: ::once_cell::sync::Lazy<
+    ::regex_automata::DenseDFA<&'static [u8], u8>,
+> = ::once_cell::sync::Lazy::new(|| {
     #[repr(C)]
     struct Aligned<B: ?Sized> {
         _align: [u8; 0],
@@ -18,15 +19,13 @@ lazy_static::lazy_static! {
         bytes: *include_bytes!("whitespace_anchored_fwd.bigendian.dfa"),
     };
 
-    unsafe {
-      ::regex_automata::DenseDFA::from_bytes(&ALIGNED.bytes)
-    }
-  };
-}
+    unsafe { ::regex_automata::DenseDFA::from_bytes(&ALIGNED.bytes) }
+});
 
 #[cfg(target_endian = "little")]
-lazy_static::lazy_static! {
-  pub static ref WHITESPACE_ANCHORED_FWD: ::regex_automata::DenseDFA<&'static [u8], u8> = {
+pub static WHITESPACE_ANCHORED_FWD: ::once_cell::sync::Lazy<
+    ::regex_automata::DenseDFA<&'static [u8], u8>,
+> = ::once_cell::sync::Lazy::new(|| {
     #[repr(C)]
     struct Aligned<B: ?Sized> {
         _align: [u8; 0],
@@ -38,8 +37,5 @@ lazy_static::lazy_static! {
         bytes: *include_bytes!("whitespace_anchored_fwd.littleendian.dfa"),
     };
 
-    unsafe {
-      ::regex_automata::DenseDFA::from_bytes(&ALIGNED.bytes)
-    }
-  };
-}
+    unsafe { ::regex_automata::DenseDFA::from_bytes(&ALIGNED.bytes) }
+});
