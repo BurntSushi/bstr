@@ -44,8 +44,25 @@ pub struct BString {
 }
 
 impl BString {
+    /// Constructs a new `BString` from the given [`Vec`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// let mut b = BString::new(Vec::with_capacity(10));
+    /// ```
+    ///
+    /// This function is `const`:
+    ///
+    /// ```
+    /// use bstr::BString;
+    ///
+    /// const B: BString = BString::new(vec![]);
+    /// ```
     #[inline]
-    pub(crate) fn new(bytes: Vec<u8>) -> BString {
+    pub const fn new(bytes: Vec<u8>) -> BString {
         BString { bytes }
     }
 
