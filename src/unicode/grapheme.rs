@@ -195,6 +195,22 @@ impl<'a> DoubleEndedIterator for GraphemeIndices<'a> {
 pub fn decode_grapheme(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
+    } else if bs.len() >= 2
+        && bs[0].is_ascii()
+        && bs[1].is_ascii()
+        && !bs[0].is_ascii_whitespace()
+    {
+        // FIXME: It is somewhat sad that we have to special case this, but it
+        // leads to a significant speed up in predominantly ASCII text. The
+        // issue here is that the DFA has a bit of overhead, and running it for
+        // every byte in mostly ASCII text results in a bit slowdown. We should
+        // re-litigate this once regex-automata 0.3 is out, but it might be
+        // hard to avoid the special case. A DFA is always going to at least
+        // require some memory access.
+
+        // Safe because all ASCII bytes are valid UTF-8.
+        let grapheme = unsafe { bs[..1].to_str_unchecked() };
+        (grapheme, 1)
     } else if let Some(end) = GRAPHEME_BREAK_FWD.find(bs) {
         // Safe because a match can only occur for valid UTF-8.
         let grapheme = unsafe { bs[..end].to_str_unchecked() };
