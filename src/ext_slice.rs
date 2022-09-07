@@ -1,4 +1,4 @@
-use core::{iter, ops, ptr, slice, str};
+use core::{iter, slice, str};
 
 #[cfg(all(feature = "alloc", feature = "unicode"))]
 use alloc::vec;
@@ -3013,69 +3013,6 @@ pub trait ByteSlice: Sealed {
             Some(index)
         }
     }
-
-    /// Copies elements from one part of the slice to another part of itself,
-    /// where the parts may be overlapping.
-    ///
-    /// `src` is the range within this byte string to copy from, while `dest`
-    /// is the starting index of the range within this byte string to copy to.
-    /// The length indicated by `src` must be less than or equal to the number
-    /// of bytes from `dest` to the end of the byte string.
-    ///
-    /// # Panics
-    ///
-    /// Panics if either range is out of bounds, or if `src` is too big to fit
-    /// into `dest`, or if the end of `src` is before the start.
-    ///
-    /// # Examples
-    ///
-    /// Copying four bytes within a byte string:
-    ///
-    /// ```
-    /// use bstr::{B, ByteSlice};
-    ///
-    /// let mut buf = *b"Hello, World!";
-    /// let s = &mut buf;
-    /// s.copy_within_str(1..5, 8);
-    /// assert_eq!(s, B("Hello, Wello!"));
-    /// ```
-    #[inline]
-    fn copy_within_str<R>(&mut self, src: R, dest: usize)
-    where
-        R: ops::RangeBounds<usize>,
-    {
-        // TODO: Deprecate this once slice::copy_within stabilizes.
-        let src_start = match src.start_bound() {
-            ops::Bound::Included(&n) => n,
-            ops::Bound::Excluded(&n) => {
-                n.checked_add(1).expect("attempted to index slice beyond max")
-            }
-            ops::Bound::Unbounded => 0,
-        };
-        let src_end = match src.end_bound() {
-            ops::Bound::Included(&n) => {
-                n.checked_add(1).expect("attempted to index slice beyond max")
-            }
-            ops::Bound::Excluded(&n) => n,
-            ops::Bound::Unbounded => self.as_bytes().len(),
-        };
-        assert!(src_start <= src_end, "src end is before src start");
-        assert!(src_end <= self.as_bytes().len(), "src is out of bounds");
-        let count = src_end - src_start;
-        assert!(
-            dest <= self.as_bytes().len() - count,
-            "dest is out of bounds",
-        );
-
-        // SAFETY: This is safe because we use ptr::copy to handle overlapping
-        // copies, and is also safe because we've checked all the bounds above.
-        // Finally, we are only dealing with u8 data, which is Copy, which
-        // means we can copy without worrying about ownership/destructors.
-        unsafe {
-            let ptr = self.as_bytes_mut().as_mut_ptr();
-            ptr::copy(ptr.add(src_start), ptr.add(dest), count);
-        }
-    }
 }
 
 /// A single substring searcher fixed to a particular needle.
@@ -3817,38 +3754,6 @@ mod tests {
             let got = String::from_utf8_lossy(input);
             assert_eq!(expected.as_bytes(), got.as_bytes(), "std");
         }
-    }
-
-    #[test]
-    #[should_panic]
-    fn copy_within_fail1() {
-        let mut buf = *b"foobar";
-        let s = &mut buf;
-        s.copy_within_str(0..2, 5);
-    }
-
-    #[test]
-    #[should_panic]
-    fn copy_within_fail2() {
-        let mut buf = *b"foobar";
-        let s = &mut buf;
-        s.copy_within_str(3..2, 0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn copy_within_fail3() {
-        let mut buf = *b"foobar";
-        let s = &mut buf;
-        s.copy_within_str(5..7, 0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn copy_within_fail4() {
-        let mut buf = *b"foobar";
-        let s = &mut buf;
-        s.copy_within_str(0..1, 6);
     }
 
     #[test]
