@@ -76,8 +76,6 @@ jobs:
       run: cargo test --verbose --no-default-features --features serde
     - if: matrix.build == 'stable'
       run: cargo test --verbose --no-default-features --features alloc
-    - if: matrix.build == 'stable'
-      run: cargo test --verbose --no-default-features --features alloc,unicode
     - name: Run benchmarks as tests
       if: matrix.build == 'stable'
       working-directory: ./bench
