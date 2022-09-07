@@ -17,7 +17,7 @@ https://docs.rs/bstr
 ### When should I use byte strings?
 
 See this part of the documentation for more details:
-<https://docs.rs/bstr/1.0.0-pre.1/bstr/#when-should-i-use-byte-strings>.
+<https://docs.rs/bstr/1.*/bstr/#when-should-i-use-byte-strings>.
 
 The short story is that byte strings are useful when it is inconvenient or
 incorrect to require valid UTF-8.
@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bstr = "1.0.0-pre.1"
+bstr = "1.0.0"
 ```
 
 

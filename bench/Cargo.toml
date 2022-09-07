@@ -19,6 +19,6 @@ path = "src/bench.rs"
 
 [dependencies]
 criterion = "0.3.4"
-bstr = { version = "1.0.0-pre.1", path = ".." }
+bstr = { version = "1.0.0", path = ".." }
 # For comparisons.
 unicode-segmentation = "1.2.1"
