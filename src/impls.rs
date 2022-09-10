@@ -725,7 +725,7 @@ mod bstr {
     impl_partial_ord!(&'a BStr, String);
 }
 
-#[cfg(feature = "serde1-core")]
+#[cfg(feature = "serde")]
 mod bstr_serde {
     use core::fmt;
 
@@ -783,7 +783,7 @@ mod bstr_serde {
     }
 }
 
-#[cfg(feature = "serde1-alloc")]
+#[cfg(all(feature = "serde", feature = "alloc"))]
 mod bstring_serde {
     use core::{cmp, fmt};
 
