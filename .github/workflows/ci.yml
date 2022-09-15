@@ -93,8 +93,7 @@ jobs:
         toolchain: stable
         components: rustfmt
     - name: Check formatting
-      run: |
-        cargo fmt -- --check
+      run: cargo fmt --check
 
   miri:
     name: miri
