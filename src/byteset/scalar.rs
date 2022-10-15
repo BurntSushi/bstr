@@ -4,6 +4,9 @@
 
 use core::{cmp, usize};
 
+#[cfg(target_pointer_width = "16")]
+const USIZE_BYTES: usize = 2;
+
 #[cfg(target_pointer_width = "32")]
 const USIZE_BYTES: usize = 4;
 
