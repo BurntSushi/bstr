@@ -388,7 +388,7 @@ impl<'a> ::core::iter::FusedIterator for Utf8Chunks<'a> {}
 /// assert_eq!(err.error_len(), Some(3));
 ///
 /// // In contrast to the above which contains a single invalid prefix,
-/// // consider the case of multiple individal bytes that are never valid
+/// // consider the case of multiple individual bytes that are never valid
 /// // prefixes. Note how the value of error_len changes!
 /// let s = b"foobar\xFF\xFFquux";
 /// let err = s.to_str().unwrap_err();
