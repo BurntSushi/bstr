@@ -787,14 +787,14 @@ mod bstr_serde {
 mod bstring_serde {
     use core::{cmp, fmt};
 
-    use alloc::{string::String, vec::Vec};
+    use alloc::{boxed::Box, string::String, vec::Vec};
 
     use serde::{
         de::Error, de::SeqAccess, de::Visitor, Deserialize, Deserializer,
         Serialize, Serializer,
     };
 
-    use crate::bstring::BString;
+    use crate::{bstr::BStr, bstring::BString};
 
     impl Serialize for BString {
         #[inline]
@@ -868,6 +868,77 @@ mod bstring_serde {
             }
 
             deserializer.deserialize_byte_buf(BStringVisitor)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Box<BStr> {
+        #[inline]
+        fn deserialize<D>(deserializer: D) -> Result<Box<BStr>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct BoxedBStrVisitor;
+
+            impl<'de> Visitor<'de> for BoxedBStrVisitor {
+                type Value = Box<BStr>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("a boxed byte string")
+                }
+
+                #[inline]
+                fn visit_seq<V: SeqAccess<'de>>(
+                    self,
+                    mut visitor: V,
+                ) -> Result<Box<BStr>, V::Error> {
+                    let len = cmp::min(visitor.size_hint().unwrap_or(0), 256);
+                    let mut bytes = Vec::with_capacity(len);
+                    while let Some(v) = visitor.next_element()? {
+                        bytes.push(v);
+                    }
+                    Ok(BStr::from_boxed_bytes(bytes.into_boxed_slice()))
+                }
+
+                #[inline]
+                fn visit_bytes<E: Error>(
+                    self,
+                    value: &[u8],
+                ) -> Result<Box<BStr>, E> {
+                    Ok(BStr::from_boxed_bytes(
+                        value.to_vec().into_boxed_slice(),
+                    ))
+                }
+
+                #[inline]
+                fn visit_byte_buf<E: Error>(
+                    self,
+                    value: Vec<u8>,
+                ) -> Result<Box<BStr>, E> {
+                    Ok(BStr::from_boxed_bytes(value.into_boxed_slice()))
+                }
+
+                #[inline]
+                fn visit_str<E: Error>(
+                    self,
+                    value: &str,
+                ) -> Result<Box<BStr>, E> {
+                    Ok(BStr::from_boxed_bytes(
+                        value.as_bytes().to_vec().into_boxed_slice(),
+                    ))
+                }
+
+                #[inline]
+                fn visit_string<E: Error>(
+                    self,
+                    value: String,
+                ) -> Result<Box<BStr>, E> {
+                    Ok(BStr::from_boxed_bytes(
+                        value.into_bytes().into_boxed_slice(),
+                    ))
+                }
+            }
+
+            deserializer.deserialize_byte_buf(BoxedBStrVisitor)
         }
     }
 }
