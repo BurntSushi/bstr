@@ -6,7 +6,7 @@ differs from the standard library's `String` and `str` types in that they are
 not required to be valid UTF-8, but may be fully or partially valid UTF-8.
 
 [![Build status](https://github.com/BurntSushi/bstr/workflows/ci/badge.svg)](https://github.com/BurntSushi/bstr/actions)
-[![Crates.io](https://img.shields.io/crates/v/bstr.svg)](https://crates.io/crates/bstr)
+[![crates.io](https://img.shields.io/crates/v/bstr.svg)](https://crates.io/crates/bstr)
 
 
 ### Documentation
@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bstr = "1.0.0"
+bstr = "1.0.1"
 ```
 
 
@@ -38,8 +38,8 @@ bstr = "1.0.0"
 The following two examples exhibit both the API features of byte strings and
 the I/O convenience functions provided for reading line-by-line quickly.
 
-This first example simply shows how to efficiently iterate over lines in
-stdin, and print out lines containing a particular substring:
+This first example simply shows how to efficiently iterate over lines in stdin,
+and print out lines containing a particular substring:
 
 ```rust
 use std::{error::Error, io::{self, Write}};
@@ -132,8 +132,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 ### Cargo features
 
-This crates comes with a few features that control standard library, serde
-and Unicode support.
+This crates comes with a few features that control standard library, serde and
+Unicode support.
 
 * `std` - **Enabled** by default. This provides APIs that require the standard
   library, such as `Vec<u8>` and `PathBuf`. Enabling this feature also enables
@@ -160,17 +160,17 @@ supported version of Rust. MSRV may be bumped in minor version releases.
 
 ### Future work
 
-Since it is plausible that some of the types in this crate might end up in
-your public API (e.g., `BStr` and `BString`), we will commit to being very
+Since it is plausible that some of the types in this crate might end up in your
+public API (e.g., `BStr` and `BString`), we will commit to being very
 conservative with respect to new major version releases. It's difficult to say
 precisely how conservative, but unless there is a major issue with the `1.0`
 release, I wouldn't expect a `2.0` release to come out any sooner than some
 period of years.
 
 A large part of the API surface area was taken from the standard library, so
-from an API design perspective, a good portion of this crate should be on
-solid ground. The main differences from the standard library are in how the
-various substring search routines work. The standard library provides generic
+from an API design perspective, a good portion of this crate should be on solid
+ground. The main differences from the standard library are in how the various
+substring search routines work. The standard library provides generic
 infrastructure for supporting different types of searches with a single method,
 where as this library prefers to define new methods for each type of search and
 drop the generic infrastructure.
@@ -202,16 +202,16 @@ achieved with the standard library `Vec<u8>`/`&[u8]` APIs and the ecosystem of
 library crates. For example:
 
 * The standard library's
-  [`Utf8Error`](https://doc.rust-lang.org/std/str/struct.Utf8Error.html)
-  can be used for incremental lossy decoding of `&[u8]`.
+  [`Utf8Error`](https://doc.rust-lang.org/std/str/struct.Utf8Error.html) can be
+  used for incremental lossy decoding of `&[u8]`.
 * The
   [`unicode-segmentation`](https://unicode-rs.github.io/unicode-segmentation/unicode_segmentation/index.html)
   crate can be used for iterating over graphemes (or words), but is only
   implemented for `&str` types. One could use `Utf8Error` above to implement
   grapheme iteration with the same semantics as what `bstr` provides (automatic
   Unicode replacement codepoint substitution).
-* The [`twoway`](https://docs.rs/twoway) crate can be used for
-  fast substring searching on `&[u8]`.
+* The [`twoway`](https://docs.rs/twoway) crate can be used for fast substring
+  searching on `&[u8]`.
 
 So why create `bstr`? Part of the point of the `bstr` crate is to provide a
 uniform API of coupled components instead of relying on users to piece together
