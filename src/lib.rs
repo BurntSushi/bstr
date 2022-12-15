@@ -34,7 +34,7 @@ additional string oriented methods. Operations such as iterating over
 graphemes, searching for substrings, replacing substrings, trimming and case
 conversion are examples of things not provided on the standard library `&[u8]`
 APIs but are provided by this crate. For example, this code iterates over all
-of occurrences of a subtring:
+of occurrences of a substring:
 
 ```
 use bstr::ByteSlice;

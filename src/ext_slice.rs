@@ -1324,11 +1324,11 @@ pub trait ByteSlice: Sealed {
         SplitReverse::new(self.as_bytes(), splitter.as_ref())
     }
 
-    /// Split this byte string at the first occurance of `splitter`.
+    /// Split this byte string at the first occurrence of `splitter`.
     ///
     /// If the `splitter` is found in the byte string, returns a tuple
-    /// containing the parts of the string before and after the first occurance
-    /// of `splitter` respectively. Otherwise, if there are no occurances of
+    /// containing the parts of the string before and after the first occurrence
+    /// of `splitter` respectively. Otherwise, if there are no occurrences of
     /// `splitter` in the byte string, returns `None`.
     ///
     /// The splitter may be any type that can be cheaply converted into a
@@ -1368,11 +1368,11 @@ pub trait ByteSlice: Sealed {
         Some((&bytes[..start], &bytes[end..]))
     }
 
-    /// Split this byte string at the last occurance of `splitter`.
+    /// Split this byte string at the last occurrence of `splitter`.
     ///
     /// If the `splitter` is found in the byte string, returns a tuple
-    /// containing the parts of the string before and after the last occurance
-    /// of `splitter`, respectively. Otherwise, if there are no occurances of
+    /// containing the parts of the string before and after the last occurrence
+    /// of `splitter`, respectively. Otherwise, if there are no occurrences of
     /// `splitter` in the byte string, returns `None`.
     ///
     /// The splitter may be any type that can be cheaply converted into a
@@ -1915,7 +1915,7 @@ pub trait ByteSlice: Sealed {
     /// assert_eq!(vec![(0, 5, "à̖"), (5, 13, "🇺🇸")], graphemes);
     /// ```
     ///
-    /// This example shows what happens when invalid UTF-8 is enountered. Note
+    /// This example shows what happens when invalid UTF-8 is encountered. Note
     /// that the offsets are valid indices into the original string, and do
     /// not necessarily correspond to the length of the `&str` returned!
     ///

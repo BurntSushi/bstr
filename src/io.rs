@@ -13,7 +13,7 @@ use std::io;
 
 use crate::{ext_slice::ByteSlice, ext_vec::ByteVec};
 
-/// An extention trait for
+/// An extension trait for
 /// [`std::io::BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html)
 /// which provides convenience APIs for dealing with byte strings.
 pub trait BufReadExt: io::BufRead {
