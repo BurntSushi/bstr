@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bstr = "1.0.1"
+bstr = "1"
 ```
 
 
