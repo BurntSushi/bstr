@@ -104,8 +104,10 @@ impl ByteVec for Vec<u8> {
 
 /// Ensure that callers cannot implement `ByteSlice` by making an
 /// umplementable trait its super trait.
-pub trait Sealed {}
-impl Sealed for Vec<u8> {}
+mod private {
+    pub trait Sealed {}
+}
+impl private::Sealed for Vec<u8> {}
 
 /// A trait that extends `Vec<u8>` with string oriented methods.
 ///
@@ -119,7 +121,9 @@ impl Sealed for Vec<u8> {}
 /// let s = Vec::from_slice(b"abc"); // NOT ByteVec::from_slice("...")
 /// assert_eq!(s, B("abc"));
 /// ```
-pub trait ByteVec: Sealed {
+///
+/// This trait is sealed and cannot be implemented outside of `bstr`.
+pub trait ByteVec: private::Sealed {
     /// A method for accessing the raw vector bytes of this type. This is
     /// always a no-op and callers shouldn't care about it. This only exists
     /// for making the extension trait work.
