@@ -101,12 +101,16 @@ impl<const N: usize> ByteSlice for [u8; N] {
 
 /// Ensure that callers cannot implement `ByteSlice` by making an
 /// umplementable trait its super trait.
-pub trait Sealed {}
-impl Sealed for [u8] {}
-impl<const N: usize> Sealed for [u8; N] {}
+mod private {
+    pub trait Sealed {}
+}
+impl private::Sealed for [u8] {}
+impl<const N: usize> private::Sealed for [u8; N] {}
 
 /// A trait that extends `&[u8]` with string oriented methods.
-pub trait ByteSlice: Sealed {
+///
+/// This trait is sealed and cannot be implemented outside of `bstr`.
+pub trait ByteSlice: private::Sealed {
     /// A method for accessing the raw bytes of this type. This is always a
     /// no-op and callers shouldn't care about it. This only exists for making
     /// the extension trait work.
