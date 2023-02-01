@@ -667,6 +667,14 @@ mod bstr {
         }
     }
 
+    #[cfg(feature = "alloc")]
+    impl Clone for Box<BStr> {
+        #[inline]
+        fn clone(&self) -> Self {
+            BStr::from_boxed_bytes(self.as_bytes().into())
+        }
+    }
+
     impl Eq for BStr {}
 
     impl PartialEq<BStr> for BStr {
