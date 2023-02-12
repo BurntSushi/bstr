@@ -99,6 +99,19 @@ impl<const N: usize> ByteSlice for [u8; N] {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<'a> ByteSlice for Cow<'a, [u8]> {
+    #[inline]
+    fn as_bytes(&self) -> &[u8] {
+        self
+    }
+
+    #[inline]
+    fn as_bytes_mut(&mut self) -> &mut [u8] {
+        self.to_mut()
+    }
+}
+
 /// Ensure that callers cannot implement `ByteSlice` by making an
 /// umplementable trait its super trait.
 mod private {
@@ -106,6 +119,8 @@ mod private {
 }
 impl private::Sealed for [u8] {}
 impl<const N: usize> private::Sealed for [u8; N] {}
+#[cfg(feature = "alloc")]
+impl<'a> private::Sealed for Cow<'a, [u8]> {}
 
 /// A trait that extends `&[u8]` with string oriented methods.
 ///
