@@ -563,6 +563,13 @@ mod bstr {
         }
     }
 
+    impl AsRef<BStr> for BStr {
+        #[inline]
+        fn as_ref(&self) -> &BStr {
+            self
+        }
+    }
+
     impl AsRef<BStr> for [u8] {
         #[inline]
         fn as_ref(&self) -> &BStr {
