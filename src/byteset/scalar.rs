@@ -48,8 +48,8 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
         while loop_size == LOOP_SIZE && ptr <= end_ptr.sub(loop_size) {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
-            let a = *(ptr as *const usize);
-            let b = *(ptr.add(USIZE_BYTES) as *const usize);
+            let a = read_unaligned_usize(ptr);
+            let b = read_unaligned_usize(ptr.add(USIZE_BYTES));
             let eqa = (a ^ vn1) != 0;
             let eqb = (b ^ vn1) != 0;
             if eqa || eqb {
@@ -87,8 +87,8 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
         while loop_size == LOOP_SIZE && ptr >= start_ptr.add(loop_size) {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
-            let a = *(ptr.sub(2 * USIZE_BYTES) as *const usize);
-            let b = *(ptr.sub(1 * USIZE_BYTES) as *const usize);
+            let a = read_unaligned_usize(ptr.sub(2 * USIZE_BYTES));
+            let b = read_unaligned_usize(ptr.sub(1 * USIZE_BYTES));
             let eqa = (a ^ vn1) != 0;
             let eqb = (b ^ vn1) != 0;
             if eqa || eqb {

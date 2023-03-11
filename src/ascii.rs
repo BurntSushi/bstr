@@ -78,8 +78,8 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
             while ptr <= ptr_sub(end_ptr, FALLBACK_LOOP_SIZE) {
                 debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
-                let a = *(ptr as *const usize);
-                let b = *(ptr_add(ptr, USIZE_BYTES) as *const usize);
+                let a = read_unaligned_usize(ptr);
+                let b = read_unaligned_usize(ptr_add(ptr, USIZE_BYTES));
                 if (a | b) & ASCII_MASK != 0 {
                     // What a kludge. We wrap the position finding code into
                     // a non-inlineable function, which makes the codegen in
@@ -92,8 +92,9 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
                         start_ptr: *const u8,
                         ptr: *const u8,
                     ) -> usize {
-                        let a = *(ptr as *const usize);
-                        let b = *(ptr_add(ptr, USIZE_BYTES) as *const usize);
+                        let a = read_unaligned_usize(ptr);
+                        let b =
+                            read_unaligned_usize(ptr_add(ptr, USIZE_BYTES));
 
                         let mut at = sub(ptr, start_ptr);
                         let maska = a & ASCII_MASK;
