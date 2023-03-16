@@ -25,13 +25,7 @@ incorrect to require valid UTF-8.
 
 ### Usage
 
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-bstr = "1"
-```
-
+`cargo add bstr`
 
 ### Examples
 
