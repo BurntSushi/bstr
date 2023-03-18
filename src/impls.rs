@@ -156,6 +156,20 @@ mod bstring {
         }
     }
 
+    impl<'a, const N: usize> From<&'a [u8; N]> for BString {
+        #[inline]
+        fn from(s: &'a [u8; N]) -> BString {
+            BString::from(&s[..])
+        }
+    }
+
+    impl<const N: usize> From<[u8; N]> for BString {
+        #[inline]
+        fn from(s: [u8; N]) -> BString {
+            BString::from(&s[..])
+        }
+    }
+
     impl<'a> From<&'a [u8]> for BString {
         #[inline]
         fn from(s: &'a [u8]) -> BString {
@@ -607,6 +621,13 @@ mod bstr {
     impl<'a> Default for &'a mut BStr {
         fn default() -> &'a mut BStr {
             BStr::from_bytes_mut(&mut [])
+        }
+    }
+
+    impl<'a, const N: usize> From<&'a [u8; N]> for &'a BStr {
+        #[inline]
+        fn from(s: &'a [u8; N]) -> &'a BStr {
+            BStr::from_bytes(s)
         }
     }
 
