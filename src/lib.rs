@@ -414,6 +414,7 @@ extern crate alloc;
 pub use crate::bstr::BStr;
 #[cfg(feature = "alloc")]
 pub use crate::bstring::BString;
+pub use crate::escape_bytes::EscapeBytes;
 #[cfg(feature = "unicode")]
 pub use crate::ext_slice::Fields;
 pub use crate::ext_slice::{
@@ -437,6 +438,7 @@ mod bstr;
 #[cfg(feature = "alloc")]
 mod bstring;
 mod byteset;
+mod escape_bytes;
 mod ext_slice;
 #[cfg(feature = "alloc")]
 mod ext_vec;

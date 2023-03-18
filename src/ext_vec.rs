@@ -296,6 +296,107 @@ pub trait ByteVec: private::Sealed {
         Vec::from_os_str_lossy(path.as_os_str())
     }
 
+    /// Unescapes the given string into its raw bytes.
+    ///
+    /// This looks for the escape sequences `\xNN`, `\0`, `\r`, `\n`, `\t`
+    /// and `\` and translates them into their corresponding unescaped form.
+    ///
+    /// Incomplete escape sequences or things that look like escape sequences
+    /// but are not (for example, `\i` or `\xYZ`) are passed through literally.
+    ///
+    /// This is the dual of [`ByteSlice::escape_bytes`].
+    ///
+    /// Note that the zero or NUL byte may be represented as either `\0` or
+    /// `\x00`. Both will be unescaped into the zero byte.
+    ///
+    /// # Examples
+    ///
+    /// This shows basic usage:
+    ///
+    /// ```
+    /// # #[cfg(feature = "alloc")] {
+    /// use bstr::{B, BString, ByteVec};
+    ///
+    /// assert_eq!(
+    ///     BString::from(b"foo\xFFbar"),
+    ///     Vec::unescape_bytes(r"foo\xFFbar"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(b"foo\nbar"),
+    ///     Vec::unescape_bytes(r"foo\nbar"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(b"foo\tbar"),
+    ///     Vec::unescape_bytes(r"foo\tbar"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(b"foo\\bar"),
+    ///     Vec::unescape_bytes(r"foo\\bar"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from("foo☃bar"),
+    ///     Vec::unescape_bytes(r"foo☃bar"),
+    /// );
+    ///
+    /// # }
+    /// ```
+    ///
+    /// This shows some examples of how incomplete or "incorrect" escape
+    /// sequences get passed through literally.
+    ///
+    /// ```
+    /// # #[cfg(feature = "alloc")] {
+    /// use bstr::{B, BString, ByteVec};
+    ///
+    /// // Show some incomplete escape sequences.
+    /// assert_eq!(
+    ///     BString::from(br"\"),
+    ///     Vec::unescape_bytes(r"\"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\"),
+    ///     Vec::unescape_bytes(r"\\"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\x"),
+    ///     Vec::unescape_bytes(r"\x"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\xA"),
+    ///     Vec::unescape_bytes(r"\xA"),
+    /// );
+    /// // And now some that kind of look like escape
+    /// // sequences, but aren't.
+    /// assert_eq!(
+    ///     BString::from(br"\xZ"),
+    ///     Vec::unescape_bytes(r"\xZ"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\xZZ"),
+    ///     Vec::unescape_bytes(r"\xZZ"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\i"),
+    ///     Vec::unescape_bytes(r"\i"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\u"),
+    ///     Vec::unescape_bytes(r"\u"),
+    /// );
+    /// assert_eq!(
+    ///     BString::from(br"\u{2603}"),
+    ///     Vec::unescape_bytes(r"\u{2603}"),
+    /// );
+    ///
+    /// # }
+    /// ```
+    #[inline]
+    #[cfg(feature = "alloc")]
+    fn unescape_bytes<S: AsRef<str>>(escaped: S) -> Vec<u8> {
+        let s = escaped.as_ref();
+        crate::escape_bytes::UnescapeBytes::new(s.chars()).collect()
+    }
+
     /// Appends the given byte to the end of this byte string.
     ///
     /// Note that this is equivalent to the generic `Vec::push` method. This
