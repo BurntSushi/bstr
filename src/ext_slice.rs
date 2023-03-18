@@ -10,6 +10,7 @@ use std::{ffi::OsStr, path::Path};
 
 use memchr::{memchr, memmem, memrchr};
 
+use crate::escape_bytes::EscapeBytes;
 #[cfg(feature = "alloc")]
 use crate::ext_vec::ByteVec;
 #[cfg(feature = "unicode")]
@@ -2763,6 +2764,47 @@ pub trait ByteSlice: private::Sealed {
     #[inline]
     fn make_ascii_uppercase(&mut self) {
         self.as_bytes_mut().make_ascii_uppercase();
+    }
+
+    /// Escapes this byte string into a sequence of `char` values.
+    ///
+    /// When the sequence of `char` values is concatenated into a string, the
+    /// result is always valid UTF-8. Any unprintable or invalid UTF-8 in this
+    /// byte string are escaped using using `\xNN` notation. Moreover, the
+    /// characters `\0`, `\r`, `\n`, `\t` and `\` are escaped as well.
+    ///
+    /// This is useful when one wants to get a human readable view of the raw
+    /// bytes that is also valid UTF-8.
+    ///
+    /// The iterator returned implements the `Display` trait. So one can do
+    /// `b"foo\xFFbar".escape_bytes().to_string()` to get a `String` with its
+    /// bytes escaped.
+    ///
+    /// The dual of this function is [`ByteVec::unescape_bytes`].
+    ///
+    /// Note that this is similar to, but not equivalent to the `Debug`
+    /// implementation on [`BStr`] and [`BString`]. The `Debug` implementations
+    /// also use the debug representation for all Unicode codepoints. However,
+    /// this escaping routine only escapes individual bytes. All Unicode
+    /// codepoints above `U+007F` are passed through unchanged without any
+    /// escaping.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "alloc")] {
+    /// use bstr::{B, ByteSlice};
+    ///
+    /// assert_eq!(r"foo\xFFbar", b"foo\xFFbar".escape_bytes().to_string());
+    /// assert_eq!(r"foo\nbar", b"foo\nbar".escape_bytes().to_string());
+    /// assert_eq!(r"foo\tbar", b"foo\tbar".escape_bytes().to_string());
+    /// assert_eq!(r"foo\\bar", b"foo\\bar".escape_bytes().to_string());
+    /// assert_eq!(r"foo☃bar", B("foo☃bar").escape_bytes().to_string());
+    /// # }
+    /// ```
+    #[inline]
+    fn escape_bytes(&self) -> EscapeBytes<'_> {
+        EscapeBytes::new(self.as_bytes())
     }
 
     /// Reverse the bytes in this string, in place.
