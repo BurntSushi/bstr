@@ -66,7 +66,7 @@ mod bstring {
     };
 
     use alloc::{
-        borrow::{Borrow, Cow, ToOwned},
+        borrow::{Borrow, BorrowMut, Cow, ToOwned},
         string::String,
         vec,
         vec::Vec,
@@ -134,10 +134,52 @@ mod bstring {
         }
     }
 
+    impl Borrow<[u8]> for BString {
+        #[inline]
+        fn borrow(&self) -> &[u8] {
+            self.as_bytes()
+        }
+    }
+
     impl Borrow<BStr> for BString {
         #[inline]
         fn borrow(&self) -> &BStr {
             self.as_bstr()
+        }
+    }
+
+    impl Borrow<BStr> for Vec<u8> {
+        #[inline]
+        fn borrow(&self) -> &BStr {
+            self.as_slice().as_bstr()
+        }
+    }
+
+    impl Borrow<BStr> for String {
+        #[inline]
+        fn borrow(&self) -> &BStr {
+            self.as_bytes().as_bstr()
+        }
+    }
+
+    impl BorrowMut<[u8]> for BString {
+        #[inline]
+        fn borrow_mut(&mut self) -> &mut [u8] {
+            self.as_bytes_mut()
+        }
+    }
+
+    impl BorrowMut<BStr> for BString {
+        #[inline]
+        fn borrow_mut(&mut self) -> &mut BStr {
+            self.as_mut_bstr()
+        }
+    }
+
+    impl BorrowMut<BStr> for Vec<u8> {
+        #[inline]
+        fn borrow_mut(&mut self) -> &mut BStr {
+            BStr::new_mut(self.as_mut_slice())
         }
     }
 
@@ -338,7 +380,12 @@ mod bstring {
 }
 
 mod bstr {
-    use core::{cmp::Ordering, convert::TryFrom, fmt, ops};
+    use core::{
+        borrow::{Borrow, BorrowMut},
+        cmp::Ordering,
+        convert::TryFrom,
+        fmt, ops,
+    };
 
     #[cfg(feature = "alloc")]
     use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
@@ -609,6 +656,41 @@ mod bstr {
         #[inline]
         fn as_mut(&mut self) -> &mut BStr {
             BStr::new_mut(self)
+        }
+    }
+
+    impl Borrow<BStr> for [u8] {
+        #[inline]
+        fn borrow(&self) -> &BStr {
+            self.as_bstr()
+        }
+    }
+
+    impl Borrow<BStr> for str {
+        #[inline]
+        fn borrow(&self) -> &BStr {
+            self.as_bytes().as_bstr()
+        }
+    }
+
+    impl Borrow<[u8]> for BStr {
+        #[inline]
+        fn borrow(&self) -> &[u8] {
+            self.as_bytes()
+        }
+    }
+
+    impl BorrowMut<BStr> for [u8] {
+        #[inline]
+        fn borrow_mut(&mut self) -> &mut BStr {
+            BStr::new_mut(self)
+        }
+    }
+
+    impl BorrowMut<[u8]> for BStr {
+        #[inline]
+        fn borrow_mut(&mut self) -> &mut [u8] {
+            self.as_bytes_mut()
         }
     }
 
