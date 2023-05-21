@@ -3428,7 +3428,7 @@ impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
                 }
             }
         }
-        while let Some((_, e, ch)) = self.chars.next() {
+        for (_, e, ch) in self.chars.by_ref() {
             if (self.f)(ch) {
                 break;
             }
