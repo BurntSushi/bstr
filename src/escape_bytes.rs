@@ -129,11 +129,13 @@ enum EscapeState {
 /// expose this for core-only use cases too. I'm just not quite sure what the
 /// API should be.
 #[derive(Clone, Debug)]
+#[cfg(feature = "alloc")]
 pub(crate) struct UnescapeBytes<I> {
     it: I,
     state: UnescapeState,
 }
 
+#[cfg(feature = "alloc")]
 impl<I: Iterator<Item = char>> UnescapeBytes<I> {
     pub(crate) fn new<T: IntoIterator<IntoIter = I>>(
         t: T,
@@ -142,6 +144,7 @@ impl<I: Iterator<Item = char>> UnescapeBytes<I> {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<I: Iterator<Item = char>> Iterator for UnescapeBytes<I> {
     type Item = u8;
 
@@ -265,6 +268,7 @@ impl<I: Iterator<Item = char>> Iterator for UnescapeBytes<I> {
 
 /// The state used by the FSM in the unescaping iterator.
 #[derive(Clone, Debug)]
+#[cfg(feature = "alloc")]
 enum UnescapeState {
     /// The start state. Look for an escape sequence, otherwise emit the next
     /// codepoint as-is.
@@ -283,6 +287,7 @@ enum UnescapeState {
     HexSecond(char),
 }
 
+#[cfg(feature = "alloc")]
 impl UnescapeState {
     /// Create a new `Bytes` variant with the given slice.
     ///
@@ -337,6 +342,7 @@ impl UnescapeState {
 /// # Panics
 ///
 /// This panics if `ch` is not in `[0-9A-Fa-f]`.
+#[cfg(feature = "alloc")]
 fn char_to_hexdigit(ch: char) -> u8 {
     u8::try_from(ch.to_digit(16).unwrap()).unwrap()
 }
