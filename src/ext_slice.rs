@@ -3045,7 +3045,7 @@ pub trait ByteSlice: private::Sealed {
     #[inline]
     fn last_byte(&self) -> Option<u8> {
         let bytes = self.as_bytes();
-        bytes.get(bytes.len().saturating_sub(1)).copied()
+        bytes.last().copied()
     }
 
     /// Returns the index of the first non-ASCII byte in this byte string (if
