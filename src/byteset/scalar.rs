@@ -4,11 +4,7 @@
 
 use core::{cmp, usize};
 
-#[cfg(target_pointer_width = "32")]
-const USIZE_BYTES: usize = 4;
-
-#[cfg(target_pointer_width = "64")]
-const USIZE_BYTES: usize = 8;
+const USIZE_BYTES: usize = core::mem::size_of::<usize>();
 
 // The number of bytes to loop at in one iteration of memchr/memrchr.
 const LOOP_SIZE: usize = 2 * USIZE_BYTES;
