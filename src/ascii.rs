@@ -1,5 +1,3 @@
-use core::mem;
-
 // The following ~400 lines of code exists for exactly one purpose, which is
 // to optimize this code:
 //
@@ -24,7 +22,7 @@ use core::mem;
 // _mm_movemask_epi8.
 
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
-const USIZE_BYTES: usize = mem::size_of::<usize>();
+const USIZE_BYTES: usize = core::mem::size_of::<usize>();
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
 const FALLBACK_LOOP_SIZE: usize = 2 * USIZE_BYTES;
 
@@ -119,7 +117,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
 fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
     use core::arch::x86_64::*;
 
-    const VECTOR_SIZE: usize = mem::size_of::<__m128i>();
+    const VECTOR_SIZE: usize = core::mem::size_of::<__m128i>();
     const VECTOR_ALIGN: usize = VECTOR_SIZE - 1;
     const VECTOR_LOOP_SIZE: usize = 4 * VECTOR_SIZE;
 
