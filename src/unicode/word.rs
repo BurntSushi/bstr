@@ -66,7 +66,7 @@ impl<'a> Iterator for Words<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<&'a str> {
-        while let Some(word) = self.0.next() {
+        for word in self.0.by_ref() {
             let input =
                 Input::new(word).anchored(Anchored::Yes).earliest(true);
             if SIMPLE_WORD_FWD.try_search_fwd(&input).unwrap().is_some() {
@@ -144,7 +144,7 @@ impl<'a> Iterator for WordIndices<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<(usize, usize, &'a str)> {
-        while let Some((start, end, word)) = self.0.next() {
+        for (start, end, word) in self.0.by_ref() {
             let input =
                 Input::new(word).anchored(Anchored::Yes).earliest(true);
             if SIMPLE_WORD_FWD.try_search_fwd(&input).unwrap().is_some() {
