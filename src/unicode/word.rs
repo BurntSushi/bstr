@@ -66,12 +66,7 @@ impl<'a> Iterator for Words<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<&'a str> {
-        for word in self.0.by_ref() {
-            if SIMPLE_WORD_FWD.is_match(word.as_bytes()) {
-                return Some(word);
-            }
-        }
-        None
+        self.0.by_ref().find(|&word| SIMPLE_WORD_FWD.is_match(word.as_bytes()))
     }
 }
 
