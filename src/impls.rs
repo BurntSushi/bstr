@@ -62,7 +62,7 @@ macro_rules! impl_partial_ord {
 #[cfg(feature = "alloc")]
 mod bstring {
     use core::{
-        cmp::Ordering, convert::TryFrom, fmt, iter::FromIterator, ops,
+        cmp::Ordering, convert::TryFrom, fmt, hash, iter::FromIterator, ops,
     };
 
     use alloc::{
@@ -355,6 +355,13 @@ mod bstring {
     impl_partial_eq!(BString, BStr);
     impl_partial_eq!(BString, &'a BStr);
 
+    impl hash::Hash for BString {
+        #[inline]
+        fn hash<H: hash::Hasher>(&self, state: &mut H) {
+            self.as_bytes().hash(state);
+        }
+    }
+
     impl PartialOrd for BString {
         #[inline]
         fn partial_cmp(&self, other: &BString) -> Option<Ordering> {
@@ -384,7 +391,7 @@ mod bstr {
         borrow::{Borrow, BorrowMut},
         cmp::Ordering,
         convert::TryFrom,
-        fmt, ops,
+        fmt, hash, ops,
     };
 
     #[cfg(feature = "alloc")]
@@ -813,6 +820,13 @@ mod bstr {
     impl_partial_eq_cow!(&'a BStr, Cow<'a, str>);
     #[cfg(feature = "alloc")]
     impl_partial_eq_cow!(&'a BStr, Cow<'a, [u8]>);
+
+    impl hash::Hash for BStr {
+        #[inline]
+        fn hash<H: hash::Hasher>(&self, state: &mut H) {
+            self.as_bytes().hash(state);
+        }
+    }
 
     impl PartialOrd for BStr {
         #[inline]
