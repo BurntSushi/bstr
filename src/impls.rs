@@ -342,7 +342,7 @@ mod bstring {
     impl PartialEq for BString {
         #[inline]
         fn eq(&self, other: &BString) -> bool {
-            &self[..] == &other[..]
+            self[..] == other[..]
         }
     }
 
