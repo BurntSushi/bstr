@@ -38,6 +38,9 @@ jobs:
         - build: win-gnu
           os: windows-latest
           rust: stable-x86_64-gnu
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: 1
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
