@@ -185,7 +185,7 @@ pub trait ByteVec: private::Sealed {
         fn imp(os_str: OsString) -> Result<Vec<u8>, OsString> {
             use std::os::unix::ffi::OsStringExt;
 
-            Ok(Vec::from(os_str.into_vec()))
+            Ok(os_str.into_vec())
         }
 
         #[cfg(not(unix))]
