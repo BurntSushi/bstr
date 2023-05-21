@@ -3045,7 +3045,7 @@ pub trait ByteSlice: private::Sealed {
     #[inline]
     fn last_byte(&self) -> Option<u8> {
         let bytes = self.as_bytes();
-        bytes.get(bytes.len().saturating_sub(1)).map(|&b| b)
+        bytes.get(bytes.len().saturating_sub(1)).copied()
     }
 
     /// Returns the index of the first non-ASCII byte in this byte string (if
@@ -3331,7 +3331,7 @@ impl<'a> Iterator for Bytes<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<u8> {
-        self.it.next().map(|&b| b)
+        self.it.next().copied()
     }
 
     #[inline]
@@ -3343,7 +3343,7 @@ impl<'a> Iterator for Bytes<'a> {
 impl<'a> DoubleEndedIterator for Bytes<'a> {
     #[inline]
     fn next_back(&mut self) -> Option<u8> {
-        self.it.next_back().map(|&b| b)
+        self.it.next_back().copied()
     }
 }
 
