@@ -29,7 +29,6 @@ use alloc::boxed::Box;
 /// The `Display` implementation behaves as if `BStr` were first lossily
 /// converted to a `str`. Invalid UTF-8 bytes are substituted with the Unicode
 /// replacement codepoint, which looks like this: �.
-#[derive(Hash)]
 #[repr(transparent)]
 pub struct BStr {
     pub(crate) bytes: [u8],
