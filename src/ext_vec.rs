@@ -223,10 +223,10 @@ pub trait ByteVec: private::Sealed {
     /// ```
     #[inline]
     #[cfg(feature = "std")]
-    fn from_os_str_lossy<'a>(os_str: &'a OsStr) -> Cow<'a, [u8]> {
+    fn from_os_str_lossy(os_str: &OsStr) -> Cow<'_, [u8]> {
         #[cfg(unix)]
         #[inline]
-        fn imp<'a>(os_str: &'a OsStr) -> Cow<'a, [u8]> {
+        fn imp(os_str: &OsStr) -> Cow<'_, [u8]> {
             use std::os::unix::ffi::OsStrExt;
 
             Cow::Borrowed(os_str.as_bytes())
@@ -234,7 +234,7 @@ pub trait ByteVec: private::Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp<'a>(os_str: &'a OsStr) -> Cow<'a, [u8]> {
+        fn imp(os_str: &OsStr) -> Cow<'_, [u8]> {
             match os_str.to_string_lossy() {
                 Cow::Borrowed(x) => Cow::Borrowed(x.as_bytes()),
                 Cow::Owned(x) => Cow::Owned(Vec::from(x)),
@@ -292,7 +292,7 @@ pub trait ByteVec: private::Sealed {
     /// ```
     #[inline]
     #[cfg(feature = "std")]
-    fn from_path_lossy<'a>(path: &'a Path) -> Cow<'a, [u8]> {
+    fn from_path_lossy(path: &Path) -> Cow<'_, [u8]> {
         Vec::from_os_str_lossy(path.as_os_str())
     }
 
