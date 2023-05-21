@@ -60,7 +60,7 @@ impl BStr {
     /// assert_eq!(a, c);
     /// ```
     #[inline]
-    pub fn new<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a BStr {
+    pub fn new<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &BStr {
         BStr::from_bytes(bytes.as_ref())
     }
 
