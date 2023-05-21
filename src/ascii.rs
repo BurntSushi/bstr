@@ -233,8 +233,7 @@ fn first_non_ascii_byte_mask(mask: usize) -> usize {
 
 /// Increment the given pointer by the given amount.
 unsafe fn ptr_add(ptr: *const u8, amt: usize) -> *const u8 {
-    debug_assert!(amt < ::core::isize::MAX as usize);
-    ptr.offset(amt as isize)
+    ptr.add(amt)
 }
 
 /// Decrement the given pointer by the given amount.
