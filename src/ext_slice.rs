@@ -72,7 +72,7 @@ use crate::{
 /// string literals. This can be quite convenient!
 #[allow(non_snake_case)]
 #[inline]
-pub fn B<'a, B: ?Sized + AsRef<[u8]>>(bytes: &'a B) -> &'a [u8] {
+pub fn B<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &[u8] {
     bytes.as_ref()
 }
 
