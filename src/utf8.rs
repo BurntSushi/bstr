@@ -605,7 +605,7 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
 #[inline]
 pub fn decode<B: AsRef<[u8]>>(slice: B) -> (Option<char>, usize) {
     let slice = slice.as_ref();
-    match slice.get(0) {
+    match slice.first() {
         None => return (None, 0),
         Some(&b) if b <= 0x7F => return (Some(b as char), 1),
         _ => {}
