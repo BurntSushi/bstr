@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 pub mod grapheme_break_fwd;
 pub mod grapheme_break_rev;
 pub mod regional_indicator_rev;

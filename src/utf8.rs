@@ -55,7 +55,7 @@ const CLASSES: [u8; 256] = [
 /// SAFETY: The decode below function relies on the correctness of this state
 /// machine.
 #[rustfmt::skip]
-const STATES_FORWARD: &'static [u8] = &[
+const STATES_FORWARD: &[u8] = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   12, 0, 24, 36, 60, 96, 84, 0, 0, 0, 48, 72,
   0, 12, 0, 0, 0, 0, 0, 12, 0, 12, 0, 0,
