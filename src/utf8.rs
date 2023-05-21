@@ -37,7 +37,7 @@ const REJECT: usize = 0;
 
 /// SAFETY: The decode below function relies on the correctness of these
 /// equivalence classes.
-#[cfg_attr(rustfmt, rustfmt::skip)]
+#[rustfmt::skip]
 const CLASSES: [u8; 256] = [
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -51,7 +51,7 @@ const CLASSES: [u8; 256] = [
 
 /// SAFETY: The decode below function relies on the correctness of this state
 /// machine.
-#[cfg_attr(rustfmt, rustfmt::skip)]
+#[rustfmt::skip]
 const STATES_FORWARD: &'static [u8] = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   12, 0, 24, 36, 60, 96, 84, 0, 0, 0, 48, 72,
