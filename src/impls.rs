@@ -499,7 +499,10 @@ mod bstr {
                     | '\x7f' => {
                         write!(f, "\\x{:02x}", ch as u32)?;
                     }
-                    '\n' | '\r' | '\t' | _ => {
+                    '\n' | '\r' | '\t' => {
+                        write!(f, "{}", ch.escape_debug())?;
+                    }
+                    _ => {
                         write!(f, "{}", ch.escape_debug())?;
                     }
                 }
