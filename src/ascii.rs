@@ -238,8 +238,7 @@ unsafe fn ptr_add(ptr: *const u8, amt: usize) -> *const u8 {
 
 /// Decrement the given pointer by the given amount.
 unsafe fn ptr_sub(ptr: *const u8, amt: usize) -> *const u8 {
-    debug_assert!(amt < ::core::isize::MAX as usize);
-    ptr.offset((amt as isize).wrapping_neg())
+    ptr.sub(amt)
 }
 
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
