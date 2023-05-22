@@ -84,7 +84,7 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
             let a = *(ptr.sub(2 * USIZE_BYTES) as *const usize);
-            let b = *(ptr.sub(1 * USIZE_BYTES) as *const usize);
+            let b = *(ptr.sub(USIZE_BYTES) as *const usize);
             let eqa = (a ^ vn1) != 0;
             let eqb = (b ^ vn1) != 0;
             if eqa || eqb {
