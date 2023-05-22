@@ -1,5 +1,3 @@
-use core::mem;
-
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
@@ -72,12 +70,12 @@ impl BStr {
 
     #[inline]
     pub(crate) fn from_bytes(slice: &[u8]) -> &BStr {
-        unsafe { mem::transmute(slice) }
+        unsafe { &*(slice as *const [u8] as *const BStr) }
     }
 
     #[inline]
     pub(crate) fn from_bytes_mut(slice: &mut [u8]) -> &mut BStr {
-        unsafe { mem::transmute(slice) }
+        unsafe { &mut *(slice as *mut [u8] as *mut BStr) }
     }
 
     #[inline]
