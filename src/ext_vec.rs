@@ -961,7 +961,7 @@ pub trait ByteVec: private::Sealed {
         R: ops::RangeBounds<usize>,
         B: AsRef<[u8]>,
     {
-        self.as_vec_mut().splice(range, replace_with.as_ref().iter().cloned());
+        self.as_vec_mut().splice(range, replace_with.as_ref().iter().copied());
     }
 
     /// Creates a draining iterator that removes the specified range in this
