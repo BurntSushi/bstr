@@ -3374,7 +3374,7 @@ pub struct Fields<'a> {
 #[cfg(feature = "unicode")]
 impl<'a> Fields<'a> {
     fn new(bytes: &'a [u8]) -> Fields<'a> {
-        Fields { it: bytes.fields_with(|ch| ch.is_whitespace()) }
+        Fields { it: bytes.fields_with(char::is_whitespace) }
     }
 }
 
