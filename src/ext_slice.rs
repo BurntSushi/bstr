@@ -3744,7 +3744,7 @@ impl<'a> Iterator for LinesWithTerminator<'a> {
                 Some(line)
             }
             Some(end) => {
-                let line = &self.bytes[..end + 1];
+                let line = &self.bytes[..=end];
                 self.bytes = &self.bytes[end + 1..];
                 Some(line)
             }
@@ -3764,7 +3764,7 @@ impl<'a> DoubleEndedIterator for LinesWithTerminator<'a> {
             }
             Some(end) => {
                 let line = &self.bytes[end + 1..];
-                self.bytes = &self.bytes[..end + 1];
+                self.bytes = &self.bytes[..=end];
                 Some(line)
             }
         }
