@@ -1,4 +1,4 @@
-use regex_automata::DFA;
+use regex_automata::{dfa::Automaton, Anchored, Input};
 
 use crate::{
     ext_slice::ByteSlice,
@@ -67,7 +67,9 @@ impl<'a> Iterator for Words<'a> {
     #[inline]
     fn next(&mut self) -> Option<&'a str> {
         while let Some(word) = self.0.next() {
-            if SIMPLE_WORD_FWD.is_match(word.as_bytes()) {
+            let input =
+                Input::new(word).anchored(Anchored::Yes).earliest(true);
+            if SIMPLE_WORD_FWD.try_search_fwd(&input).unwrap().is_some() {
                 return Some(word);
             }
         }
@@ -143,7 +145,9 @@ impl<'a> Iterator for WordIndices<'a> {
     #[inline]
     fn next(&mut self) -> Option<(usize, usize, &'a str)> {
         while let Some((start, end, word)) = self.0.next() {
-            if SIMPLE_WORD_FWD.is_match(word.as_bytes()) {
+            let input =
+                Input::new(word).anchored(Anchored::Yes).earliest(true);
+            if SIMPLE_WORD_FWD.try_search_fwd(&input).unwrap().is_some() {
                 return Some((start, end, word));
             }
         }
@@ -307,9 +311,12 @@ impl<'a> Iterator for WordsWithBreakIndices<'a> {
 fn decode_word(bs: &[u8]) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
-    } else if let Some(end) = WORD_BREAK_FWD.find(bs) {
+    } else if let Some(hm) = {
+        let input = Input::new(bs).anchored(Anchored::Yes);
+        WORD_BREAK_FWD.try_search_fwd(&input).unwrap()
+    } {
         // Safe because a match can only occur for valid UTF-8.
-        let word = unsafe { bs[..end].to_str_unchecked() };
+        let word = unsafe { bs[..hm.offset()].to_str_unchecked() };
         (word, word.len())
     } else {
         const INVALID: &'static str = "\u{FFFD}";

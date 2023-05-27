@@ -29,42 +29,59 @@ graphemes() {
     regex="$(sh "$D/regex/grapheme.sh")"
 
     echo "generating forward grapheme DFA"
-    ucd-generate dfa \
-        --name GRAPHEME_BREAK_FWD \
-        --sparse --minimize --anchored --state-size 2 \
-        src/unicode/fsm/ \
-        "$regex"
+    regex-cli generate serialize sparse dfa \
+      --minimize \
+      --start-kind anchored \
+      --shrink \
+      --rustfmt \
+      --safe \
+      GRAPHEME_BREAK_FWD \
+      src/unicode/fsm/ \
+      "$regex"
 
     echo "generating reverse grapheme DFA"
-    ucd-generate dfa \
-        --name GRAPHEME_BREAK_REV \
-        --reverse --longest \
-        --sparse --minimize --anchored --state-size 2 \
-        src/unicode/fsm/ \
-        "$regex"
+    regex-cli generate serialize sparse dfa \
+      --minimize \
+      --start-kind anchored \
+      --reverse \
+      --match-kind all \
+      --no-captures \
+      --shrink \
+      --rustfmt \
+      --safe \
+      GRAPHEME_BREAK_REV \
+      src/unicode/fsm/ \
+      "$regex"
 }
 
 words() {
     regex="$(sh "$D/regex/word.sh")"
 
     echo "generating forward word DFA (this can take a while)"
-    ucd-generate dfa \
-        --name WORD_BREAK_FWD \
-        --sparse --minimize --anchored --state-size 4 \
-        src/unicode/fsm/ \
-        "$regex"
+    regex-cli generate serialize sparse dfa \
+      --minimize \
+      --start-kind anchored \
+      --shrink \
+      --rustfmt \
+      --safe \
+      WORD_BREAK_FWD \
+      src/unicode/fsm/ \
+      "$regex"
 }
 
 sentences() {
     regex="$(sh "$D/regex/sentence.sh")"
 
     echo "generating forward sentence DFA (this can take a while)"
-    ucd-generate dfa \
-        --name SENTENCE_BREAK_FWD \
-        --minimize \
-        --sparse --anchored --state-size 4 \
-        src/unicode/fsm/ \
-        "$regex"
+    regex-cli generate serialize sparse dfa \
+      --minimize \
+      --start-kind anchored \
+      --shrink \
+      --rustfmt \
+      --safe \
+      SENTENCE_BREAK_FWD \
+      src/unicode/fsm/ \
+      "$regex"
 }
 
 regional_indicator() {
@@ -72,38 +89,56 @@ regional_indicator() {
     # regional indicators as a special case for the reverse grapheme iterator
     # and the reverse word iterator.
     echo "generating regional indicator DFA"
-    ucd-generate dfa \
-        --name REGIONAL_INDICATOR_REV \
-        --reverse \
-        --classes --minimize --anchored --premultiply --state-size 1 \
-        src/unicode/fsm/ \
-        "\p{gcb=Regional_Indicator}"
+    regex-cli generate serialize dense dfa \
+      --minimize \
+      --start-kind anchored \
+      --reverse \
+      --no-captures \
+      --shrink \
+      --rustfmt \
+      --safe \
+      REGIONAL_INDICATOR_REV \
+      src/unicode/fsm/ \
+      "\p{gcb=Regional_Indicator}"
 }
 
 simple_word() {
     echo "generating forward simple word DFA"
-    ucd-generate dfa \
-        --name SIMPLE_WORD_FWD \
-        --sparse --minimize --state-size 2 \
-        src/unicode/fsm/ \
-        "\w"
+    regex-cli generate serialize sparse dfa \
+      --minimize \
+      --start-kind anchored \
+      --shrink \
+      --rustfmt \
+      --safe \
+      SIMPLE_WORD_FWD \
+      src/unicode/fsm/ \
+      "\w"
 }
 
 whitespace() {
     echo "generating forward whitespace DFA"
-    ucd-generate dfa \
-        --name WHITESPACE_ANCHORED_FWD \
-        --anchored --classes --premultiply --minimize --state-size 1 \
-        src/unicode/fsm/ \
-        "\s+"
+    regex-cli generate serialize dense dfa \
+      --minimize \
+      --start-kind anchored \
+      --shrink \
+      --rustfmt \
+      --safe \
+      WHITESPACE_ANCHORED_FWD \
+      src/unicode/fsm/ \
+      "\s+"
 
     echo "generating reverse whitespace DFA"
-    ucd-generate dfa \
-        --name WHITESPACE_ANCHORED_REV \
-        --reverse \
-        --anchored --classes --premultiply --minimize --state-size 2 \
-        src/unicode/fsm/ \
-        "\s+"
+    regex-cli generate serialize dense dfa \
+      --minimize \
+      --start-kind anchored \
+      --reverse \
+      --no-captures \
+      --shrink \
+      --rustfmt \
+      --safe \
+      WHITESPACE_ANCHORED_REV \
+      src/unicode/fsm/ \
+      "\s+"
 }
 
 main() {
@@ -127,8 +162,14 @@ main() {
         exit
     fi
 
-    # ucd-generate is used to compile regexes into DFAs.
-    requires ucd-generate
+    # regex-cli is used to compile regexes into DFAs.
+    # To get regex-cli, run:
+    #
+    #     cargo install --git https://github.com/rust-lang/regex regex-cli
+    #
+    # regex-cli will build DFAs, serialize them to big endian and little endian
+    # files, and then generate the Rust code to deserialize them.
+    requires regex-cli
 
     mkdir -p src/unicode/fsm/
 

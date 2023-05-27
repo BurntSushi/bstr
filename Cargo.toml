@@ -30,8 +30,13 @@ serde = ["dep:serde"]
 
 [dependencies]
 memchr = { version = "2.4.0", default-features = false }
-regex-automata = { version = "0.1.5", default-features = false, optional = true }
 serde = { version = "1.0.85", default-features = false, optional = true }
+
+[dependencies.regex-automata]
+version = "0.3.0"
+default-features = false
+features = ["dfa-search"]
+optional = true
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
