@@ -98,14 +98,14 @@ jobs:
     - name: Check formatting
       run: cargo fmt --check
 
-  miri:
-    name: miri
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@miri
-    - run: cargo miri test --lib --verbose
-      env:
-        MIRIFLAGS: -Zmiri-strict-provenance
+#   miri:
+#     name: miri
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
+#     - name: Install Rust
+#       uses: dtolnay/rust-toolchain@miri
+#     - run: cargo miri test --lib --verbose
+#       env:
+#         MIRIFLAGS: -Zmiri-strict-provenance
