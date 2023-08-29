@@ -24,12 +24,12 @@ bench = false
 [features]
 default = ["std", "unicode"]
 std = ["alloc", "memchr/std", "serde?/std"]
-alloc = ["serde?/alloc"]
+alloc = ["memchr/alloc", "serde?/alloc"]
 unicode = ["dep:regex-automata"]
 serde = ["dep:serde"]
 
 [dependencies]
-memchr = { version = "2.4.0", default-features = false }
+memchr = { version = "2.6.1", default-features = false }
 serde = { version = "1.0.85", default-features = false, optional = true }
 
 [dependencies.regex-automata]

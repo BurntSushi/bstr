@@ -3106,8 +3106,8 @@ impl<'a> Finder<'a> {
     /// If this is already an owned finder, then this is a no-op. Otherwise,
     /// this copies the needle.
     ///
-    /// This is only available when the `std` feature is enabled.
-    #[cfg(feature = "std")]
+    /// This is only available when the `alloc` feature is enabled.
+    #[cfg(feature = "alloc")]
     #[inline]
     pub fn into_owned(self) -> Finder<'static> {
         Finder(self.0.into_owned())
@@ -3189,8 +3189,8 @@ impl<'a> FinderReverse<'a> {
     /// If this is already an owned finder, then this is a no-op. Otherwise,
     /// this copies the needle.
     ///
-    /// This is only available when the `std` feature is enabled.
-    #[cfg(feature = "std")]
+    /// This is only available when the `alloc` feature is enabled.
+    #[cfg(feature = "alloc")]
     #[inline]
     pub fn into_owned(self) -> FinderReverse<'static> {
         FinderReverse(self.0.into_owned())
