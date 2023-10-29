@@ -63,6 +63,7 @@ macro_rules! impl_partial_ord {
 mod bstring {
     use core::{
         cmp::Ordering, convert::TryFrom, fmt, iter::FromIterator, ops,
+        str::FromStr,
     };
 
     use alloc::{
@@ -87,6 +88,15 @@ mod bstring {
         #[inline]
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             fmt::Debug::fmt(self.as_bstr(), f)
+        }
+    }
+
+    impl FromStr for BString {
+        type Err = crate::Utf8Error;
+
+        #[inline]
+        fn from_str(s: &str) -> Result<BString, crate::Utf8Error> {
+            Ok(BString::from(s))
         }
     }
 
@@ -1071,6 +1081,12 @@ mod display {
     fn clean() {
         assert_eq!(&format!("{}", &b"abc".as_bstr()), "abc");
         assert_eq!(&format!("{}", &b"\xf0\x28\x8c\xbc".as_bstr()), "�(��");
+    }
+
+    #[test]
+    fn from_str() {
+        let s: BString = "abc".parse().unwrap();
+        assert_eq!(s, BString::new(b"abc".to_vec()));
     }
 
     #[test]
