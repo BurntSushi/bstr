@@ -3246,7 +3246,7 @@ impl<'a> FinderReverse<'a> {
 ///
 /// `'h` is the lifetime of the haystack while `'n` is the lifetime of the
 /// needle.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Find<'h, 'n> {
     it: memmem::FindIter<'h, 'n>,
     haystack: &'h [u8],
@@ -3274,7 +3274,7 @@ impl<'h, 'n> Iterator for Find<'h, 'n> {
 ///
 /// `'h` is the lifetime of the haystack while `'n` is the lifetime of the
 /// needle.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FindReverse<'h, 'n> {
     it: memmem::FindRevIter<'h, 'n>,
     haystack: &'h [u8],
@@ -3366,7 +3366,7 @@ impl<'a> iter::FusedIterator for Bytes<'a> {}
 ///
 /// `'a` is the lifetime of the byte string being split.
 #[cfg(feature = "unicode")]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Fields<'a> {
     it: FieldsWith<'a, fn(char) -> bool>,
 }
@@ -3397,7 +3397,7 @@ impl<'a> Iterator for Fields<'a> {
 ///
 /// `'a` is the lifetime of the byte string being split, while `F` is the type
 /// of the predicate, i.e., `FnMut(char) -> bool`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FieldsWith<'a, F> {
     f: F,
     bytes: &'a [u8],
@@ -3442,7 +3442,7 @@ impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
 ///
 /// `'h` is the lifetime of the byte string being split (the haystack), while
 /// `'s` is the lifetime of the byte string doing the splitting.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Split<'h, 's> {
     finder: Find<'h, 's>,
     /// The end position of the previous match of our splitter. The element
@@ -3498,7 +3498,7 @@ impl<'h, 's> Iterator for Split<'h, 's> {
 ///
 /// `'h` is the lifetime of the byte string being split (the haystack), while
 /// `'s` is the lifetime of the byte string doing the splitting.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SplitReverse<'h, 's> {
     finder: FindReverse<'h, 's>,
     /// The end position of the previous match of our splitter. The element
@@ -3555,7 +3555,7 @@ impl<'h, 's> Iterator for SplitReverse<'h, 's> {
 ///
 /// `'h` is the lifetime of the byte string being split (the haystack), while
 /// `'s` is the lifetime of the byte string doing the splitting.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SplitN<'h, 's> {
     split: Split<'h, 's>,
     limit: usize,
@@ -3594,7 +3594,7 @@ impl<'h, 's> Iterator for SplitN<'h, 's> {
 ///
 /// `'h` is the lifetime of the byte string being split (the haystack), while
 /// `'s` is the lifetime of the byte string doing the splitting.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SplitNReverse<'h, 's> {
     split: SplitReverse<'h, 's>,
     limit: usize,
