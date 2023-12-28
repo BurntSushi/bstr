@@ -29,7 +29,7 @@ unicode = ["dep:regex-automata"]
 serde = ["dep:serde"]
 
 [dependencies]
-memchr = { version = "2.6.1", default-features = false }
+memchr = { version = "2.7.1", default-features = false }
 serde = { version = "1.0.85", default-features = false, optional = true }
 
 [dependencies.regex-automata]
