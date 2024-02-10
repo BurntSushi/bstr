@@ -21,18 +21,38 @@
 // means we can effectively skip the _mm_cmpeq_epi8 step and jump straight to
 // _mm_movemask_epi8.
 
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 const USIZE_BYTES: usize = core::mem::size_of::<usize>();
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 const FALLBACK_LOOP_SIZE: usize = 2 * USIZE_BYTES;
 
 // This is a mask where the most significant bit of each byte in the usize
 // is set. We test this bit to determine whether a character is ASCII or not.
 // Namely, a single byte is regarded as an ASCII codepoint if and only if it's
 // most significant bit is not set.
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 const ASCII_MASK_U64: u64 = 0x8080808080808080;
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 const ASCII_MASK: usize = ASCII_MASK_U64 as usize;
 
 /// Returns the index of the first non ASCII byte in the given slice.
@@ -40,18 +60,27 @@ const ASCII_MASK: usize = ASCII_MASK_U64 as usize;
 /// If slice only contains ASCII bytes, then the length of the slice is
 /// returned.
 pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
-    #[cfg(any(miri, not(target_arch = "x86_64")))]
+    #[cfg(any(
+        miri,
+        not(target_arch = "x86_64"),
+        not(target_feature = "sse2")
+    ))]
     {
         first_non_ascii_byte_fallback(slice)
     }
 
-    #[cfg(all(not(miri), target_arch = "x86_64"))]
+    #[cfg(all(not(miri), target_arch = "x86_64", target_feature = "sse2"))]
     {
         first_non_ascii_byte_sse2(slice)
     }
 }
 
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
     let align = USIZE_BYTES - 1;
     let start_ptr = slice.as_ptr();
@@ -113,7 +142,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
     }
 }
 
-#[cfg(all(not(miri), target_arch = "x86_64"))]
+#[cfg(all(not(miri), target_arch = "x86_64", target_feature = "sse2"))]
 fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
     use core::arch::x86_64::*;
 
@@ -219,7 +248,12 @@ unsafe fn first_non_ascii_byte_slow(
 /// bytes is not an ASCII byte.
 ///
 /// The position returned is always in the inclusive range [0, 7].
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 fn first_non_ascii_byte_mask(mask: usize) -> usize {
     #[cfg(target_endian = "little")]
     {
@@ -243,7 +277,12 @@ unsafe fn ptr_sub(ptr: *const u8, amt: usize) -> *const u8 {
     ptr.offset((amt as isize).wrapping_neg())
 }
 
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
+#[cfg(any(
+    test,
+    miri,
+    not(target_arch = "x86_64"),
+    not(target_feature = "sse2")
+))]
 unsafe fn read_unaligned_usize(ptr: *const u8) -> usize {
     use core::ptr;
 
