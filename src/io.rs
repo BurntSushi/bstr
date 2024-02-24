@@ -302,6 +302,9 @@ pub trait BufReadExt: io::BufRead {
             // Lend out complete record slices from our buffer
             {
                 let mut buf = self.fill_buf()?;
+                if buf.is_empty() {
+                    break;
+                }
                 while let Some(index) = buf.find_byte(terminator) {
                     let (record, rest) = buf.split_at(index + 1);
                     buf = rest;
