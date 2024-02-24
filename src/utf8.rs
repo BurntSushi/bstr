@@ -1,8 +1,5 @@
 use core::{char, cmp, fmt, str};
 
-#[cfg(feature = "std")]
-use std::error;
-
 use crate::{ascii, bstr::BStr, ext_slice::ByteSlice};
 
 // The UTF-8 decoder provided here is based on the one presented here:
@@ -448,7 +445,7 @@ impl Utf8Error {
 }
 
 #[cfg(feature = "std")]
-impl error::Error for Utf8Error {
+impl std::error::Error for Utf8Error {
     fn description(&self) -> &str {
         "invalid UTF-8"
     }
@@ -852,7 +849,9 @@ fn is_leading_or_invalid_utf8_byte(b: u8) -> bool {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use std::char;
+    use core::char;
+
+    use alloc::{string::String, vec, vec::Vec};
 
     use crate::{
         ext_slice::{ByteSlice, B},

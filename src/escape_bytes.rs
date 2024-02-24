@@ -358,6 +358,8 @@ fn hexdigit_to_char(digit: u8) -> char {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use alloc::string::{String, ToString};
+
     use crate::BString;
 
     use super::*;

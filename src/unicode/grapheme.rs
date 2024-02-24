@@ -288,10 +288,16 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use alloc::{
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
+
     #[cfg(not(miri))]
     use ucd_parse::GraphemeClusterBreakTest;
 
-    use crate::{ext_slice::ByteSlice, tests::LOSSY_TESTS};
+    use crate::tests::LOSSY_TESTS;
 
     use super::*;
 

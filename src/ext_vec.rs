@@ -1,7 +1,4 @@
-use core::fmt;
-use core::iter;
-use core::ops;
-use core::ptr;
+use core::{fmt, iter, ops, ptr};
 
 use alloc::{borrow::Cow, string::String, vec, vec::Vec};
 
@@ -1165,6 +1162,8 @@ impl fmt::Display for FromUtf8Error {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use alloc::{vec, vec::Vec};
+
     use crate::ext_vec::ByteVec;
 
     #[test]

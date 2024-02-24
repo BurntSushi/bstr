@@ -443,6 +443,8 @@ fn trim_record_slice(mut record: &[u8], terminator: u8) -> &[u8] {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use alloc::{vec, vec::Vec};
+
     use crate::bstring::BString;
 
     use super::BufReadExt;

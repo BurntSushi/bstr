@@ -61,10 +61,7 @@ macro_rules! impl_partial_ord {
 
 #[cfg(feature = "alloc")]
 mod bstring {
-    use core::{
-        cmp::Ordering, convert::TryFrom, fmt, iter::FromIterator, ops,
-        str::FromStr,
-    };
+    use core::{cmp::Ordering, fmt, ops, str::FromStr};
 
     use alloc::{
         borrow::{Borrow, BorrowMut, Cow, ToOwned},
@@ -393,7 +390,6 @@ mod bstr {
     use core::{
         borrow::{Borrow, BorrowMut},
         cmp::Ordering,
-        convert::TryFrom,
         fmt, ops,
     };
 
@@ -1073,6 +1069,8 @@ mod bstring_serde {
 
 #[cfg(all(test, feature = "std"))]
 mod display {
+    use alloc::format;
+
     #[cfg(not(miri))]
     use crate::bstring::BString;
     use crate::ByteSlice;
@@ -1190,6 +1188,8 @@ mod display {
 
 #[cfg(all(test, feature = "alloc"))]
 mod bstring_arbitrary {
+    use alloc::{boxed::Box, vec::Vec};
+
     use crate::bstring::BString;
 
     use quickcheck::{Arbitrary, Gen};
@@ -1208,6 +1208,8 @@ mod bstring_arbitrary {
 #[test]
 #[cfg(feature = "std")]
 fn test_debug() {
+    use alloc::format;
+
     use crate::{ByteSlice, B};
 
     assert_eq!(

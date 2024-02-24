@@ -82,6 +82,8 @@ pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
 
 #[cfg(all(test, feature = "std", not(miri)))]
 mod tests {
+    use alloc::vec::Vec;
+
     quickcheck::quickcheck! {
         fn qc_byteset_forward_matches_naive(
             haystack: Vec<u8>,

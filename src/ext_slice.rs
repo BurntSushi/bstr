@@ -3785,6 +3785,8 @@ fn trim_last_terminator(mut s: &[u8]) -> &[u8] {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use alloc::{string::String, vec::Vec};
+
     use crate::{
         ext_slice::{ByteSlice, Lines, LinesWithTerminator, B},
         tests::LOSSY_TESTS,
