@@ -487,7 +487,7 @@ mod bstr {
                             write!(f, "{}", ch.escape_debug())?;
                         } else {
                             for &b in self[s..e].as_bytes() {
-                                write!(f, r"\x{:02X}", b)?;
+                                write!(f, "\\x{:02x}", b)?;
                             }
                         }
                     }
@@ -1245,11 +1245,19 @@ fn test_debug() {
     // replacement codepoint, then we emit the codepoint just like other
     // non-printable Unicode characters.
     assert_eq!(
-        b"\"\\xFF\xEF\xBF\xBD\\xFF\"".as_bstr(),
+        b"\"\\xff\xef\xbf\xbd\\xff\"".as_bstr(),
         // Before fixing #72, the output here would be:
         //   \\xFF\\xEF\\xBF\\xBD\\xFF
-        B(&format!("{:?}", b"\xFF\xEF\xBF\xBD\xFF".as_bstr())).as_bstr(),
+        B(&format!("{:?}", b"\xff\xef\xbf\xbd\xff".as_bstr())).as_bstr(),
     );
+
+    // Tests that all ASCII control characters are in lower case.
+    assert_eq!(
+        b"\"\\xed\\xa0\\x80Aa\\x7f\\x0b\"".as_bstr(),
+        // Before fixing #188, the output here would be:
+        //   \\xED\\xA0\\x80Aa\\x7f\\x0b
+        B(&format!("{:?}", b"\xed\xa0\x80Aa\x7f\x0b".as_bstr())).as_bstr(),
+    )
 }
 
 // See: https://github.com/BurntSushi/bstr/issues/82
