@@ -24,6 +24,8 @@
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
 const USIZE_BYTES: usize = core::mem::size_of::<usize>();
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
+const ALIGN_MASK: usize = core::mem::align_of::<usize>() - 1;
+#[cfg(any(test, miri, not(target_arch = "x86_64")))]
 const FALLBACK_LOOP_SIZE: usize = 2 * USIZE_BYTES;
 
 // This is a mask where the most significant bit of each byte in the usize
@@ -53,7 +55,6 @@ pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
 
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
 fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
-    let align = USIZE_BYTES - 1;
     let start_ptr = slice.as_ptr();
     let end_ptr = slice[slice.len()..].as_ptr();
     let mut ptr = start_ptr;
@@ -69,7 +70,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
             return first_non_ascii_byte_mask(mask);
         }
 
-        ptr = ptr_add(ptr, USIZE_BYTES - (start_ptr as usize & align));
+        ptr = ptr_add(ptr, USIZE_BYTES - (start_ptr as usize & ALIGN_MASK));
         debug_assert!(ptr > start_ptr);
         debug_assert!(ptr_sub(end_ptr, USIZE_BYTES) >= start_ptr);
         if slice.len() >= FALLBACK_LOOP_SIZE {
