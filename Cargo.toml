@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 categories = ["text-processing", "encoding"]
 exclude = ["/.github", "/scripts"]
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.73"
 resolver = "2"
 
 [workspace]
