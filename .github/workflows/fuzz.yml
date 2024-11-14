@@ -1,0 +1,24 @@
+name: Fuzzing
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  fuzzing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - name: Install cargo-fuzz
+      run: |
+        cargo install cargo-fuzz
+    - name: Run Fuzzing
+      run: |
+        cargo fuzz run utf8_validate -- -max_total_time=180
