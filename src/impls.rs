@@ -525,6 +525,9 @@ mod bstr {
             for (s, e, ch) in self.char_indices() {
                 match ch {
                     '\0' => write!(f, "\\0")?,
+                    '\x01'..='\x7f' => {
+                        write!(f, "{}", (ch as u8).escape_ascii())?;
+                    }
                     '\u{FFFD}' => {
                         let bytes = self[s..e].as_bytes();
                         if bytes == b"\xEF\xBF\xBD" {
@@ -534,17 +537,6 @@ mod bstr {
                                 write!(f, "\\x{:02x}", b)?;
                             }
                         }
-                    }
-                    // ASCII control characters except \0, \n, \r, \t
-                    '\x01'..='\x08'
-                    | '\x0b'
-                    | '\x0c'
-                    | '\x0e'..='\x1f'
-                    | '\x7f' => {
-                        write!(f, "\\x{:02x}", ch as u32)?;
-                    }
-                    '\n' | '\r' | '\t' => {
-                        write!(f, "{}", ch.escape_debug())?;
                     }
                     _ => {
                         write!(f, "{}", ch.escape_debug())?;
