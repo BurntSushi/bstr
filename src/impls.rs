@@ -539,7 +539,7 @@ mod bstr {
                     '\x01'..='\x08'
                     | '\x0b'
                     | '\x0c'
-                    | '\x0e'..='\x19'
+                    | '\x0e'..='\x1f'
                     | '\x7f' => {
                         write!(f, "\\x{:02x}", ch as u32)?;
                     }
@@ -1305,7 +1305,12 @@ fn test_debug() {
         // Before fixing #188, the output here would be:
         //   \\xED\\xA0\\x80Aa\\x7f\\x0b
         B(&format!("{:?}", b"\xed\xa0\x80Aa\x7f\x0b".as_bstr())).as_bstr(),
-    )
+    );
+
+    assert_eq!(
+        r#""\0\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x11\x12\r\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f \x7f\x80\x81\xfe\xff""#,
+        format!("{:?}", b"\0\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x11\x12\r\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f \x7f\x80\x81\xfe\xff".as_bstr()),
+    );
 }
 
 // See: https://github.com/BurntSushi/bstr/issues/82
