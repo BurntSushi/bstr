@@ -1,6 +1,6 @@
 macro_rules! impl_partial_eq {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a, 'b> PartialEq<$rhs> for $lhs {
+        impl<'a> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
                 let other: &[u8] = other.as_ref();
@@ -8,7 +8,7 @@ macro_rules! impl_partial_eq {
             }
         }
 
-        impl<'a, 'b> PartialEq<$lhs> for $rhs {
+        impl<'a> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
                 let this: &[u8] = self.as_ref();
@@ -20,7 +20,7 @@ macro_rules! impl_partial_eq {
 
 macro_rules! impl_partial_eq_n {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a, 'b, const N: usize> PartialEq<$rhs> for $lhs {
+        impl<'a, const N: usize> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
                 let other: &[u8] = other.as_ref();
@@ -28,7 +28,7 @@ macro_rules! impl_partial_eq_n {
             }
         }
 
-        impl<'a, 'b, const N: usize> PartialEq<$lhs> for $rhs {
+        impl<'a, const N: usize> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
                 let this: &[u8] = self.as_ref();
@@ -41,7 +41,7 @@ macro_rules! impl_partial_eq_n {
 #[cfg(feature = "alloc")]
 macro_rules! impl_partial_eq_cow {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a, 'b> PartialEq<$rhs> for $lhs {
+        impl<'a> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
                 let other: &[u8] = (&**other).as_ref();
@@ -49,7 +49,7 @@ macro_rules! impl_partial_eq_cow {
             }
         }
 
-        impl<'a, 'b> PartialEq<$lhs> for $rhs {
+        impl<'a> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
                 let this: &[u8] = (&**other).as_ref();
@@ -61,7 +61,7 @@ macro_rules! impl_partial_eq_cow {
 
 macro_rules! impl_partial_ord {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a, 'b> PartialOrd<$rhs> for $lhs {
+        impl<'a> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<Ordering> {
                 let other: &[u8] = other.as_ref();
@@ -69,7 +69,7 @@ macro_rules! impl_partial_ord {
             }
         }
 
-        impl<'a, 'b> PartialOrd<$lhs> for $rhs {
+        impl<'a> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<Ordering> {
                 let this: &[u8] = self.as_ref();
@@ -81,7 +81,7 @@ macro_rules! impl_partial_ord {
 
 macro_rules! impl_partial_ord_n {
     ($lhs:ty, $rhs:ty) => {
-        impl<'a, 'b, const N: usize> PartialOrd<$rhs> for $lhs {
+        impl<'a, const N: usize> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<Ordering> {
                 let other: &[u8] = other.as_ref();
@@ -89,7 +89,7 @@ macro_rules! impl_partial_ord_n {
             }
         }
 
-        impl<'a, 'b, const N: usize> PartialOrd<$lhs> for $rhs {
+        impl<'a, const N: usize> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<Ordering> {
                 let this: &[u8] = self.as_ref();
