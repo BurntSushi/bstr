@@ -528,7 +528,7 @@ pub trait ByteSlice: private::Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp(bytes: &[u8]) -> Cow<OsStr> {
+        fn imp(bytes: &[u8]) -> Cow<'_, OsStr> {
             use std::ffi::OsString;
 
             match bytes.to_str_lossy() {
