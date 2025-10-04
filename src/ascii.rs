@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86_64", target_feature = "sse2"))]
     #[cfg(not(miri))]
     fn negative_sse2_forward() {
         for i in 0..517 {
