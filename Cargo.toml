@@ -49,7 +49,7 @@ all-features = true
 # Since this crate's feature setup is pretty complicated, it is worth opting
 # into a nightly unstable option to show the features that need to be enabled
 # for public API items. To do that, we set 'docsrs', and when that's enabled,
-# we enable the 'doc_auto_cfg' feature.
+# we enable the 'doc_cfg' feature.
 #
 # To test this locally, run:
 #
