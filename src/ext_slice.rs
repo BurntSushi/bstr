@@ -1102,6 +1102,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(0, B("  \n\t\u{2003}\n  \t").fields().count());
     /// ```
     #[cfg(feature = "unicode")]
+    #[doc(alias = "split_whitespace")]
     #[inline]
     fn fields(&self) -> Fields<'_> {
         Fields::new(self.as_bytes())
@@ -3366,6 +3367,7 @@ impl<'a> iter::FusedIterator for Bytes<'a> {}
 ///
 /// `'a` is the lifetime of the byte string being split.
 #[cfg(feature = "unicode")]
+#[doc(alias = "SplitWhitespace")]
 #[derive(Clone, Debug)]
 pub struct Fields<'a> {
     it: FieldsWith<'a, fn(char) -> bool>,
