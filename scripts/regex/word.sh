@@ -32,6 +32,9 @@
 #
 # Gah.
 
+# Abort on undefined variables
+set -u
+
 CR="\p{wb=CR}"
 LF="\p{wb=LF}"
 Newline="\p{wb=Newline}"

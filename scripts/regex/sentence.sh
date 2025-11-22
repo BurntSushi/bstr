@@ -91,6 +91,9 @@
 # UAX #29's recommendation in S6.2. Essentially, we use it avoid ever breaking
 # in the middle of a grapheme cluster.
 
+# Abort on undefined variables
+set -u
+
 CR="\p{sb=CR}"
 LF="\p{sb=LF}"
 Sep="\p{sb=Sep}"
