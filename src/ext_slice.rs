@@ -1542,6 +1542,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(s, "ZfZoZoZ".as_bytes());
     /// ```
     #[cfg(feature = "alloc")]
+    #[must_use]
     #[inline]
     fn replace<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
@@ -1588,6 +1589,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(s, "ZfZoo".as_bytes());
     /// ```
     #[cfg(feature = "alloc")]
+    #[must_use]
     #[inline]
     fn replacen<N: AsRef<[u8]>, R: AsRef<[u8]>>(
         &self,
