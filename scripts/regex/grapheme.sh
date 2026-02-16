@@ -6,6 +6,9 @@
 # This regex was manually written, derived from the rules in UAX #29.
 # Particularly, from Table 1c, which lays out a regex for grapheme clusters.
 
+# Abort on undefined variables
+set -u
+
 CR="\p{gcb=CR}"
 LF="\p{gcb=LF}"
 Control="\p{gcb=Control}"
