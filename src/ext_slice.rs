@@ -3079,7 +3079,7 @@ pub trait ByteSlice: private::Sealed {
 /// The purpose of this type is to permit callers to construct a substring
 /// searcher that can be used to search haystacks without the overhead of
 /// constructing the searcher in the first place. This is a somewhat niche
-/// concern when it's necessary to re-use the same needle to search multiple
+/// concern when it's necessary to reuse the same needle to search multiple
 /// different haystacks with as little overhead as possible. In general, using
 /// [`ByteSlice::find`](trait.ByteSlice.html#method.find)
 /// or
