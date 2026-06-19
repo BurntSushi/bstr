@@ -45,7 +45,7 @@ graphemes() {
       --start-kind anchored \
       --reverse \
       --match-kind all \
-      --no-captures \
+      --captures none \
       --shrink \
       --rustfmt \
       --safe \
@@ -93,7 +93,7 @@ regional_indicator() {
       --minimize \
       --start-kind anchored \
       --reverse \
-      --no-captures \
+      --captures none \
       --shrink \
       --rustfmt \
       --safe \
@@ -132,7 +132,7 @@ whitespace() {
       --minimize \
       --start-kind anchored \
       --reverse \
-      --no-captures \
+      --captures none \
       --shrink \
       --rustfmt \
       --safe \
