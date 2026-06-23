@@ -1268,6 +1268,14 @@ mod tests {
     #[test]
     fn chars() {
         for (i, &(expected, input)) in LOSSY_TESTS.iter().enumerate() {
+            assert_eq!(
+                B(input).chars().collect::<Vec<char>>().len(),
+                B(input).chars().count(),
+                "chars.len(ith: {:?}, given: {:?})",
+                i,
+                input
+            );
+
             let got: String = B(input).chars().collect();
             assert_eq!(
                 expected, got,
