@@ -1271,7 +1271,7 @@ mod tests {
             assert_eq!(
                 B(input).chars().collect::<Vec<char>>().len(),
                 B(input).chars().count(),
-                "chars.len(ith: {:?}, given: {:?})",
+                "chars.count(ith: {:?}, given: {:?})",
                 i,
                 input
             );
