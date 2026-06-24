@@ -588,9 +588,10 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
 /// for a successful decode is always between 1 and 4, inclusive.
 ///
 /// When unsuccessful, `None` is returned along with the number of bytes that
-/// make up a maximal prefix of a valid UTF-8 code unit sequence. In this case,
-/// the number of bytes consumed is always between 0 and 3, inclusive, where
-/// 0 is only returned when `slice` is empty.
+/// make up a maximal prefix of a valid UTF-8 code unit sequence. When there is
+/// no prefix of a valid UTF-8 code unit sequence, then 1 byte is consumed.
+/// Thus, for a non-empty slice given, the number of bytes consumed is always
+/// at least `1`. `0` is only returned when `slice` is empty.
 ///
 /// # Examples
 ///
