@@ -120,6 +120,30 @@ impl<'a> Iterator for Chars<'a> {
         self.bs = &self.bs[size..];
         Some(ch)
     }
+
+    #[inline]
+    fn count(mut self) -> usize {
+        let mut count = 0;
+        loop {
+            // ASCII fast path taken if two consecutive ASCII chars found
+            match self.bs {
+                [fst, snd, ..] if *fst <= 0x7F && *snd <= 0x7F => {
+                    let size = ascii::first_non_ascii_byte(self.bs);
+                    count += size;
+                    self.bs = &self.bs[size..];
+                }
+                _ => (),
+            }
+
+            let (_ch, size) = decode(self.bs);
+            if size == 0 {
+                return count;
+            } else {
+                count += 1;
+                self.bs = &self.bs[size..];
+            }
+        }
+    }
 }
 
 impl<'a> DoubleEndedIterator for Chars<'a> {
@@ -1244,6 +1268,14 @@ mod tests {
     #[test]
     fn chars() {
         for (i, &(expected, input)) in LOSSY_TESTS.iter().enumerate() {
+            assert_eq!(
+                B(input).chars().collect::<Vec<char>>().len(),
+                B(input).chars().count(),
+                "chars.count(ith: {:?}, given: {:?})",
+                i,
+                input
+            );
+
             let got: String = B(input).chars().collect();
             assert_eq!(
                 expected, got,

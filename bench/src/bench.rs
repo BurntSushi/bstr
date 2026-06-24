@@ -164,6 +164,26 @@ fn chars(c: &mut Criterion) {
     }
 }
 
+fn chars_count(c: &mut Criterion) {
+    // benchmark our impl
+    for &(name, corpus) in CORPORA_HUGE {
+        define(c, "bstr/chars_count", name, corpus, move |b| {
+            b.iter(|| {
+                assert!(corpus.chars().count() > 0);
+            });
+        });
+    }
+    // benchmark std's impl
+    for &(name, corpus) in CORPORA_HUGE {
+        define(c, "std/chars_count", name, corpus, move |b| {
+            let corpus = std::str::from_utf8(corpus).unwrap();
+            b.iter(|| {
+                assert!(corpus.chars().count() > 0);
+            });
+        });
+    }
+}
+
 fn graphemes(c: &mut Criterion) {
     // benchmark our impl
     for &(name, corpus) in CORPORA_SMALL {
@@ -287,4 +307,7 @@ criterion_group!(g11, search::rfind_iter);
 criterion_group!(g12, search::find_char);
 criterion_group!(g13, search::find_byteset);
 criterion_group!(g14, search::find_not_byteset);
-criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14);
+criterion_group!(g15, chars_count);
+criterion_main!(
+    g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15
+);
