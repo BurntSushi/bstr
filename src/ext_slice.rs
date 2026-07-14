@@ -126,7 +126,7 @@ pub trait ByteSlice: private::Sealed {
 
     /// Return this byte slice as a `&BStr`.
     ///
-    /// Use `&BStr` is useful because of its `fmt::Debug` representation
+    /// `&BStr` is useful because of its `fmt::Debug` representation
     /// and various other trait implementations (such as `PartialEq` and
     /// `PartialOrd`). In particular, the `Debug` implementation for `BStr`
     /// shows its bytes as a normal string. For invalid UTF-8, hex escape
@@ -148,7 +148,7 @@ pub trait ByteSlice: private::Sealed {
 
     /// Return this byte slice as a `&mut BStr`.
     ///
-    /// Use `&mut BStr` is useful because of its `fmt::Debug` representation
+    /// `&mut BStr` is useful because of its `fmt::Debug` representation
     /// and various other trait implementations (such as `PartialEq` and
     /// `PartialOrd`). In particular, the `Debug` implementation for `BStr`
     /// shows its bytes as a normal string. For invalid UTF-8, hex escape
