@@ -10,6 +10,7 @@ use std::{
 };
 
 use crate::{
+    BString,
     ext_slice::ByteSlice,
     utf8::{self, Utf8Error},
 };
@@ -140,6 +141,35 @@ pub trait ByteVec: private::Sealed {
     fn into_vec(self) -> Vec<u8>
     where
         Self: Sized;
+
+    /// Convert this type to a `BString`.
+    ///
+    /// `BString` is useful if you want its trait implementations such as `Debug`, `PartialEq`, and
+    /// `PartialOrd`, or if you want to declare at an interface boundary (field or parameter) that
+    /// something uses "conventionally UTF-8" owned strings.
+    ///
+    /// This is a zero-cost conversion.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteVec;
+    ///
+    /// let v = vec![b'a', b'b', b'c'];
+    /// let b = v.to_bstring();
+    /// println!("{b}");
+    /// assert_eq!(b, "abc");
+    /// assert_ne!(b, "hello");
+    /// ```
+    #[inline]
+    fn to_bstring(self) -> BString
+    where
+        Self: Sized,
+    {
+        BString::new(self.into_vec())
+    }
 
     /// Create a new owned byte string from the given byte slice.
     ///
