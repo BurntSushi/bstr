@@ -1229,12 +1229,7 @@ impl FromUtf8Error {
 }
 
 #[cfg(feature = "std")]
-impl error::Error for FromUtf8Error {
-    #[inline]
-    fn description(&self) -> &str {
-        "invalid UTF-8 vector"
-    }
-}
+impl error::Error for FromUtf8Error {}
 
 impl fmt::Display for FromUtf8Error {
     #[inline]
