@@ -1,0 +1,23 @@
+[package]
+name = "bstr-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.bstr]
+path = ".."
+
+[[bin]]
+name = "utf8_validate"
+path = "fuzz_targets/utf8_validate.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
