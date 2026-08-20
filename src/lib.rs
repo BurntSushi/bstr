@@ -26,6 +26,8 @@ with convenient `std::fmt::Debug` implementations:
 
 Additionally, the free function [`B`](fn.B.html) serves as a convenient short
 hand for writing byte string literals.
+And the trait [`FromBytesRadix`](trait.FromBytesRadix.html) provides integer
+parsing with `from_bytes_radix`, like the standard library's `from_str_radix`.
 
 # Quick examples
 
@@ -423,6 +425,10 @@ pub use crate::utf8::{
     Chars, Utf8Chunk, Utf8Chunks, Utf8Error,
 };
 
+pub use crate::from_bytes_radix::{
+    FromBytesRadix, IntErrorKind, ParseIntError,
+};
+
 mod ascii;
 mod bstr;
 #[cfg(feature = "alloc")]
@@ -432,6 +438,7 @@ mod escape_bytes;
 mod ext_slice;
 #[cfg(feature = "alloc")]
 mod ext_vec;
+mod from_bytes_radix;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
