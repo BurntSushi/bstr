@@ -469,11 +469,7 @@ impl Utf8Error {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for Utf8Error {
-    fn description(&self) -> &str {
-        "invalid UTF-8"
-    }
-}
+impl std::error::Error for Utf8Error {}
 
 impl fmt::Display for Utf8Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
