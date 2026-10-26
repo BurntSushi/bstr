@@ -2,7 +2,7 @@
 // the 'inverse' query of memchr, e.g. finding the first byte not in the
 // provided set. This is simple for the 1-byte case.
 
-use core::cmp;
+use core::{cmp, ops};
 
 const USIZE_BYTES: usize = core::mem::size_of::<usize>();
 const ALIGN_MASK: usize = core::mem::align_of::<usize>() - 1;
@@ -23,10 +23,10 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let vn1 = repeat_byte(n1);
     let confirm = |byte| byte != n1;
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
-    let start_ptr = haystack.as_ptr();
+    let ops::Range { start: start_ptr, end: end_ptr } =
+        haystack.as_ptr_range();
 
     unsafe {
-        let end_ptr = haystack.as_ptr().add(haystack.len());
         let mut ptr = start_ptr;
 
         if haystack.len() < USIZE_BYTES {
@@ -62,10 +62,10 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let vn1 = repeat_byte(n1);
     let confirm = |byte| byte != n1;
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
-    let start_ptr = haystack.as_ptr();
+    let ops::Range { start: start_ptr, end: end_ptr } =
+        haystack.as_ptr_range();
 
     unsafe {
-        let end_ptr = haystack.as_ptr().add(haystack.len());
         let mut ptr = end_ptr;
 
         if haystack.len() < USIZE_BYTES {
@@ -150,11 +150,8 @@ pub(crate) fn forward_search_bytes<F: Fn(u8) -> bool>(
     s: &[u8],
     confirm: F,
 ) -> Option<usize> {
-    unsafe {
-        let start = s.as_ptr();
-        let end = start.add(s.len());
-        forward_search(start, end, start, confirm)
-    }
+    let ops::Range { start, end } = s.as_ptr_range();
+    unsafe { forward_search(start, end, start, confirm) }
 }
 
 /// Safe wrapper around `reverse_search`
@@ -163,11 +160,8 @@ pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
     s: &[u8],
     confirm: F,
 ) -> Option<usize> {
-    unsafe {
-        let start = s.as_ptr();
-        let end = start.add(s.len());
-        reverse_search(start, end, end, confirm)
-    }
+    let ops::Range { start, end } = s.as_ptr_range();
+    unsafe { reverse_search(start, end, end, confirm) }
 }
 
 #[cfg(all(test, feature = "std"))]

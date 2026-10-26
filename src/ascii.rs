@@ -21,6 +21,8 @@
 // means we can effectively skip the _mm_cmpeq_epi8 step and jump straight to
 // _mm_movemask_epi8.
 
+use core::ops;
+
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
 const USIZE_BYTES: usize = core::mem::size_of::<usize>();
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
@@ -55,8 +57,7 @@ pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
 
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
 fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
-    let start_ptr = slice.as_ptr();
-    let end_ptr = slice[slice.len()..].as_ptr();
+    let ops::Range { start: start_ptr, end: end_ptr } = slice.as_ptr_range();
     let mut ptr = start_ptr;
 
     unsafe {
@@ -122,8 +123,7 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
     const VECTOR_ALIGN: usize = VECTOR_SIZE - 1;
     const VECTOR_LOOP_SIZE: usize = 4 * VECTOR_SIZE;
 
-    let start_ptr = slice.as_ptr();
-    let end_ptr = slice[slice.len()..].as_ptr();
+    let ops::Range { start: start_ptr, end: end_ptr } = slice.as_ptr_range();
     let mut ptr = start_ptr;
 
     unsafe {
