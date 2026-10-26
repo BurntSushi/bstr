@@ -488,7 +488,7 @@ impl fmt::Display for Utf8Error {
 pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
     // The fast path for validating UTF-8. It steps through a UTF-8 automaton
     // and uses a SIMD accelerated ASCII fast path on x86_64. If an error is
-    // detected, it backs up and runs the slower version of the UTF-8 automaton
+    // detected, it backs up to the preceding scalar and decodes it
     // to determine correct error information.
     fn fast(slice: &[u8]) -> Result<(), Utf8Error> {
         let mut state = ACCEPT;
@@ -529,40 +529,31 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
         // that guarantees every preceding byte is part of a valid UTF-8
         // code unit sequence. To do this, we simply locate the last leading
         // byte that occurs before rejected_at.
+        let rejected_at = cmp::min(rejected_at, slice.len());
         let mut backup = rejected_at.saturating_sub(1);
-        while backup > 0 && !is_leading_or_invalid_utf8_byte(slice[backup]) {
+        while backup > 0
+            && slice
+                .get(backup)
+                .map_or(false, |&byte| !is_leading_or_invalid_utf8_byte(byte))
+        {
             backup -= 1;
         }
-        let upto = cmp::min(slice.len(), rejected_at.saturating_add(1));
-        let mut err = slow(&slice[backup..upto]).unwrap_err();
-        err.valid_up_to += backup;
-        err
-    }
-
-    // Like top-level UTF-8 decoding, except it correctly reports a UTF-8 error
-    // when an invalid sequence is found. This is split out from validate so
-    // that the fast path doesn't need to keep track of the position of the
-    // last valid UTF-8 byte. In particular, tracking this requires checking
-    // for an ACCEPT state on each byte, which degrades throughput pretty
-    // badly.
-    fn slow(slice: &[u8]) -> Result<(), Utf8Error> {
-        let mut state = ACCEPT;
-        let mut valid_up_to = 0;
-        for (i, &b) in slice.iter().enumerate() {
-            state = step(state, b);
-            if state == ACCEPT {
-                valid_up_to = i + 1;
-            } else if state == REJECT {
-                // Our error length must always be at least 1.
-                let error_len = Some(cmp::max(1, i - valid_up_to));
-                return Err(Utf8Error { valid_up_to, error_len });
-            }
-        }
-        if state != ACCEPT {
-            Err(Utf8Error { valid_up_to, error_len: None })
+        // The preceding window is either one complete valid scalar or the
+        // incomplete scalar that contains the rejected byte. Complete scalars
+        // advance the error start; incomplete scalars leave it at their lead.
+        // Derive the error directly instead of asserting that rerunning a
+        // second validator must return Err.
+        let complete = slice.get(backup..rejected_at).and_then(|prefix| {
+            let (character, width) = decode(prefix);
+            character.map(|_| width)
+        });
+        let valid_up_to = backup + complete.unwrap_or(0);
+        let error_len = if rejected_at == slice.len() {
+            None
         } else {
-            Ok(())
-        }
+            Some(cmp::max(1, rejected_at.saturating_sub(valid_up_to)))
+        };
+        Utf8Error { valid_up_to, error_len }
     }
 
     // Advance to the next state given the current state and current byte.
@@ -638,7 +629,10 @@ pub fn decode<B: AsRef<[u8]>>(slice: B) -> (Option<char>, usize) {
 
     let (mut state, mut cp, mut i) = (ACCEPT, 0, 0);
     while i < slice.len() {
-        decode_step(&mut state, &mut cp, slice[i]);
+        // SAFETY: state and cp start at ACCEPT (12) and 0. Feeding both
+        // outputs into the next transition preserves the row-offset and
+        // codepoint-prefix invariants for every iteration.
+        unsafe { decode_step(&mut state, &mut cp, slice[i]) };
         i += 1;
 
         if state == ACCEPT {
@@ -833,10 +827,17 @@ pub fn decode_last_lossy<B: AsRef<[u8]>>(slice: B) -> (char, usize) {
     }
 }
 
-/// SAFETY: The decode function relies on state being equal to ACCEPT only if
-/// cp is a valid Unicode scalar value.
+/// Advance one byte of the UTF-8 decoder.
+///
+/// # Safety
+///
+/// `state` must be a row offset in 0..=96, divisible by 12. Starting at
+/// ACCEPT and feeding back the returned state preserves this invariant.
+/// Before treating an ACCEPT result as a scalar, the caller must also
+/// preserve the codepoint-prefix invariant by starting cp at 0 and feeding
+/// the accumulator back into each successive transition.
 #[inline]
-pub fn decode_step(state: &mut usize, cp: &mut u32, b: u8) {
+unsafe fn decode_step(state: &mut usize, cp: &mut u32, b: u8) {
     let class = CLASSES[b as usize];
     let b = u32::from(b);
     if *state == ACCEPT {
@@ -844,7 +845,13 @@ pub fn decode_step(state: &mut usize, cp: &mut u32, b: u8) {
     } else {
         *cp = (b & 0b0011_1111) | (*cp << 6);
     }
-    *state = STATES_FORWARD[*state + class as usize] as usize;
+    // SAFETY: The caller supplies a row offset in 0..=96. CLASSES maps
+    // every byte to 0..=11, so the sum is at most 107 and cannot overflow.
+    // STATES_FORWARD has 108 entries, all row offsets in 0..=96. Thus this
+    // access is in bounds and preserves the invariant for the next step.
+    *state = usize::from(unsafe {
+        *STATES_FORWARD.get_unchecked(*state + usize::from(class))
+    });
 }
 
 /// Returns true if and only if the given byte is either a valid leading UTF-8
@@ -884,6 +891,95 @@ mod tests {
         tests::LOSSY_TESTS,
         utf8::{self, Utf8Error},
     };
+
+    #[test]
+    fn decoder_tables_keep_every_transition_in_the_valid_state_domain() {
+        assert_eq!(super::ACCEPT, 12);
+        assert_eq!(super::CLASSES.len(), 256);
+        assert_eq!(super::STATES_FORWARD.len(), 108);
+        assert!(super::CLASSES.iter().all(|&class| class < 12));
+        assert!(super::STATES_FORWARD.iter().all(|&state| {
+            usize::from(state) < super::STATES_FORWARD.len() && state % 12 == 0
+        }));
+        for state in (0..super::STATES_FORWARD.len()).step_by(12) {
+            for byte in u8::MIN..=u8::MAX {
+                let mut actual = state;
+                let mut codepoint = 0;
+                // SAFETY: This loop enumerates only valid row offsets.
+                unsafe {
+                    super::decode_step(&mut actual, &mut codepoint, byte)
+                };
+                let class = usize::from(super::CLASSES[usize::from(byte)]);
+                assert_eq!(
+                    actual,
+                    usize::from(super::STATES_FORWARD[state + class])
+                );
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn decoder_preserves_every_scalar_and_its_truncated_prefixes() {
+        for ordinal in 0..=0x10FFFF {
+            let Some(character) = char::from_u32(ordinal) else { continue };
+            let mut storage = [0; 4];
+            let encoded = character.encode_utf8(&mut storage).as_bytes();
+            assert_eq!(
+                utf8::decode(encoded),
+                (Some(character), encoded.len())
+            );
+            for length in 1..encoded.len() {
+                assert_eq!(utf8::decode(&encoded[..length]), (None, length));
+            }
+        }
+    }
+
+    #[test]
+    fn error_recovery_matches_standard_utf8_boundaries() {
+        fn check(bytes: &[u8]) {
+            match (core::str::from_utf8(bytes), utf8::validate(bytes)) {
+                (Ok(_), Ok(())) => {}
+                (Err(expected), Err(actual)) => {
+                    assert_eq!(
+                        actual.valid_up_to(),
+                        expected.valid_up_to(),
+                        "{bytes:?}"
+                    );
+                    assert_eq!(
+                        actual.error_len(),
+                        expected.error_len(),
+                        "{bytes:?}"
+                    );
+                }
+                outcome => panic!(
+                    "different validation result for {bytes:?}: {outcome:?}"
+                ),
+            }
+        }
+        for first in u8::MIN..=u8::MAX {
+            check(&[first]);
+            for second in u8::MIN..=u8::MAX {
+                check(&[first, second]);
+                check(&[b'a', first, second]);
+                check(&[first, second, b'a']);
+            }
+        }
+        let boundary = [
+            0x00, 0x7F, 0x80, 0x8F, 0x90, 0x9F, 0xA0, 0xBF, 0xC0, 0xC1, 0xC2,
+            0xDF, 0xE0, 0xED, 0xEF, 0xF0, 0xF4, 0xF5, 0xFF,
+        ];
+        for first in boundary {
+            for second in boundary {
+                for third in boundary {
+                    check(&[first, second, third]);
+                    for fourth in boundary {
+                        check(&[first, second, third, fourth]);
+                    }
+                }
+            }
+        }
+    }
 
     fn utf8e(valid_up_to: usize) -> Utf8Error {
         Utf8Error { valid_up_to, error_len: None }
