@@ -64,21 +64,21 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
             return first_non_ascii_byte_slow(start_ptr, end_ptr, ptr);
         }
 
-        let chunk = read_unaligned_usize(ptr);
+        let chunk = ptr.cast::<usize>().read_unaligned();
         let mask = chunk & ASCII_MASK;
         if mask != 0 {
             return first_non_ascii_byte_mask(mask);
         }
 
-        ptr = ptr_add(ptr, USIZE_BYTES - (start_ptr as usize & ALIGN_MASK));
+        ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & ALIGN_MASK));
         debug_assert!(ptr > start_ptr);
-        debug_assert!(ptr_sub(end_ptr, USIZE_BYTES) >= start_ptr);
+        debug_assert!(end_ptr.sub(USIZE_BYTES) >= start_ptr);
         if slice.len() >= FALLBACK_LOOP_SIZE {
-            while ptr <= ptr_sub(end_ptr, FALLBACK_LOOP_SIZE) {
+            while ptr <= end_ptr.sub(FALLBACK_LOOP_SIZE) {
                 debug_assert_eq!(0, (ptr as usize) % USIZE_BYTES);
 
                 let a = *(ptr as *const usize);
-                let b = *(ptr_add(ptr, USIZE_BYTES) as *const usize);
+                let b = *(ptr.add(USIZE_BYTES) as *const usize);
                 if (a | b) & ASCII_MASK != 0 {
                     // What a kludge. We wrap the position finding code into
                     // a non-inlineable function, which makes the codegen in
@@ -92,7 +92,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
                         ptr: *const u8,
                     ) -> usize {
                         let a = *(ptr as *const usize);
-                        let b = *(ptr_add(ptr, USIZE_BYTES) as *const usize);
+                        let b = *(ptr.add(USIZE_BYTES) as *const usize);
 
                         let mut at = sub(ptr, start_ptr);
                         let maska = a & ASCII_MASK;
@@ -107,7 +107,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
                     }
                     return findpos(start_ptr, ptr);
                 }
-                ptr = ptr_add(ptr, FALLBACK_LOOP_SIZE);
+                ptr = ptr.add(FALLBACK_LOOP_SIZE);
             }
         }
         first_non_ascii_byte_slow(start_ptr, end_ptr, ptr)
@@ -141,7 +141,7 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
         debug_assert!(ptr > start_ptr);
         debug_assert!(end_ptr.sub(VECTOR_SIZE) >= start_ptr);
         if slice.len() >= VECTOR_LOOP_SIZE {
-            while ptr <= ptr_sub(end_ptr, VECTOR_LOOP_SIZE) {
+            while ptr <= end_ptr.sub(VECTOR_LOOP_SIZE) {
                 debug_assert_eq!(0, (ptr as usize) % VECTOR_SIZE);
 
                 let a = _mm_load_si128(ptr as *const __m128i);
@@ -178,7 +178,7 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
                     debug_assert!(mask != 0);
                     return at + mask.trailing_zeros() as usize;
                 }
-                ptr = ptr_add(ptr, VECTOR_LOOP_SIZE);
+                ptr = ptr.add(VECTOR_LOOP_SIZE);
             }
         }
         while ptr <= end_ptr.sub(VECTOR_SIZE) {
@@ -230,25 +230,6 @@ fn first_non_ascii_byte_mask(mask: usize) -> usize {
     {
         mask.leading_zeros() as usize / 8
     }
-}
-
-/// Increment the given pointer by the given amount.
-unsafe fn ptr_add(ptr: *const u8, amt: usize) -> *const u8 {
-    ptr.add(amt)
-}
-
-/// Decrement the given pointer by the given amount.
-unsafe fn ptr_sub(ptr: *const u8, amt: usize) -> *const u8 {
-    ptr.sub(amt)
-}
-
-#[cfg(any(test, miri, not(target_arch = "x86_64")))]
-unsafe fn read_unaligned_usize(ptr: *const u8) -> usize {
-    use core::ptr;
-
-    let mut n: usize = 0;
-    ptr::copy_nonoverlapping(ptr, &mut n as *mut _ as *mut u8, USIZE_BYTES);
-    n
 }
 
 /// Subtract `b` from `a` and return the difference. `a` should be greater than

@@ -33,7 +33,7 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
 
-        let chunk = read_unaligned_usize(ptr);
+        let chunk = ptr.cast::<usize>().read_unaligned();
         if (chunk ^ vn1) != 0 {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -72,7 +72,7 @@ pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
 
-        let chunk = read_unaligned_usize(ptr.sub(USIZE_BYTES));
+        let chunk = ptr.sub(USIZE_BYTES).cast::<usize>().read_unaligned();
         if (chunk ^ vn1) != 0 {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -131,10 +131,6 @@ unsafe fn reverse_search<F: Fn(u8) -> bool>(
         }
     }
     None
-}
-
-unsafe fn read_unaligned_usize(ptr: *const u8) -> usize {
-    (ptr as *const usize).read_unaligned()
 }
 
 /// Subtract `b` from `a` and return the difference. `a` should be greater than
