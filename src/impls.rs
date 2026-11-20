@@ -485,7 +485,8 @@ mod bstr {
                 Ok(())
             }
 
-            if let Some(align) = f.align() {
+            if f.width().is_some() || f.align().is_some() {
+                let align = f.align().unwrap_or(fmt::Alignment::Left);
                 let width = f.width().unwrap_or(0);
                 let nchars = self.chars().count();
                 let remaining_pads = width.saturating_sub(nchars);
@@ -1146,6 +1147,31 @@ mod display {
     #[cfg(not(miri))]
     use crate::bstring::BString;
     use crate::ByteSlice;
+
+    #[test]
+    fn default_alignment() {
+        for bytes in
+            [b"abc".as_slice(), b"", b"\xf0\x28\x8c\xbc", "界é".as_bytes()]
+        {
+            let expected = bytes.to_str_lossy();
+            assert_eq!(
+                format!("{:8}!", bytes.as_bstr()),
+                format!("{:8}!", expected)
+            );
+            assert_eq!(
+                format!("{:1$}!", bytes.as_bstr(), 8),
+                format!("{:8}!", expected)
+            );
+            assert_eq!(
+                format!("{:0}!", bytes.as_bstr()),
+                format!("{}!", expected)
+            );
+            assert_eq!(
+                format!("{:2}!", bytes.as_bstr()),
+                format!("{:2}!", expected)
+            );
+        }
+    }
 
     #[test]
     fn clean() {
