@@ -42,9 +42,20 @@ const ASCII_MASK: usize = ASCII_MASK_U64 as usize;
 /// If slice only contains ASCII bytes, then the length of the slice is
 /// returned.
 pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
-    #[cfg(any(miri, not(target_arch = "x86_64")))]
+    #[cfg(any(
+        miri,
+        not(any(
+            target_arch = "x86_64",
+            all(target_arch = "aarch64", target_feature = "neon"),
+        ))
+    ))]
     {
         first_non_ascii_byte_fallback(slice)
+    }
+
+    #[cfg(all(not(miri), target_arch = "aarch64", target_feature = "neon"))]
+    {
+        first_non_ascii_byte_neon(slice)
     }
 
     #[cfg(all(not(miri), target_arch = "x86_64"))]
@@ -195,6 +206,60 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
     }
 }
 
+// NEON has no byte movemask, so reduce the unsigned maximum instead: a
+// vector contains non-ASCII precisely when its maximum byte is above 0x7F.
+#[cfg(all(not(miri), target_arch = "aarch64", target_feature = "neon"))]
+fn first_non_ascii_byte_neon(slice: &[u8]) -> usize {
+    use core::arch::aarch64::{vld1q_u8, vmaxvq_u8, vorrq_u8};
+    use core::ops;
+
+    const VECTOR_SIZE: usize = 16;
+    const VECTOR_LOOP_SIZE: usize = 4 * VECTOR_SIZE;
+
+    let ops::Range { start: start_ptr, end: end_ptr } = slice.as_ptr_range();
+    let mut ptr = start_ptr;
+
+    // SAFETY: This function is only compiled when NEON is enabled. Each load
+    // is guarded by the number of bytes remaining in the slice; unaligned
+    // loads are permitted. No load extends past the end, including the tail.
+    unsafe {
+        if slice.len() < VECTOR_SIZE {
+            return first_non_ascii_byte_fallback(slice);
+        }
+        let chunk = vld1q_u8(ptr);
+        if vmaxvq_u8(chunk) > 0x7F {
+            return first_non_ascii_byte_fallback(slice);
+        }
+        ptr = ptr.add(VECTOR_SIZE);
+
+        while sub(end_ptr, ptr) >= VECTOR_LOOP_SIZE {
+            let a = vld1q_u8(ptr);
+            let b = vld1q_u8(ptr.add(VECTOR_SIZE));
+            let c = vld1q_u8(ptr.add(2 * VECTOR_SIZE));
+            let d = vld1q_u8(ptr.add(3 * VECTOR_SIZE));
+            let combined = vorrq_u8(vorrq_u8(a, b), vorrq_u8(c, d));
+            if vmaxvq_u8(combined) > 0x7F {
+                // Localize only within the matching block, using the existing
+                // word-at-a-time scanner to avoid a 64-byte scalar rescan.
+                let block = core::slice::from_raw_parts(ptr, VECTOR_LOOP_SIZE);
+                return sub(ptr, start_ptr)
+                    + first_non_ascii_byte_fallback(block);
+            }
+            ptr = ptr.add(VECTOR_LOOP_SIZE);
+        }
+        while sub(end_ptr, ptr) >= VECTOR_SIZE {
+            let chunk = vld1q_u8(ptr);
+            if vmaxvq_u8(chunk) > 0x7F {
+                let block = core::slice::from_raw_parts(ptr, VECTOR_SIZE);
+                return sub(ptr, start_ptr)
+                    + first_non_ascii_byte_fallback(block);
+            }
+            ptr = ptr.add(VECTOR_SIZE);
+        }
+        first_non_ascii_byte_slow(start_ptr, end_ptr, ptr)
+    }
+}
+
 #[inline(always)]
 unsafe fn first_non_ascii_byte_slow(
     start_ptr: *const u8,
@@ -261,6 +326,48 @@ fn sub(a: *const u8, b: *const u8) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[cfg(all(not(miri), target_arch = "aarch64", target_feature = "neon"))]
+    fn neon_matches_scalar_for_every_length_alignment_and_position() {
+        for align in 0..64 {
+            for len in 0..=257 {
+                let mut storage = std::vec![b'a'; align + len];
+                assert_eq!(first_non_ascii_byte_neon(&storage[align..]), len);
+                assert_eq!(first_non_ascii_byte(&storage[align..]), len);
+                for at in 0..len {
+                    // Exercise both the high-bit boundary and maximum byte.
+                    for byte in [0x80, 0xFF] {
+                        storage[align + at] = byte;
+                        let slice = &storage[align..];
+                        let expected = slice
+                            .iter()
+                            .position(|&b| b > 0x7F)
+                            .unwrap_or(slice.len());
+                        assert_eq!(first_non_ascii_byte_neon(slice), expected,
+                            "align: {align}, len: {len}, at: {at}, byte: {byte}");
+                        assert_eq!(first_non_ascii_byte(slice), expected);
+                    }
+                    storage[align + at] = b'a';
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(all(not(miri), target_arch = "aarch64", target_feature = "neon"))]
+    fn neon_returns_first_of_multiple_non_ascii_bytes() {
+        for first in 0..129 {
+            let mut bytes = std::vec![0x7F; 193];
+            bytes[first] = 0x80;
+            bytes[first + 16] = 0xFF;
+            bytes[first + 64] = 0x81;
+            assert_eq!(first_non_ascii_byte_neon(&bytes), first);
+        }
+        for byte in 0u8..=0x7F {
+            assert_eq!(first_non_ascii_byte_neon(&[byte; 193]), 193);
+        }
+    }
 
     // Our testing approach here is to try and exhaustively test every case.
     // This includes the position at which a non-ASCII byte occurs in addition
