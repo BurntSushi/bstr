@@ -384,9 +384,7 @@ and Unicode support.
 * `unicode` - **Enabled** by default. This provides APIs that require sizable
   Unicode data compiled into the binary. This includes, but is not limited to,
   grapheme/word/sentence segmenters. When this is disabled, basic support such
-  as UTF-8 decoding is still included. Note that currently, enabling this
-  feature also requires enabling the `std` feature. It is expected that this
-  limitation will be lifted at some point.
+  as UTF-8 decoding is still included.
 * `serde` - Enables implementations of serde traits for `BStr`, and also
   `BString` when `alloc` is enabled.
 */
