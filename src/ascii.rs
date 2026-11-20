@@ -131,7 +131,7 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
             return first_non_ascii_byte_slow(start_ptr, end_ptr, ptr);
         }
 
-        let chunk = _mm_loadu_si128(ptr as *const __m128i);
+        let chunk = _mm_loadu_si128(ptr.cast());
         let mask = _mm_movemask_epi8(chunk);
         if mask != 0 {
             return mask.trailing_zeros() as usize;
@@ -144,12 +144,10 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
             while ptr <= ptr_sub(end_ptr, VECTOR_LOOP_SIZE) {
                 debug_assert_eq!(0, (ptr as usize) % VECTOR_SIZE);
 
-                let a = _mm_load_si128(ptr as *const __m128i);
-                let b = _mm_load_si128(ptr.add(VECTOR_SIZE) as *const __m128i);
-                let c =
-                    _mm_load_si128(ptr.add(2 * VECTOR_SIZE) as *const __m128i);
-                let d =
-                    _mm_load_si128(ptr.add(3 * VECTOR_SIZE) as *const __m128i);
+                let a = _mm_load_si128(ptr.cast());
+                let b = _mm_load_si128(ptr.add(VECTOR_SIZE).cast());
+                let c = _mm_load_si128(ptr.add(2 * VECTOR_SIZE).cast());
+                let d = _mm_load_si128(ptr.add(3 * VECTOR_SIZE).cast());
 
                 let or1 = _mm_or_si128(a, b);
                 let or2 = _mm_or_si128(c, d);
@@ -184,14 +182,25 @@ fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
         while ptr <= end_ptr.sub(VECTOR_SIZE) {
             debug_assert!(sub(end_ptr, ptr) >= VECTOR_SIZE);
 
-            let chunk = _mm_loadu_si128(ptr as *const __m128i);
+            let chunk = _mm_loadu_si128(ptr.cast());
             let mask = _mm_movemask_epi8(chunk);
             if mask != 0 {
                 return sub(ptr, start_ptr) + mask.trailing_zeros() as usize;
             }
             ptr = ptr.add(VECTOR_SIZE);
         }
-        first_non_ascii_byte_slow(start_ptr, end_ptr, ptr)
+        // SAFETY: The initial length check guarantees at least VECTOR_SIZE
+        // bytes. A final vector ending at end_ptr stays within the slice.
+        // Any overlap contains bytes already checked as ASCII, so the first
+        // set bit still identifies the first non-ASCII byte.
+        if ptr < end_ptr {
+            let last = end_ptr.sub(VECTOR_SIZE);
+            let mask = _mm_movemask_epi8(_mm_loadu_si128(last.cast()));
+            if mask != 0 {
+                return sub(last, start_ptr) + mask.trailing_zeros() as usize;
+            }
+        }
+        slice.len()
     }
 }
 
@@ -261,6 +270,43 @@ fn sub(a: *const u8, b: *const u8) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(all(not(miri), target_arch = "x86_64"))]
+    fn check_x86_kernel(scan: fn(&[u8]) -> usize) {
+        for align in 0..64 {
+            for len in 0..=257 {
+                // Include NUL as ordinary ASCII input.
+                let mut bytes = std::vec![0; align + len];
+                assert_eq!(scan(&bytes[align..]), len);
+                for at in 0..len {
+                    for byte in [0x80, 0xFF] {
+                        bytes[align + at] = byte;
+                        assert_eq!(scan(&bytes[align..]), at,
+                            "align: {align}, len: {len}, at: {at}, byte: {byte}");
+                    }
+                    bytes[align + at] = 0;
+                }
+            }
+        }
+        for byte in 0u8..=255 {
+            let bytes = [byte; 513];
+            let expected = if byte <= 0x7F { bytes.len() } else { 0 };
+            assert_eq!(scan(&bytes), expected);
+        }
+        for first in 0..257 {
+            let mut bytes = std::vec![0x7F; 513];
+            bytes[first] = 0x80;
+            bytes[first + 16] = 0xFF;
+            bytes[first + 128] = 0x81;
+            assert_eq!(scan(&bytes), first);
+        }
+    }
+
+    #[test]
+    #[cfg(all(not(miri), target_arch = "x86_64"))]
+    fn sse2_matches_scalar() {
+        check_x86_kernel(first_non_ascii_byte_sse2);
+    }
 
     // Our testing approach here is to try and exhaustively test every case.
     // This includes the position at which a non-ASCII byte occurs in addition
