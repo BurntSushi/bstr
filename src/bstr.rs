@@ -68,8 +68,27 @@ impl BStr {
         BStr::from_bytes_mut(bytes.as_mut())
     }
 
+    /// Directly creates a `BStr` slice from a byte slice in a `const`
+    /// context.
+    ///
+    /// This is like [`BStr::new`], except it only accepts `&[u8]` (and
+    /// byte string literals) so that it can be a `const fn`.
+    ///
+    /// This is a cost-free conversion.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bstr::BStr;
+    ///
+    /// const FOO: &BStr = BStr::from_bytes(b"foo");
+    /// static BAR: &BStr = BStr::from_bytes(&[b'b', b'a', 0xFF]);
+    ///
+    /// assert_eq!(FOO, "foo");
+    /// assert_eq!(BAR, &b"ba\xFF"[..]);
+    /// ```
     #[inline]
-    pub(crate) fn from_bytes(slice: &[u8]) -> &BStr {
+    pub const fn from_bytes(slice: &[u8]) -> &BStr {
         unsafe { &*(slice as *const [u8] as *const BStr) }
     }
 
